@@ -1,0 +1,47 @@
+[project]
+name = "skinulis"
+version = "0.1.0"
+description = "Учебный сервис совместных расходов"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[tool.uv]
+required-version = "==0.13.1"
+package = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+exclude = ['^\.venv/']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-config", "--strict-markers", "--import-mode=importlib"]
+
+[tool.coverage.run]
+branch = true
+source = ["app", "bot"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+fail_under = 60
+
+[dependency-groups]
+dev = [
+    "detect-secrets>=1.5.0,<2.0.0",
+    "mypy>=2.4.0,<3.0.0",
+    "pre-commit>=4.7.0,<5.0.0",
+    "pytest>=9.1.1,<10.0.0",
+    "pytest-cov>=7.1.0,<8.0.0",
+    "ruff>=0.17.1,<0.18.0",
+]
