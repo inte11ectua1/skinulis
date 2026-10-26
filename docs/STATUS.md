@@ -1,30 +1,45 @@
 # Фактическое состояние проекта
 
-Обновлять **только по подтверждённым PR, CI и работающим URL**.
+**Срез:** 26 октября 2026 года. Источник истины — GitHub `main`, принятые PR, Issues, логи проверок и реальные URL. Этот документ отражает подтверждённое состояние, а не обещание готовой реализации.
 
-| Задача | Состояние | Владелец | Доказательство |
+Статусы задач: `planned → in progress → PR review → merged → verified`. `merged` не равно `verified`: для последнего нужны соответствующие CI, тесты и/или работающий сервис.
+
+## M0 — подготовка и документация
+
+| Задача | Состояние | Ответственный | Подтверждение / оставшееся |
 |---|---|---|---|
-| T-01 стартовые документы | PR review | Тимур | PR создаётся; защита main и приглашения ещё не настроены |
-| T-02 uv и зависимости | PR review | Тимур | [PR #7](https://github.com/inte11ectua1/skinulis/pull/7): frozen-установка, Ruff, mypy, pytest (2 passed), pre-commit и аудит зависимостей прошли локально на macOS arm64 |
-| O-01 аудит финансовых правил | planned | Олег | — |
-| L-01 UX-сценарии | planned | Лера | — |
-| G1 Docker + CI | not verified | Тимур | — |
-| G2 Авторизация и группы | not verified | Тимур | — |
-| G3 Расходы | not verified | Олег | — |
-| G4 Компенсации | not verified | Олег | — |
-| G5 Публичный CD | not verified | Тимур | — |
+| [T-01](https://github.com/inte11ectua1/skinulis/issues/2) GitHub и ADR 001 | **in progress** | Тимур | [PR #1](https://github.com/inte11ectua1/skinulis/pull/1) и [PR #6](https://github.com/inte11ectua1/skinulis/pull/6) merged; ADR 001 одобрен Лерой; `main.protected=true`, `delete_branch_on_merge=true`. Полные параметры защиты и запрет прямого push ещё надо проверить; обязательный CI check добавится в T-04. Преподаватель по решению Тимура будет приглашён ближе к защите, сейчас не приглашать. |
+| [T-02](https://github.com/inte11ectua1/skinulis/issues/5) Python 3.12, uv | **merged** | Тимур | [PR #7](https://github.com/inte11ectua1/skinulis/pull/7) merged после `APPROVED` Олега и исправления уязвимостей; CPython 3.12.15, uv 0.13.5. Локальные macOS проверки в PR, Windows junction issue при `uv python install` остаётся не перепроверенным на обновлённом uv. |
+| [O-01](https://github.com/inte11ectua1/skinulis/issues/3) инварианты | **merged** | Олег | [PR #8](https://github.com/inte11ectua1/skinulis/pull/8) approved Тимуром и merged; финансовые документы, 105 сценариев, вопросы Q-01–Q-10. Это документация, не реализация тестов. |
+| [L-01](https://github.com/inte11ectua1/skinulis/issues/4) Telegram UX | **merged** | Лера | [PR #9](https://github.com/inte11ectua1/skinulis/pull/9) approved Тимуром и merged; сценарии, 42 будущих QA-проверки, вопросы UQ-01–UQ-09. Требующие контрактов пункты остаются открытыми. |
 
-Статусы: planned → in progress → PR review → merged → verified. При отсутствии CI/тестов/deploy нельзя отмечать verified.
+**ADR:** 001 (GitHub Flow) принят PR #6; 002 (uv) принят PR #7. Их текстовые статусы приводятся в соответствие с историей PR отдельным документационным PR.
 
-T-02: проверена также установка в пустое виртуальное окружение на том же Mac.
-Покрытие приложения пока не измеряется: `app/` и `bot/` отсутствуют. API/БД/Docker
-проверяются после T-03, CI — после T-04. PR #7 ожидает человеческого ревью;
-issue #5 открыта, ADR 002 имеет статус «Предложено».
+## M1 — Skeleton (вторая фаза, назначенные задачи)
 
-26 октября 2026: после [ревью Олега на Windows 11](https://github.com/inte11ectua1/skinulis/pull/7#pullrequestreview-5655930834)
-uv обновлён до 0.13.5; certifi — до 2026.10.23, filelock — до 4.2.4,
-virtualenv — до 21.14.13. На macOS повторно прошли установка Python,
-frozen-установка, Ruff, mypy, pytest (2 passed), все hooks, проверка совместимости
-и аудит без исключений (31 зависимость, известных уязвимостей не найдено).
-Ограничение установки Python на Windows описано в README; повторная проверка
-Windows с uv 0.13.5 остаётся за ревьюером.
+| Задача | Состояние | Ответственный | Зависимости |
+|---|---|---|---|
+| [T-03](https://github.com/inte11ectua1/skinulis/issues/10) API/DB/Alembic/Compose | **planned** | Тимур | T-02 выполнена |
+| [O-02](https://github.com/inte11ectua1/skinulis/issues/11) pure splits и parser | **planned** | Олег | O-01, T-02; согласовать необходимые Q-01/Q-02 до фиксации поведения |
+| [L-02](https://github.com/inte11ectua1/skinulis/issues/12) bot skeleton и mock HTTP | **planned** | Лера | L-01, T-02; не изобретать API для UQ |
+| [T-04](https://github.com/inte11ectua1/skinulis/issues/13) PR CI | **planned (blocked by T-03)** | Тимур | Дождаться интегрируемого T-03, затем включить обязательный status check |
+
+T-03, O-02, L-02 можно начинать параллельно **в отдельных ветках**. T-04 выполняется после рабочего T-03. Согласование shared-контрактов — через issue/PR, без молчаливого изменения PRODUCT_RULES.
+
+## Release gates
+
+| Gate | Статус | Условие проверки |
+|---|---|---|
+| G1 — cold start / миграция / health / CI | **not verified** | T-03, T-04: миграции на пустой БД, /health 200 и 503 при отказе DB, reviewed PR с зелёным CI, blocked merge при красном CI |
+| G2 — auth и группы | **not verified** | M2 |
+| G3 — расходы | **not verified** | M3 |
+| G4 — компенсации | **not verified** | M4 |
+| G5 — публикация и CD | **not verified** | M5 |
+| G6 — приёмка / демонстрация | **not verified** | M6 |
+
+## Открытые вопросы и ограничения
+
+- Подробное содержимое защиты `main` (PR/approval/stale dismissal/conversations/no bypass/force-push/deletion) пока не удаётся подтвердить через подключённый GitHub API; GitHub сообщает `protected=true`, но детальный endpoint недоступен. Проверить вручную в Settings и сохранить доказательство. Mandatory CI после T-04.
+- Предпросмотр расхода без записи **UQ-03** не имеет принятого API-маршрута; до согласования O-04/O-05 и L-04 нельзя реализовать локальные денежные расчёты или временные расходы ради превью.
+- Денежная грамматика/порядок ID **Q-01/Q-02** требуют решения перед зависимой реализацией O-02. Прочие Q/UQ закрываются до соответствующих этапов по ответственным.
+- Сборка API, PostgreSQL, Docker, CI и рабочий Telegram-бот пока **не подтверждены**. Не заявлять coverage >=60%, G1 или работающий E2E до реальных проверок.
