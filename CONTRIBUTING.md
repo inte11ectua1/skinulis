@@ -11,3 +11,26 @@
 
 Настройку branch protection (approval, проверка статусов CI, блокировка push) нужно выполнить отдельно в GitHub Settings после появления первого workflow.
 
+## Локальные проверки
+
+Установите окружение по [README](README.md#окружение-разработки), затем включите hooks:
+
+```bash
+uv sync --frozen
+uv run pre-commit install
+uv lock --check
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy .
+uv run pytest
+uv run pre-commit run --all-files
+uv pip check
+uv audit --locked
+```
+
+При ошибках форматирования выполните `uv run ruff format .`, проверьте diff и повторите
+проверки. Команда mypy проверяет весь существующий Python-код, включая тесты; новые
+модули попадут в неё автоматически. Покрытие приложения и PostgreSQL integration
+пока недоступны; порядок их подключения описан в README. До T-04 результаты команд
+прикладываются в PR вручную.
+
