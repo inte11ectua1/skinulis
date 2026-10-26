@@ -1,5 +1,9 @@
 # Подготовка к Codex
 
+> **Исторический чек-лист первого запуска (M0)**, не текущая команда на приглашения/назначение задач. На 26.10.2026 M0 документация merged; следующий этап M1: [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12), после T-03 — [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13). Преподавателя не приглашать до отдельного решения Тимура. Открытые Q/UQ не считать автоматически решёнными. Текущий статус: [STATUS](../STATUS.md).
+
+## Ниже — исходные инструкции первоначальной настройки
+
 ## Тимур — один раз
 1. Открыть PR с документацией; пригласить Олега, Леру и преподавателя.
 2. В Settings → Rules → Rulesets настроить protection main: PR, минимум один approval, dismiss stale approvals, resolved conversations, запрет force-push/deletion, без bypass. Как только появится CI — обязательные status checks.
