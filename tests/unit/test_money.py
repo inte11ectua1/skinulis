@@ -1,4 +1,4 @@
-"""O-01 M-* на уровне pure functions; Q-01 cases проверяют Draft-предохранитель."""
+"""O-01 M-* на уровне pure functions; Q-01 утверждён в Issue #11."""
 
 from decimal import Decimal
 from typing import cast
@@ -7,7 +7,6 @@ import pytest
 
 from app.services.money import (
     MAX_EXPENSE_KOPECKS,
-    ContractPendingError,
     MoneyError,
     format_money,
     parse_money,
@@ -147,18 +146,45 @@ def test_integer_round_trip(amount: int) -> None:
 
 
 @pytest.mark.parametrize(
-    "value", [" 1.00", "1.00 ", "01.00", "+1.00", "١.٠٠", "-0.00", "\t1.00\n"]
+    "value",
+    [
+        " 1.00",
+        "1.00 ",
+        "01.00",
+        "+1.00",
+        "١.٠٠",
+        "-0.00",
+        "\t1.00\n",
+        "00.00",
+        "０.００",
+        "1.00\n",
+        "1.00\x00",
+    ],
 )
-def test_unresolved_q01_spelling_does_not_become_a_validation_decision(
-    value: str,
-) -> None:
-    """M-014/M-015: ни принятие, ни окончательный отказ; явный блокер Draft."""
-    with pytest.raises(ContractPendingError, match="Q-01"):
+def test_noncanonical_money_is_a_validation_error(value: str) -> None:
+    """M-014/M-015: обычная ошибка валидации, без trim/нормализации."""
+    with pytest.raises(MoneyError):
         parse_money(value)
 
 
-@pytest.mark.parametrize("amount", [-1, -100])
-def test_signed_formatter_waits_for_q01(amount: int) -> None:
-    """M-016: API-представление отрицательных балансов ещё не принято."""
-    with pytest.raises(ContractPendingError, match="Q-01"):
-        format_money(amount)
+@pytest.mark.parametrize(
+    ("amount", "expected"),
+    [
+        (-101, "-1.01"),
+        (-100, "-1.00"),
+        (-1, "-0.01"),
+        (0, "0.00"),
+        (1, "0.01"),
+        (10_000, "100.00"),
+    ],
+)
+def test_signed_formatter_does_not_allow_negative_parser_input(
+    amount: int, expected: str
+) -> None:
+    """M-016: signed output не разрешает отрицательные входные суммы."""
+    assert format_money(amount) == expected
+    if amount < 0:
+        with pytest.raises(MoneyError):
+            parse_money(expected)
+    else:
+        assert parse_money(expected) == amount
