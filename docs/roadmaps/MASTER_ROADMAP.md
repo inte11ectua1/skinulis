@@ -1,6 +1,6 @@
 # Общий roadmap (зависимости, интеграция, gate)
 
-**Статус:** план без подтверждения выполненных пунктов. Нумерация M0–M7 — последовательные фазы, а не календарные недели. Разрешена параллельность при согласованном контракте.
+**Статус:** дорожная карта и зависимости; фактическое выполнение см. в [STATUS](../STATUS.md) и GitHub Issues/PR. На 26.10.2026 PR по T-02, O-01, L-01 приняты, T-01 остаётся открытой для доказательств защиты `main`; начата постановка задач M1. Нумерация M0–M7 — последовательные фазы, а не календарные недели. Разрешена параллельность при согласованном контракте.
 
 | Фаза | Тимур (T) | Олег (O) | Лера (L) | Общий gate |
 |---|---|---|---|---|
@@ -12,6 +12,15 @@
 | M5 Delivery | T-09 GHCR/CD/VPS/Caddy, T-10 логи | O-08 integration/concurrency/load tests | L-06 E2E, UX errors, README | Merge -> image -> HTTPS /health /version |
 | M6 Acceptance | T-11 DoD audit, reset/test clean environment | O-09 bugfix, invariants, PR audit | L-07 user guide, demo script, smoke bots | CI green, coverage >=60%, p95/100 concurrent documented |
 | M7 Defense | T-12 rehearsal PR to deploy | O-10 defense calculations/Q&A | L-08 Telegram live demonstration | 7m presentation, 5m live-demo, 8m Q&A |
+
+## Переход к M1 — назначенные Issues (26.10.2026)
+
+- **Тимур:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10) — FastAPI + sync SQLAlchemy, PostgreSQL 17, Alembic, Compose, `/health`, `/version`. Можно начинать после merged T-02.
+- **Олег:** [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11) — pure money parser/equal/custom/by_items и unit-тесты после согласования необходимых Q-01/Q-02; без DB/API.
+- **Лера:** [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12) — каркас aiogram и typed httpx mock client без реального Telegram-токена и без выдуманных API-контрактов.
+- **Тимур после T-03:** [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) — PR GitHub Actions lint/types/Postgres tests+coverage/Docker build; обязательный status check после первого подтверждённого workflow.
+
+T-03, O-02, L-02 — параллельные независимые PR с человеческим ревью. T-04 зависит от T-03; **G1 пока не проверен**. Подробные состояния и открытые зависимости: [STATUS](../STATUS.md).
 
 ## Release gates
 - **G1 (после M1):** cold start, migration, /health 200, one real reviewed PR with green CI.
