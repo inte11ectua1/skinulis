@@ -20,12 +20,6 @@
 ## Основной принцип
 **GitHub-репозиторий нашего приложения — единственный канонический источник решения и статуса.** ChatGPT-чаты, память проекта и Notion — помощники, не источники истины. Репозиторий команды — [`inte11ectua1/skinulis`](https://github.com/inte11ectua1/skinulis). Не путать его с учебным репозиторием `andrey-limasov/app-conf`.
 
-## Следующая фаза — M1 (Skeleton)
-
-По состоянию на 26.10.2026: merged PR #7 (T-02), #8 (O-01), #9 (L-01); T-01 открыта до подтверждения защиты `main`, а приглашение преподавателя отложено по решению Тимура.
-
-В M1 назначены [T-03](https://github.com/inte11ectua1/skinulis/issues/10) и зависимая от неё [T-04](https://github.com/inte11ectua1/skinulis/issues/13) Тимуру, [O-02](https://github.com/inte11ectua1/skinulis/issues/11) Олегу, [L-02](https://github.com/inte11ectua1/skinulis/issues/12) Лере. Не подменять вопросы финансового/UX API-контракта собственными решениями; смотреть Q-xx/UQ-xx в `docs/finance/` и `docs/ux/`.
-
 ## Читать в указанном порядке
 1. `START_HERE.md` (этот файл).
 2. `docs/PRODUCT_RULES.md` и `docs/TECHNICAL_DECISIONS.md` — ранее согласованные проектные решения.
