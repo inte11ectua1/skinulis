@@ -15,8 +15,9 @@
 | O-09 | M6 | Performance fixes, migrations review, debt after soft-delete regression | O-08 | regression suite green under CI |
 | O-10 | M7 | Financial demo rehearsal + questions | all | can explain transaction/rounding/invariants |
 
-## Стартовая задача Codex
-«Изучи AGENTS.md, docs/PRODUCT_RULES.md, docs/contracts/BOUNDARIES.md, docs/roles/OLEG_SPEC.md. Выполни только O-01/O-02: pure Python money parser и функции equal/custom/by_items без DB, HTTP и бота. Добавь unit tests: 100/3, 0.01/3, дубликаты, пустое множество, custom mismatch, by_items pizza. Не создавай миграции до согласования моделей. Прогони Ruff, pytest и опиши контракт».
+## Текущая задача Codex (M1, 26.10.2026)
+
+[O-02, Issue #11](https://github.com/inte11ectua1/skinulis/issues/11): прочитать AGENTS.md, PRODUCT_RULES, BOUNDARIES, OLEG_SPEC, merged O-01 invariants/test matrix и Issue. Реализовать **только** pure Python parser/formatter и `equal/custom/by_items` на целых копейках с unit-тестами (100.00/3, 0.01/3, custom mismatch, пустые/дубликаты, ресторан/две однокопеечные позиции). Перед фиксацией спорных решений закрыть связанные Q-01/Q-02 с Тимуром/Лерой. Без DB/ORM/API/миграций/бота. Отдельный PR, Ruff/mypy/pytest и человеческое ревью.
 
 ## Для своего чата
 «Проверь расчёты на контрпример», «Составь тест конкурентного подтверждения для PostgreSQL», «Раздели O-07 на безопасные PR», «Проверь атомарность изменения расхода».

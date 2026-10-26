@@ -17,8 +17,11 @@
 | T-11 | M6 | DoD audit, cold-start other machine, release smoke, evidence | all owners | evidence linked in STATUS |
 | T-12 | M7 | PR->CI->approval->merge->CD demonstration | T-09/11 | live rehearsed and backup successful run linked |
 
-## Стартовая задача Codex
-«Прочитай AGENTS.md, docs/TECHNICAL_DECISIONS.md, docs/contracts/BOUNDARIES.md, docs/roles/TIMUR_SPEC.md. Выполни только T-02: настрой Python 3.12, uv, pyproject.toml, uv.lock, Ruff lint+format, mypy, pytest, .env.example и gitignore. Не реализуй бизнес API, не добавляй Redis, не трогай чужую зону. Обнови README и добавь проверку конфигурации. Запусти команды и отчитайся. Работай в отдельной ветке».
+## Текущая задача Codex (M1, 26.10.2026)
+
+[T-03, Issue #10](https://github.com/inte11ectua1/skinulis/issues/10): прочитать AGENTS.md, TECHNICAL_DECISIONS, BOUNDARIES, TIMUR_SPEC и Issue; реализовать только FastAPI skeleton, sync SQLAlchemy, psycopg, Alembic, PostgreSQL 17, Compose, /health (200/503), /version и documented cold start. Не брать задачи авторизации/групп, финансов Олега или бота Леры. Выполнить тесты, оформить отдельный PR с review.
+
+[T-04, Issue #13](https://github.com/inte11ectua1/skinulis/issues/13) **заблокирована до рабочего T-03**: GitHub Actions PR-checks с PostgreSQL, coverage >=60%, Docker build, mandatory status check и доказательство блокировки merge при красном CI. Это отдельная ветка/PR после T-03; не подменять её ручным запуском.
 
 ## Вопросы для своего ChatGPT-чата
 «Что мой следующий gate?», «Проверь угрозы Telegram actor», «Сформулируй PR description и тестовый план», «Какие доказательства CI/CD нужны для преподавателя?».
