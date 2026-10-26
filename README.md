@@ -29,6 +29,15 @@
 
 Каждая задача: отдельная ветка → PR → независимый review → merge → обновить [STATUS](docs/STATUS.md). [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) описывает остальные фазы.
 
+## Следующие задачи M1
+
+- [T-03 — API, PostgreSQL, миграции и Compose](https://github.com/inte11ectua1/skinulis/issues/10), Тимур.
+- [O-02 — чистые финансовые функции](https://github.com/inte11ectua1/skinulis/issues/11), Олег.
+- [L-02 — aiogram и mock HTTP-клиент](https://github.com/inte11ectua1/skinulis/issues/12), Лера.
+- [T-04 — GitHub Actions CI](https://github.com/inte11ectua1/skinulis/issues/13), Тимур, после T-03.
+
+T-03/O-02/L-02 могут идти параллельно в отдельных ветках. Открытые API/финансовые вопросы из O-01/L-01 не становятся автоматически принятыми контрактами после merge документации.
+
 ## Окружение разработки
 
 Инструкция подходит для чистого компьютера. Нужны Git, доступ к GitHub и интернет для первой загрузки Python и зависимостей. Устанавливать Python отдельно не требуется: им управляет uv. Используем **uv 0.13.5** и **CPython 3.12.15**. Точный Python закреплён в [.python-version](.python-version), семейство `>=3.12,<3.13` и версия uv — в [pyproject.toml](pyproject.toml).
