@@ -19,7 +19,7 @@
 
 | Задача | Состояние | Ответственный | Зависимости |
 |---|---|---|---|
-| [T-03](https://github.com/inte11ectua1/skinulis/issues/10) API/DB/Alembic/Compose | **planned** | Тимур | T-02 выполнена |
+| [T-03](https://github.com/inte11ectua1/skinulis/issues/10) API/DB/Alembic/Compose | **PR review** | Тимур | [PR #15](https://github.com/inte11ectua1/skinulis/pull/15): каркас, PostgreSQL 17.11, Alembic, Compose; локальные проверки выполнены, ожидает независимого review |
 | [O-02](https://github.com/inte11ectua1/skinulis/issues/11) pure splits и parser | **planned** | Олег | O-01, T-02; согласовать необходимые Q-01/Q-02 до фиксации поведения |
 | [L-02](https://github.com/inte11ectua1/skinulis/issues/12) bot skeleton и mock HTTP | **planned** | Лера | L-01, T-02; не изобретать API для UQ |
 | [T-04](https://github.com/inte11ectua1/skinulis/issues/13) PR CI | **planned (blocked by T-03)** | Тимур | Дождаться интегрируемого T-03, затем включить обязательный status check |
@@ -42,4 +42,23 @@ T-03, O-02, L-02 можно начинать параллельно **в отд�
 - Подробное содержимое защиты `main` (PR/approval/stale dismissal/conversations/no bypass/force-push/deletion) пока не удаётся подтвердить через подключённый GitHub API; GitHub сообщает `protected=true`, но детальный endpoint недоступен. Проверить вручную в Settings и сохранить доказательство. Mandatory CI после T-04.
 - Предпросмотр расхода без записи **UQ-03** не имеет принятого API-маршрута; до согласования O-04/O-05 и L-04 нельзя реализовать локальные денежные расчёты или временные расходы ради превью.
 - Денежная грамматика/порядок ID **Q-01/Q-02** требуют решения перед зависимой реализацией O-02. Прочие Q/UQ закрываются до соответствующих этапов по ответственным.
-- Сборка API, PostgreSQL, Docker, CI и рабочий Telegram-бот пока **не подтверждены**. Не заявлять coverage >=60%, G1 или работающий E2E до реальных проверок.
+- API/PostgreSQL/Docker проверены локально в T-03 ([PR #15](https://github.com/inte11ectua1/skinulis/pull/15)); CI и рабочий Telegram-бот пока **не подтверждены**. G1 и продуктовый E2E не объявлять завершёнными.
+
+## Локальные доказательства T-03 (26.10.2026)
+
+- macOS arm64, Python 3.12.15, uv 0.13.5; Engine 23.0.5, Compose 2.17.3.
+- Frozen-установка, lock check, Ruff lint/format, строгий mypy (19 файлов), все
+  pre-commit hooks и проверка совместимости пакетов прошли. Аудит 54 зависимостей
+  не обнаружил известных уязвимостей; исключения не добавлялись.
+- Unit/T-02: 18 passed; отдельно реальная PostgreSQL 17.11: 4 integration passed.
+  Объединённое branch coverage **существующего app/** — 98.69%, не покрытие будущего MVP.
+- Холодный запуск на новом изолированном volume: db healthy → migrate exit 0 →
+  api healthy; /, /health, /version, /docs, /redoc, /openapi.json — HTTP 200.
+  При остановке DB /health → 503; после старта DB → 200 без перезапуска API.
+- На чистой БД Alembic применяет 0001_baseline, повторный upgrade успешен,
+  alembic check не находит drift. Намеренно ошибочная следующая ревизия в
+  отдельном тестовом project: migrate exit 1, API не запущен.
+- Runtime UID 10001, без .env/.git/tests/dev dependencies. Тестовые контейнеры
+  остановлены, named volumes сохранены; другие проекты и .env не изменялись.
+- Windows/Linux host отдельно не проверены; предупреждение Starlette о будущей
+  смене httpx для TestClient не подавлено. T-04 и G1 остаются отдельной работой.
