@@ -29,6 +29,15 @@
 
 Каждая задача: отдельная ветка → PR → независимый review → merge → обновить [STATUS](docs/STATUS.md). [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) описывает остальные фазы.
 
+## Каркас Telegram-бота (L-02)
+
+Команды `/start`, `/help`, `/cancel`, стартовое меню и проверка доступности API
+описаны в [инструкции запуска бота](docs/bot/L-02_SETUP.md). Тесты используют mock
+Telegram session и HTTP transport; настоящий токен и polling им не нужны.
+Регистрация, приглашения, расходы и компенсации пока недоступны.
+После локальной настройки `TELEGRAM_BOT_TOKEN` процесс запускается командой
+`uv run python -m bot.main`, останавливается через `Ctrl+C`.
+
 ## Запуск API с PostgreSQL
 
 Установите [Docker Desktop или Docker Engine с Compose](https://docs.docker.com/get-started/get-docker/)
@@ -263,22 +272,24 @@ uv run python scripts/test_integration.py
 Другие контейнеры и данные не затрагиваются. Для своей тестовой БД см.
 [TEST_DATABASE_URL](docs/environment-schema.md#изолированные-тесты).
 
-Покрытие текущего кода `app/` с учётом ветвей и порогом 60%:
+Покрытие текущего кода `app/` и `bot/` с учётом ветвей и порогом 60%
+(source берётся из принятой конфигурации pyproject):
 
 ```sh
-uv run pytest --cov=app --cov-report=term-missing
-uv run python scripts/test_integration.py --cov=app --cov-append --cov-report=term-missing
+uv run pytest --cov --cov-report=term-missing
+uv run python scripts/test_integration.py --cov --cov-append --cov-report=term-missing
 ```
 
-Второй запуск дополняет отчёт первого. Это покрытие существующего каркаса;
-финансовая логика и бот ещё не проверяются. После интеграции L-02 владелец бота
-добавит свой source к проверке. CI и обязательные проверки относятся к T-04.
+Второй запуск дополняет отчёт первого проверками настоящей PostgreSQL.
+Unit-прогон включает существующие денежные функции и mock-тесты каркаса бота;
+он не проверяет реальный Telegram и ещё не реализованные продуктовые API.
+CI и обязательные проверки относятся к T-04.
 Starlette выдаёт предупреждение о будущем переходе TestClient с httpx на httpx2;
 согласованный httpx пока работает, предупреждение не подавлено, новый стек не введён.
 
 ## Изменение зависимостей
 
-Причина выбора uv описана в [принятом ADR 002](docs/adr/002-uv.md), одобренном через PR #7. T-03 добавляет FastAPI, Pydantic v2, pydantic-settings, sync SQLAlchemy, psycopg 3 (binary), Alembic и Uvicorn; httpx нужен для тестов. Зависимости бота и авторизации добавляются владельцами следующих задач.
+Причина выбора uv описана в [принятом ADR 002](docs/adr/002-uv.md), одобренном через PR #7. T-03 добавляет FastAPI, Pydantic v2, pydantic-settings, sync SQLAlchemy, psycopg 3 (binary), Alembic и Uvicorn. L-02 добавляет aiogram 3.x и переносит существующий httpx из dev в runtime для клиента бота. Необходимое для aiogram согласование версии Pydantic и ограничения описаны в инструкции бота. Авторизация остаётся за следующими задачами.
 
 Новую зависимость добавляйте командой `uv add <имя>` или `uv add --dev <имя>` для инструмента разработки. Просмотрите изменения `pyproject.toml` и `uv.lock`, запустите проверки и включите оба файла в один PR. Для целевого обновления используйте `uv lock --upgrade-package <имя>` и затем `uv sync --frozen`. Не редактируйте `uv.lock` вручную. Обновление Python или uv тоже оформляйте отдельным проверенным изменением закреплённых версий и инструкций.
 
