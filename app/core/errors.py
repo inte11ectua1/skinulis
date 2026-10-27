@@ -16,18 +16,23 @@ logger = logging.getLogger(__name__)
 
 
 class ApiError(Exception):
-    def __init__(self, status: int, code: str, message: str) -> None:
+    def __init__(
+        self, status: int, code: str, message: str, *, auth_scheme: str = "Bearer"
+    ) -> None:
         super().__init__(message)
         self.status = status
         self.code = code
         self.message = message
+        self.auth_scheme = auth_scheme
 
 
-def error_response(status: int, code: str, message: str) -> JSONResponse:
+def error_response(
+    status: int, code: str, message: str, *, auth_scheme: str = "Bearer"
+) -> JSONResponse:
     request_id = str(uuid4())
     headers = {"X-Request-ID": request_id}
     if status == 401:
-        headers["WWW-Authenticate"] = "Bearer"
+        headers["WWW-Authenticate"] = auth_scheme
     return JSONResponse(
         status_code=status,
         content=ErrorResponse(
@@ -40,7 +45,9 @@ def error_response(status: int, code: str, message: str) -> JSONResponse:
 def install_error_handlers(application: FastAPI) -> None:
     @application.exception_handler(ApiError)
     async def api_error(request: Request, error: ApiError) -> JSONResponse:
-        return error_response(error.status, error.code, error.message)
+        return error_response(
+            error.status, error.code, error.message, auth_scheme=error.auth_scheme
+        )
 
     @application.exception_handler(RequestValidationError)
     async def validation_error(

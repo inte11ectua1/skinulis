@@ -1,5 +1,7 @@
 """Настройки: секреты не попадают в repr и ошибки валидации."""
 
+import re
+import secrets
 from typing import Literal
 
 from pydantic import Field, SecretStr, field_validator, model_validator
@@ -22,6 +24,7 @@ class Settings(BaseSettings):
     postgres_db: str = Field(default="skinulis", min_length=1)
     postgres_user: str = Field(default="skinulis", min_length=1)
     postgres_password: SecretStr | None = Field(default=None, repr=False)
+    bot_service_token: SecretStr | None = Field(default=None, repr=False)
     jwt_secret_key: SecretStr | None = Field(default=None, repr=False)
     jwt_access_token_ttl_minutes: int = Field(default=15, ge=1, le=60)
 
@@ -30,6 +33,7 @@ class Settings(BaseSettings):
         "postgres_password",
         "app_commit_sha",
         "jwt_secret_key",
+        "bot_service_token",
         mode="before",
     )
     @classmethod
@@ -82,5 +86,27 @@ class Settings(BaseSettings):
         if len(value.encode("utf-8")) < 32:
             raise ValueError(
                 "Set JWT_SECRET_KEY to a random secret of at least 32 bytes"
+            )
+        return value
+
+    def require_bot_service_token(self) -> str:
+        value = (
+            self.bot_service_token.get_secret_value() if self.bot_service_token else ""
+        )
+        if re.fullmatch(r"[A-Za-z0-9_-]{43,128}", value) is None:
+            raise ValueError(
+                "Set BOT_SERVICE_TOKEN to a separate random URL-safe secret (43–128 characters)"
+            )
+        # A Telegram Bot API token contains ':' and cannot match the format above.
+        other_secrets = [
+            self.require_jwt_secret(),
+            self.get_database_url().password or "",
+        ]
+        if any(
+            secrets.compare_digest(value.encode(), other.encode())
+            for other in other_secrets
+        ):
+            raise ValueError(
+                "BOT_SERVICE_TOKEN must differ from JWT and database secrets"
             )
         return value
