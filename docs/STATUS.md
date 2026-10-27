@@ -1,6 +1,6 @@
 # Фактическое состояние проекта
 
-**Срез:** 26 октября 2026 года. Источник истины — GitHub `main`, принятые PR, Issues, логи проверок и реальные URL. Этот документ отражает подтверждённое состояние, а не обещание готовой реализации.
+**Срез:** 27 октября 2026 года. Источник истины — GitHub `main`, принятые PR, Issues, логи проверок и реальные URL. Этот документ отражает подтверждённое состояние, а не обещание готовой реализации.
 
 Статусы задач: `planned → in progress → PR review → merged → verified`. `merged` не равно `verified`: для последнего нужны соответствующие CI, тесты и/или работающий сервис.
 
@@ -13,18 +13,18 @@
 | [O-01](https://github.com/inte11ectua1/skinulis/issues/3) инварианты | **merged** | Олег | [PR #8](https://github.com/inte11ectua1/skinulis/pull/8) approved Тимуром и merged; финансовые документы, 105 сценариев, вопросы Q-01–Q-10. Это документация, не реализация тестов. |
 | [L-01](https://github.com/inte11ectua1/skinulis/issues/4) Telegram UX | **merged** | Лера | [PR #9](https://github.com/inte11ectua1/skinulis/pull/9) approved Тимуром и merged; сценарии, 42 будущих QA-проверки, вопросы UQ-01–UQ-09. Требующие контрактов пункты остаются открытыми. |
 
-**ADR:** 001 (GitHub Flow) принят PR #6; 002 (uv) принят PR #7. Их текстовые статусы приводятся в соответствие с историей PR отдельным документационным PR.
+**ADR:** 001 (GitHub Flow) принят PR #6; 002 (uv) принят PR #7. Текстовые статусы приняты в main через [PR #14](https://github.com/inte11ectua1/skinulis/pull/14).
 
 ## M1 — Skeleton (вторая фаза, назначенные задачи)
 
 | Задача | Состояние | Ответственный | Зависимости |
 |---|---|---|---|
-| [T-03](https://github.com/inte11ectua1/skinulis/issues/10) API/DB/Alembic/Compose | **PR review** | Тимур | [PR #15](https://github.com/inte11ectua1/skinulis/pull/15): каркас, PostgreSQL 17.11, Alembic, Compose; локальные проверки выполнены, ожидает независимого review |
-| [O-02](https://github.com/inte11ectua1/skinulis/issues/11) pure splits и parser | **planned** | Олег | O-01, T-02; согласовать необходимые Q-01/Q-02 до фиксации поведения |
-| [L-02](https://github.com/inte11ectua1/skinulis/issues/12) bot skeleton и mock HTTP | **planned** | Лера | L-01, T-02; не изобретать API для UQ |
-| [T-04](https://github.com/inte11ectua1/skinulis/issues/13) PR CI | **planned (blocked by T-03)** | Тимур | Дождаться интегрируемого T-03, затем включить обязательный status check |
+| [T-03](https://github.com/inte11ectua1/skinulis/issues/10) API/DB/Alembic/Compose | **merged** | Тимур | [PR #15](https://github.com/inte11ectua1/skinulis/pull/15) merged; PostgreSQL 17.11, Alembic, Compose, локальное cold-start evidence ниже |
+| [O-02](https://github.com/inte11ectua1/skinulis/issues/11) pure splits и parser | **merged** | Олег | [PR #16](https://github.com/inte11ectua1/skinulis/pull/16) и [#17](https://github.com/inte11ectua1/skinulis/pull/17) merged; parser/splits, Q-01/Q-02 и часть Q-04 приняты; финансовых моделей/API пока нет |
+| [L-02](https://github.com/inte11ectua1/skinulis/issues/12) bot skeleton и mock HTTP | **merged** | Лера | [PR #18](https://github.com/inte11ectua1/skinulis/pull/18) merged; навигация/typed health client/mock-тесты, без live Telegram и онбординга |
+| [T-04](https://github.com/inte11ectua1/skinulis/issues/13) PR CI | **in progress** | Тимур | Workflow, реальные GitHub runs и защита main проверяются в отдельной ветке; [evidence T-04](operations/CI.md) |
 
-T-03, O-02, L-02 можно начинать параллельно **в отдельных ветках**. T-04 выполняется после рабочего T-03. Согласование shared-контрактов — через issue/PR, без молчаливого изменения PRODUCT_RULES.
+T-03, O-02, L-02 приняты и доступны в main `2de19e2`. T-04 выполняется на этой базе. Согласование shared-контрактов — через issue/PR, без молчаливого изменения PRODUCT_RULES.
 
 ## Release gates
 
@@ -41,8 +41,8 @@ T-03, O-02, L-02 можно начинать параллельно **в отд�
 
 - Подробное содержимое защиты `main` (PR/approval/stale dismissal/conversations/no bypass/force-push/deletion) пока не удаётся подтвердить через подключённый GitHub API; GitHub сообщает `protected=true`, но детальный endpoint недоступен. Проверить вручную в Settings и сохранить доказательство. Mandatory CI после T-04.
 - Предпросмотр расхода без записи **UQ-03** не имеет принятого API-маршрута; до согласования O-04/O-05 и L-04 нельзя реализовать локальные денежные расчёты или временные расходы ради превью.
-- Денежная грамматика/порядок ID **Q-01/Q-02** требуют решения перед зависимой реализацией O-02. Прочие Q/UQ закрываются до соответствующих этапов по ответственным.
-- API/PostgreSQL/Docker проверены локально в T-03 ([PR #15](https://github.com/inte11ectua1/skinulis/pull/15)); CI и рабочий Telegram-бот пока **не подтверждены**. G1 и продуктовый E2E не объявлять завершёнными.
+- Денежная грамматика/порядок ID **Q-01/Q-02** приняты в PR #17; прочие Q/UQ закрываются до соответствующих этапов по ответственным.
+- API/PostgreSQL/Docker проверены локально в T-03 ([PR #15](https://github.com/inte11ectua1/skinulis/pull/15)); Каркас бота принят PR #18, live Telegram/product E2E не проверены. CI и защита main — отдельное evidence T-04; G1 до подтверждения всех условий не закрывать.
 
 ## Локальные доказательства T-03 (26.10.2026)
 
