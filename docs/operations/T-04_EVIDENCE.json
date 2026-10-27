@@ -1,0 +1,163 @@
+{
+  "observed_at_utc": "2026-10-27T06:01:41.564321+00:00",
+  "repository": "inte11ectua1/skinulis",
+  "pull_request": "https://github.com/inte11ectua1/skinulis/pull/19",
+  "source": "Authenticated GitHub REST and GraphQL API; existing Git credential helper, no token stored in evidence; commit IDs represented as clickable GitHub URLs",
+  "protection_endpoint": "/repos/inte11ectua1/skinulis/branches/main/protection",
+  "protection": {
+    "url": "https://api.github.com/repos/inte11ectua1/skinulis/branches/main/protection",
+    "required_status_checks": {
+      "url": "https://api.github.com/repos/inte11ectua1/skinulis/branches/main/protection/required_status_checks",
+      "strict": true,
+      "contexts": [
+        "lint",
+        "types",
+        "tests",
+        "docker-build",
+        "ci"
+      ],
+      "contexts_url": "https://api.github.com/repos/inte11ectua1/skinulis/branches/main/protection/required_status_checks/contexts",
+      "checks": [
+        {
+          "context": "lint",
+          "app_id": 15368
+        },
+        {
+          "context": "types",
+          "app_id": 15368
+        },
+        {
+          "context": "tests",
+          "app_id": 15368
+        },
+        {
+          "context": "docker-build",
+          "app_id": 15368
+        },
+        {
+          "context": "ci",
+          "app_id": 15368
+        }
+      ]
+    },
+    "required_pull_request_reviews": {
+      "url": "https://api.github.com/repos/inte11ectua1/skinulis/branches/main/protection/required_pull_request_reviews",
+      "dismiss_stale_reviews": true,
+      "require_code_owner_reviews": false,
+      "require_last_push_approval": false,
+      "required_approving_review_count": 1
+    },
+    "required_signatures": {
+      "url": "https://api.github.com/repos/inte11ectua1/skinulis/branches/main/protection/required_signatures",
+      "enabled": false
+    },
+    "enforce_admins": {
+      "url": "https://api.github.com/repos/inte11ectua1/skinulis/branches/main/protection/enforce_admins",
+      "enabled": true
+    },
+    "required_linear_history": {
+      "enabled": false
+    },
+    "allow_force_pushes": {
+      "enabled": false
+    },
+    "allow_deletions": {
+      "enabled": false
+    },
+    "block_creations": {
+      "enabled": false
+    },
+    "required_conversation_resolution": {
+      "enabled": true
+    },
+    "lock_branch": {
+      "enabled": false
+    },
+    "allow_fork_syncing": {
+      "enabled": false
+    }
+  },
+  "first_green_run": {
+    "url": "https://github.com/inte11ectua1/skinulis/actions/runs/40458001625",
+    "conclusion": "success",
+    "unit_passed": 343,
+    "integration_passed": 4,
+    "branch_coverage_app_bot": 97.79,
+    "commit_url": "https://github.com/inte11ectua1/skinulis/commit/b608a9d7bfe0685d2ae0c898a54c6a4a79203ed0"
+  },
+  "negative_run": {
+    "url": "https://github.com/inte11ectua1/skinulis/actions/runs/40458200449",
+    "conclusion": "failure",
+    "unit_failed": 1,
+    "unit_passed": 343,
+    "job_conclusions": {
+      "types": "success",
+      "docker-build": "success",
+      "lint": "success",
+      "tests": "failure",
+      "ci": "failure"
+    },
+    "commit_url": "https://github.com/inte11ectua1/skinulis/commit/7f221c9e874851d152303f613fd14f26d6228ac4"
+  },
+  "negative_pr_api_state": {
+    "number": 19,
+    "mergeStateStatus": "BLOCKED",
+    "mergeable": "MERGEABLE",
+    "reviewDecision": "REVIEW_REQUIRED",
+    "viewerCanMergeAsAdmin": false,
+    "statusCheckRollup": {
+      "state": "FAILURE",
+      "contexts": {
+        "nodes": [
+          {
+            "name": "lint",
+            "conclusion": "SUCCESS",
+            "status": "COMPLETED",
+            "detailsUrl": "https://github.com/inte11ectua1/skinulis/actions/runs/40458200449/job/122036355057"
+          },
+          {
+            "name": "types",
+            "conclusion": "SUCCESS",
+            "status": "COMPLETED",
+            "detailsUrl": "https://github.com/inte11ectua1/skinulis/actions/runs/40458200449/job/122036354756"
+          },
+          {
+            "name": "tests",
+            "conclusion": "FAILURE",
+            "status": "COMPLETED",
+            "detailsUrl": "https://github.com/inte11ectua1/skinulis/actions/runs/40458200449/job/122036355060"
+          },
+          {
+            "name": "docker-build",
+            "conclusion": "SUCCESS",
+            "status": "COMPLETED",
+            "detailsUrl": "https://github.com/inte11ectua1/skinulis/actions/runs/40458200449/job/122036354919"
+          },
+          {
+            "name": "ci",
+            "conclusion": "FAILURE",
+            "status": "COMPLETED",
+            "detailsUrl": "https://github.com/inte11ectua1/skinulis/actions/runs/40458200449/job/122036541050"
+          }
+        ]
+      }
+    },
+    "head_commit_url": "https://github.com/inte11ectua1/skinulis/commit/7f221c9e874851d152303f613fd14f26d6228ac4"
+  },
+  "merge_ui_confirmation": {
+    "verified": false,
+    "reason": "Computer Use waits for macOS Accessibility/Screen Recording permissions; API BLOCKED also coexists with REVIEW_REQUIRED, so UI cause is not asserted"
+  },
+  "restored_run": {
+    "url": "https://github.com/inte11ectua1/skinulis/actions/runs/40458675107",
+    "conclusion": "success",
+    "required_job_names": [
+      "lint",
+      "types",
+      "tests",
+      "docker-build",
+      "ci"
+    ],
+    "commit_url": "https://github.com/inte11ectua1/skinulis/commit/48a04716e49bcaddebf1f3eab332b223a65dc803"
+  }
+}

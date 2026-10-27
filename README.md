@@ -2,7 +2,7 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
-> **Статус 26.10.2026:** M0 (подготовка) принята через PR #7/#8/#9; T-01 ещё ожидает окончательной проверки настроек защиты `main`. В T-03 подготовлен каркас FastAPI/PostgreSQL/Alembic/Compose. CI (T-04) и бот (L-02) — отдельные задачи; G1 пока не подтверждён. Текущие факты — в [STATUS](docs/STATUS.md).
+> **Статус 27.10.2026:** T-03, O-02 и L-02 объединены через PR #15–#18: API/PostgreSQL/Alembic/Compose, денежные pure functions и каркас бота доступны в main. T-04 добавляет PR CI; фактические запуски, защита main и оставшиеся условия G1 — в [STATUS](docs/STATUS.md).
 
 ## Начало работы
 
@@ -23,9 +23,9 @@
 
 ## Текущие задачи M1
 
-- **Тимур:** [T-03 — API, DB, Alembic, Docker](https://github.com/inte11ectua1/skinulis/issues/10); после T-03 — [T-04 — GitHub Actions CI](https://github.com/inte11ectua1/skinulis/issues/13).
-- **Олег:** [O-02 — pure money parser и split functions](https://github.com/inte11ectua1/skinulis/issues/11), согласовать Q-01/Q-02 перед фиксацией спорного поведения.
-- **Лера:** [L-02 — aiogram и mock HTTP client](https://github.com/inte11ectua1/skinulis/issues/12); не изобретать API до согласования UQ-01–UQ-09.
+- **Тимур:** [T-04 — GitHub Actions CI](https://github.com/inte11ectua1/skinulis/issues/13), после принятого T-03.
+- **Олег:** O-02 принят через PR #16/#17, включая денежную грамматику и порядок ID; финансовые модели пока не реализованы.
+- **Лера:** L-02 принят через PR #18; онбординг и продуктовые API остаются следующими задачами с зависимостями UQ-01–UQ-09.
 
 Каждая задача: отдельная ветка → PR → независимый review → merge → обновить [STATUS](docs/STATUS.md). [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) описывает остальные фазы.
 
@@ -283,9 +283,46 @@ uv run python scripts/test_integration.py --cov --cov-append --cov-report=term-m
 Второй запуск дополняет отчёт первого проверками настоящей PostgreSQL.
 Unit-прогон включает существующие денежные функции и mock-тесты каркаса бота;
 он не проверяет реальный Telegram и ещё не реализованные продуктовые API.
-CI и обязательные проверки относятся к T-04.
+Автоматизация этих проверок и статус защиты описаны ниже.
 Starlette выдаёт предупреждение о будущем переходе TestClient с httpx на httpx2;
 согласованный httpx пока работает, предупреждение не подавлено, новый стек не введён.
+
+## GitHub Actions CI
+
+[ci.yml](.github/workflows/ci.yml) запускается для каждого PR в main (включая новые
+коммиты), а после появления workflow в main доступен и ручной `workflow_dispatch`.
+Нет фильтра по путям: изменение документации тоже проходит проверки.
+
+| Job / check run | Проверка |
+|---|---|
+| `lint` | frozen sync, lock check, Ruff lint/format, совместимость пакетов, аудит зависимостей и detect-secrets |
+| `types` | frozen sync, lock check, строгий `mypy .`, включая app, bot, тесты, Alembic и скрипты |
+| `tests` | unit-тесты, затем явно `-m integration` с PostgreSQL 17.11, общее branch coverage app + bot >=60% |
+| `docker-build` | настоящая сборка текущего Dockerfile, без публикации |
+| `ci` | успех только если все четыре предыдущих job завершились `success`; fail/cancel/skip не принимаются |
+
+Первые четыре job независимы; `ci` ждёт их все. Runner — Ubuntu 24.04,
+Python 3.12.15 через uv, uv 0.13.5. Actions закреплены полными commit SHA,
+PostgreSQL — тем же digest, что локально. Кэшируется только uv cache, с ключом
+lock-файла и отдельным suffix для каждого job; `.venv`, `.env` и credentials
+checkout не сохраняются. Permissions — `contents: read`; production secrets,
+deploy, SSH и GHCR push отсутствуют.
+
+В tests job используется один service-container, без второго Compose project.
+Fixture создаёт для каждого integration-теста отдельную UUID-БД и удаляет только
+её. Общий bootstrap `skinulis_test` остаётся до удаления service-container runner-ом.
+Учётные данные в YAML — публичная тестовая заготовка исключительно для временной
+БД с портом на loopback; её нельзя использовать вне CI.
+
+CI накапливает `.coverage` командами `coverage run` и `coverage run --append`,
+после обоих успешных pytest-прогонов выполняет `coverage report --fail-under=60`.
+Branch/source/omit берутся из pyproject; тесты в процент не входят. XML и текстовый
+отчёт хранятся в artifact 14 дней. Для локального повторения достаточно команд
+качества выше, двух pytest-cov прогонов из раздела покрытия и `docker build .`.
+
+Точные required checks, настройки main, проверка красного CI и troubleshooting:
+[CI и защита main](docs/operations/CI.md). Успех workflow сам по себе не включает
+branch protection; применённые настройки и доказательства фиксируются отдельно.
 
 ## Изменение зависимостей
 
