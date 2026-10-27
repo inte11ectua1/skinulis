@@ -1,6 +1,6 @@
 # Командный процесс
 
-Каждый работает в отдельной ветке и под своим GitHub-аккаунтом. Все изменения проходят Pull Request, минимум одно approval другого участника и обязательные проверки CI после их включения. Стратегия — GitHub Flow, Conventional Commits.
+Каждый работает в отдельной ветке и под своим GitHub-аккаунтом. Все изменения проходят Pull Request. **Нормальный процесс**: минимум одно approval другого участника и зелёный CI (`lint`, `types`, `tests`, `docker-build`, `ci`). Стратегия — GitHub Flow, Conventional Commits. **Фактическое исключение:** на 27.10.2026 GitHub возвращает required checks enforcement `non_admins`; администратор может обойти часть защиты. Обход не является независимым review и должен быть явно зафиксирован в PR. [Подробности](operations/CI.md).
 
 ## Владение
 - Тимур: auth, groups, Docker, workflows, deploy, конфигурация.
