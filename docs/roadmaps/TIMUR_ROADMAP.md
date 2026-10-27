@@ -17,11 +17,14 @@
 | T-11 | M6 | DoD audit, cold-start other machine, release smoke, evidence | all owners | evidence linked in STATUS |
 | T-12 | M7 | PR->CI->approval->merge->CD demonstration | T-09/11 | live rehearsed and backup successful run linked |
 
-## Текущая задача Codex (M1, 26.10.2026)
+## Завершённая фаза M1 (27.10.2026)
 
-[T-03, Issue #10](https://github.com/inte11ectua1/skinulis/issues/10): прочитать AGENTS.md, TECHNICAL_DECISIONS, BOUNDARIES, TIMUR_SPEC и Issue; реализовать только FastAPI skeleton, sync SQLAlchemy, psycopg, Alembic, PostgreSQL 17, Compose, /health (200/503), /version и documented cold start. Не брать задачи авторизации/групп, финансов Олега или бота Леры. Выполнить тесты, оформить отдельный PR с review.
+- **T-03:** [Issue #10](https://github.com/inte11ectua1/skinulis/issues/10), [PR #15](https://github.com/inte11ectua1/skinulis/pull/15) — FastAPI/PostgreSQL/Alembic/Compose, системные endpoints и cold-start проверены.
+- **T-04:** [Issue #13](https://github.com/inte11ectua1/skinulis/issues/13), [PR #19](https://github.com/inte11ectua1/skinulis/pull/19) — GitHub Actions PR CI (Ruff, mypy, PostgreSQL, coverage, Docker); успешный и намеренно красный run зафиксированы. PR #19 merged без зарегистрированного независимого approval. Формальный G1 не verified из-за оставшейся проверки merge box и текущего admin bypass; [evidence](../operations/CI.md).
 
-[T-04, Issue #13](https://github.com/inte11ectua1/skinulis/issues/13) **заблокирована до рабочего T-03**: GitHub Actions PR-checks с PostgreSQL, coverage >=60%, Docker build, mandatory status check и доказательство блокировки merge при красном CI. Это отдельная ветка/PR после T-03; не подменять её ручным запуском.
+## Следующие задачи по плану M2 (отдельные Issues ещё не созданы)
+
+**T-05** — регистрация/login, JWT/Argon2, users с положительным BIGINT ID, права доступа и negative tests. После T-05: **T-06** — группы, membership, invite-токены и безопасная привязка Telegram actor. До реализации согласовать схемы с Олегом (O-03) и Лерой (L-03). Не начинать T-09 deploy/CD раньше предусмотренного этапа.
 
 ## Вопросы для своего ChatGPT-чата
 «Что мой следующий gate?», «Проверь угрозы Telegram actor», «Сформулируй PR description и тестовый план», «Какие доказательства CI/CD нужны для преподавателя?».

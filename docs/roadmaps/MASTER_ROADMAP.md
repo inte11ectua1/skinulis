@@ -1,6 +1,6 @@
 # Общий roadmap (зависимости, интеграция, gate)
 
-**Статус:** дорожная карта и зависимости; фактическое выполнение см. в [STATUS](../STATUS.md) и GitHub Issues/PR. На 26.10.2026 PR по T-02, O-01, L-01 приняты, T-01 остаётся открытой для доказательств защиты `main`; задачи M1 созданы и назначены. Нумерация M0–M7 — последовательные фазы, а не календарные недели. Разрешена параллельность при согласованном контракте.
+**Статус на 27.10.2026:** реализация **M1 Skeleton завершена**, Issues T-03 #10, O-02 #11, L-02 #12, T-04 #13 закрыты после merged PR #15–#19. Формальное закрытие gate G1 требует дополнительных доказательств (см. [STATUS](../STATUS.md), [CI](../operations/CI.md)). T-01 из M0 всё ещё открыта. Следующая фаза по плану — **M2 Identity**, Issues M2 пока не созданы. M0–M7 — фазы, не календарные недели.
 
 | Фаза | Тимур (T) | Олег (O) | Лера (L) | Общий gate |
 |---|---|---|---|---|
@@ -13,14 +13,22 @@
 | M6 Acceptance | T-11 DoD audit, reset/test clean environment | O-09 bugfix, invariants, PR audit | L-07 user guide, demo script, smoke bots | CI green, coverage >=60%, p95/100 concurrent documented |
 | M7 Defense | T-12 rehearsal PR to deploy | O-10 defense calculations/Q&A | L-08 Telegram live demonstration | 7m presentation, 5m live-demo, 8m Q&A |
 
-## Переход к M1 — назначенные Issues (26.10.2026)
+## Итог M1 — принято в main (27.10.2026)
 
-- **Тимур:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10) — FastAPI + sync SQLAlchemy, PostgreSQL 17, Alembic, Compose, `/health`, `/version`. Можно начинать после merged T-02.
-- **Олег:** [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11) — pure money parser/equal/custom/by_items и unit-тесты после согласования необходимых Q-01/Q-02; без DB/API.
-- **Лера:** [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12) — каркас aiogram и typed httpx mock client без реального Telegram-токена и без выдуманных API-контрактов.
-- **Тимур после T-03:** [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) — PR GitHub Actions lint/types/Postgres tests+coverage/Docker build; обязательный status check после первого подтверждённого workflow.
+- **Тимур:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10) — FastAPI, PostgreSQL 17, Alembic, Compose, `/health`, `/version` — **closed**, [PR #15](https://github.com/inte11ectua1/skinulis/pull/15).
+- **Олег:** [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11) — pure money parser/equal/custom/by_items, Q-01/Q-02 — **closed**, [PR #16](https://github.com/inte11ectua1/skinulis/pull/16) и [#17](https://github.com/inte11ectua1/skinulis/pull/17).
+- **Лера:** [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12) — каркас aiogram, typed httpx mock client — **closed**, [PR #18](https://github.com/inte11ectua1/skinulis/pull/18).
+- **Тимур:** [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) — GitHub Actions lint/types/PostgreSQL tests/coverage/Docker build, требуемые checks — **closed**, [PR #19](https://github.com/inte11ectua1/skinulis/pull/19).
 
-T-03, O-02, L-02 — параллельные независимые PR с человеческим ревью. T-04 зависит от T-03; **G1 пока не проверен**. Подробные состояния и открытые зависимости: [STATUS](../STATUS.md).
+**Реализация M1 завершена.** Для G1 подтверждены локальные cold start/миграции/health и CI (включая намеренно красный run); окончательное доказательство блокировки merge из-за failed required checks в GitHub UI отсутствует, а PR #19 объединён без зарегистрированного независимого approval. Текущая защита для administrators отличается от первоначального ADR (см. STATUS).
+
+## Следующая фаза — M2 Identity (пока план, не назначение)
+
+- **Тимур:** T-05 регистрация/login, Argon2/JWT/user models; затем T-06 группы, приглашения и проверенный Telegram actor.
+- **Олег:** O-03 SQLAlchemy-модели расходов, долей и компенсаций, Alembic-миграции; согласовать FK/ID с Тимуром.
+- **Лера:** L-03 онбординг профиля, связь Telegram и API, группы/приглашения; требуется согласованный контракт T-05/T-06, до него допустим mock.
+
+Создавать новые Issues/назначать исполнителей отдельно, после проверки contract dependencies. До продуктового API не объявлять E2E профиля/групп проверенным.
 
 ## Release gates
 - **G1 (после M1):** cold start, migration, /health 200, one real reviewed PR with green CI.

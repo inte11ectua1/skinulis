@@ -1,6 +1,9 @@
 # T-04 — CI и защита main
 
-Issue: [#13](https://github.com/inte11ectua1/skinulis/issues/13).
+Issue: [#13](https://github.com/inte11ectua1/skinulis/issues/13) — **closed после merged PR #19** (27.10.2026).
+
+> **Срез после merge 27.10.2026:** M1/T-04 реализован в `main`; зелёный и намеренно красный CI runs опубликованы ниже. Административные настройки защиты, перечисленные в первоначальном отчёте T-04, — *исторические*. Повторное чтение GitHub ветки `main` после изменения владельцем показало required status check **`enforcement_level=non_admins`** для `lint`, `types`, `tests`, `docker-build`, `ci`: защита больше не гарантирует одинаковую обязательность проверок для администратора. PR #19 объединён без зарегистрированного независимого `APPROVED`-review. Факт красного CI и `mergeStateStatus=BLOCKED` на тестовом head не означает, что сейчас администратор не может обойти checks. Практическая блокировка direct push и визуальная причина запрета merge при failed required checks **не подтверждены**. G1 формально остаётся с оговорками; см. [STATUS](../STATUS.md).
+
 Конфигурация: [ci.yml](../../.github/workflows/ci.yml), команды:
 [README](../../README.md#github-actions-ci). Версии Python/uv, lock-файл,
 настройки Ruff/mypy/coverage не изменяются задачей T-04.
@@ -41,7 +44,7 @@ detect-secrets относятся только к явно публичному 
 независимо от cache hit. Docker job собирает существующий multi-stage/nonroot
 Dockerfile; registry login, push и deployment отсутствуют.
 
-## Настройки main и проверка администратором
+## Настройки main и проверка администратором (историческая конфигурация при T-04)
 
 На начало T-04 `main.protected=true`, rulesets API вернул пустой список, а GET
 branch protection через GitHub-коннектор вернул 403 Resource not accessible by
@@ -60,8 +63,7 @@ integration. Это не подтверждает параметры и не о�
 4. Require status checks to pass before merging: точные check run names `lint`,
    `types`, `tests`, `docker-build`, `ci`, источник GitHub Actions. Выбирать после
    первого завершённого run. Require branches to be up to date before merging.
-5. Do not allow bypassing the above settings / enforcement для administrators;
-   в ruleset bypass list пуст. Не добавлять владельца и приложения как исключения.
+5. **Целевая политика по первоначальному ADR**: no bypass / enforcement и для administrators, ruleset bypass list пуст. **Фактически позже владелец изменил режим:** текущий check enforcement_level=non_admins. Не выдавать прежний пункт за действующую настройку; вернуть полный enforcement только отдельным решением владельца.
 6. Allow force pushes и Allow deletions выключены. Правило применяется к main,
    enforcement активно. Не включать Lock branch: это запретит и обычный merge.
 7. Сохранить и заново открыть правило, проверить значения. Проверить красный PR
@@ -71,7 +73,7 @@ integration. Это не подтверждает параметры и не о�
 push мог бы изменить общую ветку. Настройки защиты и фактический отказ push —
 разные доказательства T-01; одно нельзя выдавать за другое.
 
-## Доказательства
+## Доказательства (срез первоначального PR #19)
 
 Первый [зелёный run #1](https://github.com/inte11ectua1/skinulis/actions/runs/40458001625)
 на commit `b608a9d`: все пять jobs success. Linux Python 3.12.15 / uv 0.13.5;
@@ -79,7 +81,7 @@ push мог бы изменить общую ветку. Настройки за
 97.79% (493 statements, 94 branches); coverage artifact загружен.
 Dockerfile действительно собран на GitHub runner, без registry push.
 
-После этого административный PUT добавил пять required checks с источником
+Во время PR #19 административный PUT добавил пять required checks с источником
 GitHub Actions (`app_id=15368`), strict=true. Повторный независимый GET подтвердил:
 
 | Параметр classic branch protection main | Фактическое значение 27.10.2026 |
@@ -124,6 +126,13 @@ merge или отключать approval для эксперимента не н
 head после документационного коммита также указан в PR #19. G1 остаётся
 not verified до независимого review/merge T-04 и оставшейся визуальной проверки.
 
+## Обновлённый статус после merge PR #19
+
+- [PR #19](https://github.com/inte11ectua1/skinulis/pull/19) merged, [Issue #13](https://github.com/inte11ectua1/skinulis/issues/13) closed; CI присутствует в main.
+- На момент первоначального тестового красного run GraphQL вернул BLOCKED и viewerCanMergeAsAdmin=false. Это исторический результат, а не повторная проверка после изменения branch protection.
+- После изменения настроек в GitHub ответ `main.protection.required_status_checks.enforcement_level` равен **`non_admins`**, а пять required check names остаются перечисленными. Точные прочие параметры branch protection (после изменения) нужно перечитать авторизованным администратором; текущему коннектору детальный endpoint недоступен.
+- Чтобы доказать реальную обязательность красного CI для **не-администратора**, нужно показать failed required checks в merge box. Для администратора с обходом проверка запрета должна отдельно документировать роль и режим bypass. Не отключать CI из workflow ради зелёного run.
+
 ## Безопасное повторение эксперимента
 
 1. Открыть отдельную временную ветку от актуальной main (после принятия T-04)
@@ -131,12 +140,12 @@ not verified до независимого review/merge T-04 и оставшей
    `tests/unit/test_ci_gate_probe.py` с функцией `def test_ci_gate() -> None:`
    и строкой `raise AssertionError("T-04 intentional probe")` внутри неё.
 2. Открыть PR в main и дождаться красных `tests` и `ci` в Checks.
-3. В Conversation прокрутить до merge box под аккаунтом inte11ectua1. Сохранить
+3. В Conversation прокрутить до merge box под аккаунтом **без admin bypass**. Сохранить
    скриншот с SHA/URL PR, failed checks с пометкой Required, текстом
-   Merging is blocked и недоступной Merge. Отсутствие approval может отображаться
-   одновременно: нужна также явная причина failed required status checks.
-4. Проверить отсутствие обхода для владельца. Не нажимать Merge и не отключать
-   требование approval, admin enforcement или status checks.
+   Merging is blocked и недоступной Merge. Для аккаунта `inte11ectua1` повторно
+   проверить, включён ли разрешённый администраторский обход: при режиме
+   `non_admins` нельзя обещать запрет Merge для самого владельца.
+4. Зафиксировать, для каких ролей действует защита. **Сейчас для checks указан non_admins**, поэтому наличие bypass у владельца не считать ошибкой CI. Не нажимать Merge для тестового красного PR.
 5. Удалить только временный тест обычным коммитом, дождаться всех пяти зелёных
    проверок. Сохранить обе run URLs; закрыть тестовый PR без merge.
 

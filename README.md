@@ -2,7 +2,7 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
-> **Статус 27.10.2026:** T-03, O-02 и L-02 объединены через PR #15–#18: API/PostgreSQL/Alembic/Compose, денежные pure functions и каркас бота доступны в main. T-04 добавляет PR CI; фактические запуски, защита main и оставшиеся условия G1 — в [STATUS](docs/STATUS.md).
+> **Статус 27.10.2026:** этап **M1 Skeleton реализован**: T-03, O-02, L-02, T-04 merged, Issues #10–#13 closed. В `main` доступны FastAPI/PostgreSQL/Alembic/Compose, финансовые pure functions, mock-каркас бота и GitHub Actions CI. До завершения G1 остаются отдельные проверки защиты/блокировки merge, а продуктовые auth/groups/expenses/settlements ещё не реализованы. [Фактический STATUS](docs/STATUS.md).
 
 ## Начало работы
 
@@ -21,13 +21,13 @@
 
 [Официальный репозиторий курса](https://github.com/andrey-limasov/app-conf/).
 
-## Текущие задачи M1
+## Этапы и ближайшая работа
 
-- **Тимур:** [T-04 — GitHub Actions CI](https://github.com/inte11ectua1/skinulis/issues/13), после принятого T-03.
-- **Олег:** O-02 принят через PR #16/#17, включая денежную грамматику и порядок ID; финансовые модели пока не реализованы.
-- **Лера:** L-02 принят через PR #18; онбординг и продуктовые API остаются следующими задачами с зависимостями UQ-01–UQ-09.
+- **M1 Skeleton завершён по реализации:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12), [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты. [CI evidence](docs/operations/CI.md).
+- **M2 Identity — следующий этап по плану, новые Issues ещё не назначены:** Тимур — T-05 auth/JWT и T-06 groups/invites; Олег — O-03 финансовые модели/Alembic; Лера — L-03 онбординг Telegram и группы.
+- **Открытые контрольные пункты:** T-01 (практическая проверка защиты `main`) и формальная верификация G1; серверный expense-preview UQ-03 и остальные Q/UQ — до соответствующей реализации.
 
-Каждая задача: отдельная ветка → PR → независимый review → merge → обновить [STATUS](docs/STATUS.md). [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) описывает остальные фазы.
+Новые задачи: отдельная ветка → PR → проверки CI → согласование затронутых контрактов → merge. [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) и [STATUS](docs/STATUS.md) — актуальные этапы и доказательства.
 
 ## Каркас Telegram-бота (L-02)
 
