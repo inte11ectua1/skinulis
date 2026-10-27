@@ -24,7 +24,7 @@
 ## Этапы и ближайшая работа
 
 - **M1 Skeleton завершён по реализации:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12), [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты. [CI evidence](docs/operations/CI.md).
-- **M2 Identity — следующий этап по плану, новые Issues ещё не назначены:** Тимур — T-05 auth/JWT и T-06 groups/invites; Олег — O-03 финансовые модели/Alembic; Лера — L-03 онбординг Telegram и группы.
+- **M2 Identity — назначенные Issues:** Тимур — [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) (начать сейчас), затем [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) (после T-05); Олег — [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) (модели можно проектировать, финальные FK/migrations согласовать с users/groups); Лера — [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) (mock FSM сейчас, реальная API-интеграция после согласованных контрактов).
 - **Открытые контрольные пункты:** T-01 (практическая проверка защиты `main`) и формальная верификация G1; серверный expense-preview UQ-03 и остальные Q/UQ — до соответствующей реализации.
 
 Новые задачи: отдельная ветка → PR → проверки CI → согласование затронутых контрактов → merge. [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) и [STATUS](docs/STATUS.md) — актуальные этапы и доказательства.
