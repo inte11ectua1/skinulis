@@ -6,7 +6,7 @@
 
 **В M1 закрыты:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10) / PR #15, [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11) / PR #16–#17, [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12) / PR #18, [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) / PR #19.
 
-**Следующий этап по roadmap (ещё не распределён отдельными Issues):** Тимур — T-05 auth/JWT и затем T-06 группы и Telegram actor; Олег — O-03 финансовые модели и миграции; Лера — L-03 онбординг и группы через согласованный HTTP API. Продуктовые маршруты и DTO нельзя придумывать до согласования.
+**M2 Identity — задачи назначены 27.10.2026:** Тимур — [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) (можно начинать), затем [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) (после T-05); Олег — [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) (сначала модель/контракты, потом FK/Alembic после T-05/T-06); Лера — [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) (сначала mock FSM, реальная API-интеграция после контракта). Продуктовые маршруты и DTO не придумывать до согласования.
 
 T-01 (GitHub protection) остаётся открытой до оставшихся практических доказательств; обязательный CI реализован, однако admin bypass и отсутствие независимого approval PR #19 должны учитываться при оценке gate G1. Преподавателя пока не приглашаем по решению Тимура. GitHub `main` — источник актуального состояния.
 

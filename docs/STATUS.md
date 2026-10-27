@@ -26,7 +26,18 @@
 | [L-02](https://github.com/inte11ectua1/skinulis/issues/12) bot skeleton и mock HTTP | **merged** | Лера | [PR #18](https://github.com/inte11ectua1/skinulis/pull/18) merged; навигация/typed health client/mock-тесты, без live Telegram и онбординга |
 | [T-04](https://github.com/inte11ectua1/skinulis/issues/13) PR CI | **merged, Issue closed** | Тимур | [PR #19](https://github.com/inte11ectua1/skinulis/pull/19) merged 27.10.2026; GitHub Actions lint/types/tests/docker-build/ci, PostgreSQL integration и покрытие ≥60%; [успешный run](https://github.com/inte11ectua1/skinulis/actions/runs/40459119340), [красный run](https://github.com/inte11ectua1/skinulis/actions/runs/40458200449), [подробности](operations/CI.md). PR объединён без зарегистрированного независимого APPROVED review. |
 
-Все T-03, O-02, L-02 и T-04 приняты в `main` (на 27.10.2026 HEAD `d635398`). **Следующая фаза — M2 Identity**: T-05 (auth/JWT), T-06 (группы и Telegram actor), O-03 (финансовые ORM-модели/миграции), L-03 (онбординг и группы в боте). На дату среза отдельные Issues для M2 ещё не назначены. Согласование shared-контрактов — через issue/PR без молчаливого изменения PRODUCT_RULES.
+Все T-03, O-02, L-02 и T-04 приняты в `main` (на 27.10.2026 HEAD `d635398`). **Следующая фаза — M2 Identity**: T-05 (auth/JWT), T-06 (группы и Telegram actor), O-03 (финансовые ORM-модели/миграции), L-03 (онбординг и группы в боте). Созданы и назначены Issues M2: [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) и [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) — Тимур; [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) — Олег; [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) — Лера. Согласование shared-контрактов — через issue/PR без молчаливого изменения PRODUCT_RULES.
+
+## M2 — Identity (27.10.2026; задачи назначены, реализация не начата)
+
+| Задача | Статус | Ответственный | Условия старта и зависимости |
+|---|---|---|---|
+| [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) Auth/users | **open / ready** | Тимур | Реализация регистрации/login, Argon2, JWT, PostgreSQL users и `/users/me`; от завершённого T-03/T-04 |
+| [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) Groups/Telegram actor | **open / blocked for implementation** | Тимур | После принятия T-05; группы, членство, приглашения, сервисная Telegram-идентификация и привязка; API контракты UQ-01/UQ-02 совместно с Лерой |
+| [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) Finance models/migrations | **open / design ready** | Олег | Модели/fixtures можно проектировать сейчас; final FK/migrations после согласования users/groups c T-05/T-06; без финансового CRUD |
+| [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) Telegram onboarding/groups | **open / mock ready** | Лера | FSM/mock client можно начать сейчас; реальные HTTP-интеграции только по принятым T-05/T-06 OpenAPI/fixtures |
+
+**Правило интеграции M2:** не создавать конкурентные Alembic heads; Тимур согласовывает `users/groups` ID/FK с Олегом до финальной миграции O-03 и Telegram service DTO/deep links с Лерой до L-03 integration. Критические UQ-01/UQ-02 остаются в реестре до явного решения. G2 не подтверждён: auth/group actor и профиль → группа ещё не испытаны.
 
 ## Release gates
 

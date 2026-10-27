@@ -22,13 +22,13 @@
 
 **Реализация M1 завершена.** Для G1 подтверждены локальные cold start/миграции/health и CI (включая намеренно красный run); окончательное доказательство блокировки merge из-за failed required checks в GitHub UI отсутствует, а PR #19 объединён без зарегистрированного независимого approval. Текущая защита для administrators отличается от первоначального ADR (см. STATUS).
 
-## Следующая фаза — M2 Identity (пока план, не назначение)
+## Текущая фаза — M2 Identity (Issues назначены 27.10.2026)
 
-- **Тимур:** T-05 регистрация/login, Argon2/JWT/user models; затем T-06 группы, приглашения и проверенный Telegram actor.
-- **Олег:** O-03 SQLAlchemy-модели расходов, долей и компенсаций, Alembic-миграции; согласовать FK/ID с Тимуром.
-- **Лера:** L-03 онбординг профиля, связь Telegram и API, группы/приглашения; требуется согласованный контракт T-05/T-06, до него допустим mock.
+- **Тимур:** [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) — регистрация/login, Argon2/JWT/users, **можно начинать**; затем [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) — groups/invites/проверенный Telegram actor, **после T-05**.
+- **Олег:** [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) — SQLAlchemy-модели финансов/Alembic; **можно проектировать** параллельно T-05, но финальные FK/migrations только после согласования users/groups с Тимуром.
+- **Лера:** [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) — онбординг, профиль, группы/приглашения; **можно делать mock FSM**, интеграцию — после принятого API-контракта T-05/T-06, UQ-01/UQ-02.
 
-Создавать новые Issues/назначать исполнителей отдельно, после проверки contract dependencies. До продуктового API не объявлять E2E профиля/групп проверенным.
+Все четыре Issues созданы с назначенными владельцами; это **план работ**, а не результат реализации. До подтверждённого API и сквозных проверок не отмечать G2 verified или работающий профиль/группы.
 
 ## Release gates
 - **G1 (после M1):** cold start, migration, /health 200, one real reviewed PR with green CI.

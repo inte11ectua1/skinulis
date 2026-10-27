@@ -19,9 +19,9 @@
 
 **O-02** закрыта: [Issue #11](https://github.com/inte11ectua1/skinulis/issues/11), [PR #16](https://github.com/inte11ectua1/skinulis/pull/16) и [#17](https://github.com/inte11ectua1/skinulis/pull/17). Реализованы pure `parse_money`/`format_money`, `equal/custom/by_items` и unit-тесты. Q-01/Q-02 утверждены, часть Q-04 подтверждена; Q-03 и Q-05–Q-10 требуют отдельных решений до зависимых этапов. ORM/финансовых API здесь нет.
 
-## Следующая задача по плану M2 (Issue ещё не создана)
+## Текущая назначенная задача M2
 
-**O-03** — SQLAlchemy-модели expenses/items/shares/settlements и собственные Alembic-миграции после T-03. До схемы согласовать FK/users/groups и ID с Тимуром, открытые вопросы по названиям/нулевым долям и структуре снимков — с Тимуром/Лерой. Не начинать O-04 CRUD и выплаты под видом O-03.
+**[O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) — assigned, design ready:** SQLAlchemy-модели expenses/items/shares/settlements и Alembic. Математический и ORM-дизайн можно проработать сейчас; прежде чем мержить финальные FK/migrations, согласовать users из [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) и groups из [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) с Тимуром, а Q-03/Q-10 — с Тимуром и Лерой. Избегать конкурирующих Alembic heads. Не начинать O-04 CRUD и выплаты под видом O-03.
 
 ## Для своего чата
 «Проверь расчёты на контрпример», «Составь тест конкурентного подтверждения для PostgreSQL», «Раздели O-07 на безопасные PR», «Проверь атомарность изменения расхода».

@@ -22,9 +22,9 @@
 - **T-03:** [Issue #10](https://github.com/inte11ectua1/skinulis/issues/10), [PR #15](https://github.com/inte11ectua1/skinulis/pull/15) — FastAPI/PostgreSQL/Alembic/Compose, системные endpoints и cold-start проверены.
 - **T-04:** [Issue #13](https://github.com/inte11ectua1/skinulis/issues/13), [PR #19](https://github.com/inte11ectua1/skinulis/pull/19) — GitHub Actions PR CI (Ruff, mypy, PostgreSQL, coverage, Docker); успешный и намеренно красный run зафиксированы. PR #19 merged без зарегистрированного независимого approval. Формальный G1 не verified из-за оставшейся проверки merge box и текущего admin bypass; [evidence](../operations/CI.md).
 
-## Следующие задачи по плану M2 (отдельные Issues ещё не созданы)
+## Текущие задачи M2 (Issues назначены 27.10.2026)
 
-**T-05** — регистрация/login, JWT/Argon2, users с положительным BIGINT ID, права доступа и negative tests. После T-05: **T-06** — группы, membership, invite-токены и безопасная привязка Telegram actor. До реализации согласовать схемы с Олегом (O-03) и Лерой (L-03). Не начинать T-09 deploy/CD раньше предусмотренного этапа.
+**[T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) — ready:** регистрация/login, JWT/Argon2, users с положительным BIGINT ID, права доступа и negative tests. После T-05: **[T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) — blocked for implementation**: группы, membership/invites, Telegram service actor и безопасная привязка. До FK/DTO согласовать users/groups с Олегом ([O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23)) и Telegram API c Лерой ([L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24)). Не начинать T-09 deploy/CD раньше предусмотренного этапа.
 
 ## Вопросы для своего ChatGPT-чата
 «Что мой следующий gate?», «Проверь угрозы Telegram actor», «Сформулируй PR description и тестовый план», «Какие доказательства CI/CD нужны для преподавателя?».
