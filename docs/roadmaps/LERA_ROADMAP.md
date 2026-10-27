@@ -17,9 +17,9 @@
 
 **L-02** закрыта: [Issue #12](https://github.com/inte11ectua1/skinulis/issues/12), [PR #18](https://github.com/inte11ectua1/skinulis/pull/18). Есть aiogram-каркас, `/start`, `/help`, `/cancel`, типизированный async httpx-клиент для существующего `/health`, mock-тесты. Live Telegram/онбординг пока не подтверждены.
 
-## Следующая задача по плану M2 (Issue ещё не создана)
+## Текущая назначенная задача M2
 
-**L-03** — онбординг/профиль, одноразовая привязка, группы и приглашения через API Тимура (T-05/T-06). Пока реальные DTO/служебные операции не приняты, использовать mocks/fixtures, не изобретать маршруты или вычислять деньги локально. Начать с [UQ-01/UQ-02](../ux/L-01_CONTRACT_QUESTIONS.md); Q-01/Q-02 о денежном формате и внутренних ID уже приняты в [Issue #11](https://github.com/inte11ectua1/skinulis/issues/11).
+**[L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) — assigned, mock-ready:** онбординг/профиль, одноразовая привязка, группы/приглашения через API Тимура ([T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) → [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22)). Сразу можно готовить mock FSM/fixtures, но не внедрять неподтверждённые HTTP endpoints/DTO. Начать с [UQ-01/UQ-02](../ux/L-01_CONTRACT_QUESTIONS.md) и согласования с Тимуром. Финансовые Q-01/Q-02 уже приняты в [Issue #11](https://github.com/inte11ectua1/skinulis/issues/11); бот не вычисляет деньги.
 
 ## Для своего чата
 «Разбей создание by_items на последовательные кнопки», «Проверь возможные ошибки мастера», «Дай промпт Codex для L-04 без изменения backend», «Составь E2E чек-лист».
