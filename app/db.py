@@ -1,4 +1,4 @@
-"""Сессия на запрос; транзакцией записи владеет будущий service (session.begin)."""
+"""Request-scoped Session; write services explicitly own commit/rollback."""
 
 from collections.abc import Iterator
 

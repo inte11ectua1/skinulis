@@ -2,7 +2,7 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
-> **Статус 27.10.2026:** этап **M1 Skeleton реализован**: T-03, O-02, L-02, T-04 merged, Issues #10–#13 closed. В `main` доступны FastAPI/PostgreSQL/Alembic/Compose, финансовые pure functions, mock-каркас бота и GitHub Actions CI. До завершения G1 остаются отдельные проверки защиты/блокировки merge, а продуктовые auth/groups/expenses/settlements ещё не реализованы. [Фактический STATUS](docs/STATUS.md).
+> **Статус 27.10.2026:** этап **M1 Skeleton реализован**: T-03, O-02, L-02, T-04 merged, Issues #10–#13 closed. В `main` доступны FastAPI/PostgreSQL/Alembic/Compose, финансовые pure functions, mock-каркас бота и GitHub Actions CI. До завершения G1 остаются отдельные проверки защиты/блокировки merge, T-05 auth/users принята в PR #26; T-06 groups/Telegram identity реализуется в отдельной ветке с proposed-контрактами, расходы/компенсации ещё не реализованы. [Фактический STATUS](docs/STATUS.md).
 
 ## Начало работы
 
@@ -24,7 +24,7 @@
 ## Этапы и ближайшая работа
 
 - **M1 Skeleton завершён по реализации:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12), [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты. [CI evidence](docs/operations/CI.md).
-- **M2 Identity — назначенные Issues:** Тимур — [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) (начать сейчас), затем [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) (после T-05); Олег — [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) (модели можно проектировать, финальные FK/migrations согласовать с users/groups); Лера — [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) (mock FSM сейчас, реальная API-интеграция после согласованных контрактов).
+- **M2 Identity — назначенные Issues:** Тимур — [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) (merged PR #26), затем [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) (после T-05); Олег — [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) (модели можно проектировать, финальные FK/migrations согласовать с users/groups); Лера — [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) (mock FSM сейчас, реальная API-интеграция после согласованных контрактов).
 - **Открытые контрольные пункты:** T-01 (практическая проверка защиты `main`) и формальная верификация G1; серверный expense-preview UQ-03 и остальные Q/UQ — до соответствующей реализации.
 
 Новые задачи: отдельная ветка → PR → проверки CI → согласование затронутых контрактов → merge. [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) и [STATUS](docs/STATUS.md) — актуальные этапы и доказательства.
@@ -46,10 +46,10 @@ Telegram session и HTTP transport; настоящий токен и polling и�
 400, неверные credentials/JWT — 401, занятый email — 409; все в общей error-оболочке.
 Пароли хэшируются Argon2id, hash в ответах отсутствует. DTO/SQL/JWT-параметры
 пока предложены на review: [контракт T-05](docs/contracts/T-05_IDENTITY.md).
-Telegram bootstrap, группы и привязка аккаунта относятся к T-06.
+Telegram bootstrap, группы и привязка описаны в разделе T-06 ниже.
 
 Перед запуском API задайте в своём `.env` случайный `JWT_SECRET_KEY` минимум
-32 bytes и непустой `POSTGRES_PASSWORD`; настоящие значения в Git/команды не
+32 bytes, отдельный `BOT_SERVICE_TOKEN` (43–128 URL-safe символов) и непустой `POSTGRES_PASSWORD`; настоящие значения в Git/команды не
 вставляйте. Для **нового** `.env` можно выполнить следующий код: существующий
 файл не перезаписывается, секреты не печатаются, права файла — 0600.
 
@@ -60,7 +60,7 @@ import secrets
 from pathlib import Path
 
 template = Path(".env.example").read_text()
-for name in ("POSTGRES_PASSWORD", "JWT_SECRET_KEY"):
+for name in ("POSTGRES_PASSWORD", "JWT_SECRET_KEY", "BOT_SERVICE_TOKEN"):
     template = template.replace(name + "=\n", name + "=" + secrets.token_urlsafe(48) + "\n")
 with Path(".env").open("x") as stream:
     os.chmod(".env", 0o600)
@@ -68,14 +68,49 @@ with Path(".env").open("x") as stream:
 PY
 ```
 
-В существующем `.env` добавьте JWT-настройку безопасно в редакторе, сохранив
+В существующем `.env` добавьте JWT и отдельную BOT_SERVICE_TOKEN настройку безопасно в редакторе, сохранив
 остальные значения. Алгоритм фиксирован HS256; `JWT_ACCESS_TOKEN_TTL_MINUTES`
-при необходимости задаётся в пределах 1–60. Миграции не требуют JWT secret.
+при необходимости задаётся в пределах 1–60. Миграции не требуют JWT или service secret.
 После запуска Compose откройте `/docs`: выполните register, затем login и
 введите полученный access token в Authorize → HTTPBearer. `GET /users/me`
 возвращает только actor токена; без Authorization получаете 401. Пароль передаётся
 только JSON body публичному API, никогда Telegram-боту. Для проверки используйте
 отдельный тестовый Compose project/БД, не production и не чужой volume.
+
+## Группы и Telegram identity (T-06, proposed)
+
+[HTTP/SQL контракт и открытое ревью](docs/contracts/T-06_IDENTITY.md) описывает DTO,
+errors, locks, timeout/retry и handoff O-03/L-03. Предложения опубликованы в
+[Issue #22](https://github.com/inte11ectua1/skinulis/issues/22#issuecomment-6436799120);
+ответа Олега/Леры пока нет, реальную интеграцию бота не объявляем согласованной.
+
+JWT-пользователь создаёт группу `POST /groups` с `{name,client_request_id:UUID}`,
+становится owner/первым member. `GET /groups`, `/groups/{id}` и
+`/groups/{id}/members` доступны только соответствующему участнику. Списки:
+`{items,limit,offset}`, default20, max100, без total/has_next. Лимит30 защищён БД.
+Owner выпускает `POST /groups/{id}/invites` с `{client_request_id:UUID}`;
+другой JWT actor добровольно вызывает `POST /group-invites/join` с `{token}`.
+Token одноразовый, TTL24h, хранится hash; raw возвращается только при первом выпуске.
+Повтор участника/полная группа не расходуют token. Неизвестная/просроченная/
+использованная/отозванная ссылка -> общий404 без раскрытия закрытой группы.
+HTTP-чтение/отзыв invites ещё ожидают отдельного согласования, их ядро реализовано.
+
+У бота отдельные те же групповые операции под `/internal`, credential
+`X-Bot-Service-Token` и `X-Telegram-ID` из sender update. Публичные JWT routes
+не принимают служебные actor headers; смешивание каналов запрещено. Бот сначала
+читает `GET /internal/users/me`;404 предлагает выбор Create/Link без записи.
+Только после явного Create-согласия: `POST /internal/users/bootstrap` с `{}`.
+Для привязки email-пользователь по JWT получает `POST /users/me/telegram-link-code`
+с `{}`; бот передаёт code в `POST /internal/users/telegram-link` по service channel.
+TTL10min, один раз, атомарно, merge уже существующих пользователей запрещён.
+После timeout сначала читать профиль/список; не выпускать новую ссылку/код вслепую.
+
+Для Swagger используйте отдельный тестовый Compose project и placeholders для
+UUID, передавайте реальные тестовые секреты только в Authorize/body, не в URL.
+Никогда не отправляйте пароль/JWT в Telegram. API требует отдельный service token,
+миграции — нет. **В production T-09 внешний proxy обязан закрыть весь /internal**;
+production-изоляция и live Telegram в T-06 не развёртываются. Бот L-02 ещё не вызывает
+эти операции, его handlers/client остаются за Лерой в L-03.
 
 ## Запуск API с PostgreSQL
 
@@ -87,7 +122,7 @@ Git, Python 3.12.15 и uv 0.13.5 устанавливаются по разде�
 запуска локальная установка Python/uv не нужна — они включены в сборку образа.
 
 После клонирования из корня репозитория создайте `.env` из `.env.example`, не
-перезаписывая существующий файл, и заполните **POSTGRES_PASSWORD**. Новый локальный
+перезаписывая существующий файл, и заполните **POSTGRES_PASSWORD, JWT_SECRET_KEY, BOT_SERVICE_TOKEN** по безопасному примеру выше. Новый локальный
 пароль можно сгенерировать командой `uv run python -c "import secrets; print(secrets.token_urlsafe(32))"`
 и сохранить только в `.env`. `DATABASE_URL` для Compose оставьте пустым. Если порт
 8000 занят, измените `API_PORT`. В `.env` пароль со специальными символами
@@ -101,7 +136,7 @@ docker compose up --build
 Для запуска в фоне используйте `docker compose up --build -d`.
 При первом запуске будет создан отдельный named volume PostgreSQL. База ждёт
 готовности, сервис `migrate` выполняет `alembic upgrade head`, и только его exit 0
-разрешает старт API. Финансовых и пользовательских таблиц пока нет.
+разрешает старт API. Создаются users, groups/members, invites/link codes; финансовых таблиц пока нет.
 
 ```sh
 docker compose ps -a

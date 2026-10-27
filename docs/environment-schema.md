@@ -1,4 +1,4 @@
-# Окружение API (T-03 / T-05)
+# Окружение API (T-03 / T-05 / T-06)
 
 Секреты хранятся в локальном `.env` / переменных окружения. В Git находится только
 `.env.example`. Существующий `.env` не перезаписывать. При использовании `.env`
@@ -22,7 +22,7 @@
 | `APP_COMMIT_SHA` | Явно переданный настоящий SHA исходников | Необязательный build argument Docker; ровно 40 lowercase hex; пусто → JSON `null` | пусто |
 | `API_BASE_URL` | Заготовка адреса API для будущего клиента бота | Backend не читает; конфигурацию сервиса bot согласовать с Лерой | `http://localhost:8000` с хоста, `http://api:8000` в Compose |
 | `TELEGRAM_BOT_TOKEN` | Заготовка токена Telegram | Зарезервировано; backend не читает | пусто |
-| `BOT_SERVICE_TOKEN` | Заготовка внутреннего service token | Зарезервировано до авторизации; backend не читает | пусто |
+| `BOT_SERVICE_TOKEN` | Внутренний credential доверенного бота | Обязателен для API, 43–128 URL-safe символов, без default; отдельный от JWT/DB/Telegram token. Migrate не получает | пусто; генерируется локально token_urlsafe(48) |
 | `JWT_SECRET_KEY` | Ключ подписи HS256 | Обязателен для API, минимум 32 UTF-8 bytes случайного значения; без default. Migrate его не требует и не получает | пусто в шаблоне, генерируется локально |
 | `JWT_ACCESS_TOKEN_TTL_MINUTES` | Срок access JWT | Default 15, от 1 до 60; алгоритм HS256 фиксирован кодом | `15` |
 | `TEST_DATABASE_URL` | PostgreSQL для явно выбранных integration tests | Нужен только для `pytest -m integration`; имя базы заканчивается на `_test` | устанавливается тестовым скриптом |
@@ -54,8 +54,9 @@ host 127.0.0.1:API_PORT → api:8000 → db:5432 → named volume postgres_data
 
 Engine и session factory принадлежат экземпляру приложения; на каждый запрос
 создаётся отдельная sync Session. Dependency закрывает её и откатывает незавершённую
-транзакцию. Будущие сервисы явно используют `with session.begin():` для атомарной
-записи; автоматического commit после HTTP-ответа нет. Таймаут подключения и ожидания
+транзакцию. T-05 регистрация использует `session.begin()`, а T-06 write-сервисы явно
+commit/rollback всей операции, включая autobegin от auth SELECT; вложенный begin
+после auth не используется. Один сервис владеет одной top-level транзакцией; автоматического commit после HTTP-ответа нет. Таймаут подключения и ожидания
 pool — 3 секунды, `statement_timeout` — 3000 мс; `pool_pre_ping` восстанавливает
 соединение после перезапуска PostgreSQL. Подключение не выполняется при импорте.
 
@@ -85,3 +86,19 @@ project с PostgreSQL 17.11, случайным паролем и динамич
 должна иметь право `CREATE DATABASE`. Затем выполните
 `uv run pytest -m integration`. Если URL отсутствует, выбранные интеграционные
 тесты завершаются ошибкой. SQLite вместо PostgreSQL не поддерживается.
+
+## T-06 service credential
+
+API проверяет BOT_SERVICE_TOKEN при создании приложения; отсутствие/невалидный
+формат/совпадение с JWT или DB password запрещают старт безопасной ошибкой.
+Настройки скрывают credential из repr/errors. ASCII URL-safe формат исключает ':'
+Telegram Bot API token. Compose передаёт service secret только api, не migrate и
+не Docker build. Миграционный сервис работает без обоих auth secrets.
+Тесты генерируют разные свежие JWT/service secrets в памяти для каждого теста,
+не используют .env оператора. Production reverse proxy должен закрывать /internal
+снаружи; это требование будущего T-09, не результат текущего deployment.
+
+[Контракт T-06](contracts/T-06_IDENTITY.md) фиксирует proposed заголовки, DTO,
+ошибки, no-merge и безопасные повторы. Следующая ревизия 0003_groups_identity
+добавляет groups, group_members, group_invites, telegram_link_codes после users;
+один head, group-first locks, deferred owner-membership FK, без CASCADE.
