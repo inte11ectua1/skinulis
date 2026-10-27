@@ -14,6 +14,7 @@ from app.schemas.groups import (
     GroupCreate,
     GroupProfile,
     InviteIssued,
+    InviteProfile,
     MemberProfile,
     Page,
     PathId,
@@ -35,11 +36,7 @@ def build_router(*, internal: bool = False) -> APIRouter:
     actor = get_bot_user if internal else get_current_user
     router = APIRouter(
         prefix="/internal" if internal else "",
-        tags=[
-            "groups (proposed T-06)"
-            if not internal
-            else "internal groups (proposed T-06)"
-        ],
+        tags=["internal groups" if internal else "groups"],
         responses=ERRORS,
         dependencies=[Depends(no_store)],
     )
@@ -126,6 +123,88 @@ def build_router(*, internal: bool = False) -> APIRouter:
                 if key != "token"
             },
             token=raw,
+        )
+
+    @router.get(
+        "/groups/{group_id}/invites",
+        response_model=Page[InviteProfile],
+        summary="List invitation metadata (owner only)",
+        responses={
+            403: {
+                "model": ErrorResponse,
+                "description": "A member who is not the owner: owner_required",
+            },
+            404: {
+                "model": ErrorResponse,
+                "description": "Unknown or hidden group: group_not_found",
+            },
+        },
+    )
+    def invitations(
+        group_id: PathId,
+        user: Annotated[User, Depends(actor)],
+        session: Annotated[Session, Depends(get_session)],
+        limit: Annotated[int, Query(ge=1, le=100)] = 20,
+        offset: Annotated[int, Query(ge=0)] = 0,
+    ) -> Page[InviteProfile]:
+        """All states, ordered by (created_at, id). No raw token, hash or consumer ID.
+
+        After an issuance timeout, find client_request_id in the paginated metadata.
+        If its raw token was lost, explicitly revoke it before issuing a new UUID.
+        """
+        return Page(
+            items=[
+                InviteProfile.model_validate(value)
+                for value in groups.list_invites(
+                    session, group_id, user.id, limit, offset
+                )
+            ],
+            limit=limit,
+            offset=offset,
+        )
+
+    @router.delete(
+        "/groups/{group_id}/invites/{invite_id}",
+        response_model=InviteProfile,
+        summary="Revoke an unused invitation (owner only)",
+        responses={
+            403: {
+                "model": ErrorResponse,
+                "description": "A member who is not the owner: owner_required",
+            },
+            404: {
+                "model": ErrorResponse,
+                "description": "group_not_found or invite_invalid; no foreign group data",
+            },
+            409: {
+                "model": ErrorResponse,
+                "description": "Already consumed: invite_consumed; state unchanged",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "error": {
+                                "code": "invite_consumed",
+                                "message": "Invitation has already been consumed",
+                                "request_id": "example-request-id",
+                            }
+                        }
+                    }
+                },
+            },
+        },
+    )
+    def revoke(
+        group_id: PathId,
+        invite_id: PathId,
+        user: Annotated[User, Depends(actor)],
+        session: Annotated[Session, Depends(get_session)],
+    ) -> InviteProfile:
+        """Atomically mark revoked; never delete history. Repeats return the same metadata.
+
+        Expired unused invitations can be revoked. Join/revoke use group → invite locks.
+        """
+        return InviteProfile.model_validate(
+            groups.revoke_invite(session, group_id, user.id, invite_id)
         )
 
     @router.post("/group-invites/join", response_model=GroupProfile)

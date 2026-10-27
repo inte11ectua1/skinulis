@@ -1,4 +1,4 @@
-"""Proposed onboarding operations; bot handlers and Telegram updates stay in L-03."""
+"""T-06 onboarding operations; bot handlers and Telegram updates stay in L-03."""
 
 from typing import Annotated
 
@@ -19,7 +19,7 @@ from app.services.telegram_identity import (
 )
 
 router = APIRouter(
-    tags=["Telegram identity (proposed T-06)"],
+    tags=["Telegram identity"],
     responses=ERRORS,
     dependencies=[Depends(no_store)],
 )

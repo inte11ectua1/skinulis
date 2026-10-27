@@ -947,3 +947,246 @@ def test_concurrent_revoke_and_join_have_one_serialized_outcome(h: Harness) -> N
         else:
             assert record.consumed_at is None and record.revoked_at is not None
             assert session.get(GroupMember, (gid, member)) is None
+
+
+@pytest.mark.parametrize("internal", [False, True])
+def test_http_invite_list_contains_all_states_with_stable_pagination(
+    h: Harness, internal: bool
+) -> None:
+    _, owner = h.user(100)
+    _, member = h.user(200)
+    gid = h.group(owner)
+    prefix = "/internal" if internal else ""
+    headers = h.service(100) if internal else owner
+    path = prefix + f"/groups/{gid}/invites"
+    empty = h.client.get(path, headers=headers)
+    assert empty.status_code == 200 and empty.json() == {
+        "items": [],
+        "limit": 20,
+        "offset": 0,
+    }
+    issued = [h.invite(gid, owner) for _ in range(4)]
+    active, expired, consumed, revoked = [item[0] for item in issued]
+    assert (
+        h.client.post(
+            "/group-invites/join", headers=member, json={"token": issued[2][1]}
+        ).status_code
+        == 200
+    )
+    assert h.client.delete(path + f"/{revoked}", headers=headers).status_code == 200
+    now = utc_now()
+    with h.sessions() as session, session.begin():
+        for iid, _ in issued:
+            record = session.get(GroupInvite, iid)
+            assert record is not None
+            record.created_at = now - (
+                timedelta(days=2) if iid == expired else timedelta(minutes=10)
+            )
+            record.expires_at = record.created_at + timedelta(hours=24)
+    response = h.client.get(path, headers=headers)
+    assert (
+        response.status_code == 200 and response.headers["Cache-Control"] == "no-store"
+    )
+    body = response.json()
+    assert set(body) == {"items", "limit", "offset"}
+    assert [item["id"] for item in body["items"]] == [
+        expired,
+        active,
+        consumed,
+        revoked,
+    ]
+    fields = {
+        "id",
+        "group_id",
+        "client_request_id",
+        "created_at",
+        "expires_at",
+        "consumed_at",
+        "revoked_at",
+    }
+    for item in body["items"]:
+        assert set(item) == fields
+    for _, raw in issued:
+        assert raw not in response.text
+    with h.sessions() as session:
+        for stored in session.scalars(select(GroupInvite)):
+            assert stored.token_hash not in response.text
+    assert body["items"][2]["consumed_at"] is not None
+    assert body["items"][3]["revoked_at"] is not None
+    page = h.client.get(path + "?limit=2&offset=1", headers=headers).json()
+    assert [item["id"] for item in page["items"]] == [active, consumed]
+    assert page["limit"] == 2 and page["offset"] == 1
+    assert h.client.get(path + "?offset=4", headers=headers).json()["items"] == []
+    for query in ("limit=0", "limit=101", "offset=-1"):
+        error(
+            h.client.get(path + "?" + query, headers=headers), 400, "validation_error"
+        )
+
+
+@pytest.mark.parametrize("internal", [False, True])
+def test_http_revoke_permissions_hidden_objects_and_repeat(
+    h: Harness, internal: bool
+) -> None:
+    uid, owner = h.user(100)
+    member_id, member = h.user(200)
+    _, stranger = h.user(300)
+    gid = h.group(owner)
+    _, membership_invite = h.invite(gid, owner)
+    assert (
+        h.client.post(
+            "/group-invites/join", headers=member, json={"token": membership_invite}
+        ).status_code
+        == 200
+    )
+    iid, raw = h.invite(gid, owner)
+    prefix = "/internal" if internal else ""
+    auth = h.service(100) if internal else owner
+    member_auth = h.service(200) if internal else member
+    stranger_auth = h.service(300) if internal else stranger
+    path = prefix + f"/groups/{gid}/invites"
+    for method, suffix in (("GET", ""), ("DELETE", f"/{iid}")):
+        error(
+            h.client.request(method, path + suffix, headers=member_auth),
+            403,
+            "owner_required",
+        )
+        error(
+            h.client.request(method, path + suffix, headers=stranger_auth),
+            404,
+            "group_not_found",
+        )
+        error(
+            h.client.request(
+                method, prefix + "/groups/999999/invites" + suffix, headers=auth
+            ),
+            404,
+            "group_not_found",
+        )
+    # A JSON/query actor ID is never authority, even on a bodyless DELETE.
+    error(
+        h.client.request(
+            "DELETE",
+            path + f"/{iid}?user_id={uid}",
+            headers=member_auth,
+            json={"owner_id": uid, "user_id": uid},
+        ),
+        403,
+        "owner_required",
+    )
+    other_gid = h.group(owner, "Other group")
+    other_iid, _ = h.invite(other_gid, owner)
+    error(h.client.delete(path + f"/{other_iid}", headers=auth), 404, "invite_invalid")
+    error(h.client.delete(path + "/999999", headers=auth), 404, "invite_invalid")
+    first = h.client.delete(path + f"/{iid}", headers=auth)
+    second = h.client.delete(path + f"/{iid}", headers=auth)
+    assert first.status_code == second.status_code == 200
+    assert first.json() == second.json() and first.json()["revoked_at"] is not None
+    assert first.headers["Cache-Control"] == "no-store"
+    assert set(first.json()) == {
+        "id",
+        "group_id",
+        "client_request_id",
+        "created_at",
+        "expires_at",
+        "consumed_at",
+        "revoked_at",
+    }
+    assert raw not in first.text
+    error(
+        h.client.post("/group-invites/join", headers=stranger, json={"token": raw}),
+        404,
+        "invite_invalid",
+    )
+    with h.sessions() as session:
+        stored = session.get(GroupInvite, iid)
+        assert (
+            stored is not None
+            and stored.revoked_at is not None
+            and stored.consumed_at is None
+        )
+        assert stored.token_hash not in first.text
+        assert session.get(GroupMember, (gid, member_id)) is not None
+
+
+@pytest.mark.parametrize("internal", [False, True])
+def test_http_revoke_consumed_conflicts_and_expired_can_be_revoked(
+    h: Harness, internal: bool
+) -> None:
+    _, owner = h.user(100)
+    _, member = h.user(200)
+    gid = h.group(owner)
+    used, token = h.invite(gid, owner)
+    expired, _ = h.invite(gid, owner)
+    assert (
+        h.client.post(
+            "/group-invites/join", headers=member, json={"token": token}
+        ).status_code
+        == 200
+    )
+    now = utc_now()
+    with h.sessions() as session, session.begin():
+        record = session.get(GroupInvite, expired)
+        assert record is not None
+        record.created_at = now - timedelta(days=2)
+        record.expires_at = record.created_at + timedelta(hours=24)
+    prefix = "/internal" if internal else ""
+    auth = h.service(100) if internal else owner
+    path = prefix + f"/groups/{gid}/invites"
+    before = h.client.get(path, headers=auth).json()
+    error(h.client.delete(path + f"/{used}", headers=auth), 409, "invite_consumed")
+    assert h.client.get(path, headers=auth).json() == before
+    response = h.client.delete(path + f"/{expired}", headers=auth)
+    assert response.status_code == 200 and response.json()["revoked_at"] is not None
+    assert response.json()["expires_at"] < response.json()["revoked_at"]
+    assert h.client.delete(path + f"/{expired}", headers=auth).json() == response.json()
+
+
+@pytest.mark.parametrize("internal", [False, True])
+def test_http_revoke_racing_join_has_exactly_one_effect(
+    h: Harness, internal: bool
+) -> None:
+    _, owner = h.user(100)
+    member_id, member = h.user(200)
+    gid = h.group(owner)
+    iid, raw = h.invite(gid, owner)
+    prefix = "/internal" if internal else ""
+    auth = h.service(100) if internal else owner
+    member_auth = h.service(200) if internal else member
+
+    def revoke() -> str:
+        response = h.client.delete(
+            prefix + f"/groups/{gid}/invites/{iid}", headers=auth
+        )
+        return (
+            "revoked"
+            if response.status_code == 200
+            else str(response.json()["error"]["code"])
+        )
+
+    def join() -> str:
+        response = h.client.post(
+            prefix + "/group-invites/join", headers=member_auth, json={"token": raw}
+        )
+        return (
+            "joined"
+            if response.status_code == 200
+            else str(response.json()["error"]["code"])
+        )
+
+    results = overlap(
+        h, "SELECT id FROM groups WHERE id=:id FOR UPDATE", {"id": gid}, [revoke, join]
+    )
+    assert sorted(results) in [
+        ["invite_invalid", "revoked"],
+        ["invite_consumed", "joined"],
+    ]
+    with h.sessions() as session:
+        record = session.get(GroupInvite, iid)
+        assert record is not None
+        assert (record.revoked_at is not None, record.consumed_at is not None) == (
+            "revoked" in results,
+            "joined" in results,
+        )
+        assert (session.get(GroupMember, (gid, member_id)) is not None) == (
+            "joined" in results
+        )

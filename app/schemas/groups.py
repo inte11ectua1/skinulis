@@ -1,4 +1,4 @@
-"""Proposed T-06 DTOs. Actor fields are never accepted in public JSON."""
+"""T-06 DTOs approved by the technical lead in #22; no public JSON actor fields."""
 
 import re
 import unicodedata
@@ -112,7 +112,22 @@ class Page[T](BaseModel):
 
 
 class InviteProfile(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "examples": [
+                {
+                    "id": 1,
+                    "group_id": 1,
+                    "client_request_id": "00000000-0000-4000-8000-000000000002",
+                    "created_at": "2026-10-27T00:00:00Z",
+                    "expires_at": "2026-10-28T00:00:00Z",
+                    "consumed_at": None,
+                    "revoked_at": "2026-10-27T01:00:00Z",
+                }
+            ]
+        },
+    )
     id: UserId
     group_id: UserId
     client_request_id: UUID
@@ -123,6 +138,22 @@ class InviteProfile(BaseModel):
 
 
 class InviteIssued(InviteProfile):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "id": 1,
+                    "group_id": 1,
+                    "client_request_id": "00000000-0000-4000-8000-000000000002",
+                    "created_at": "2026-10-27T00:00:00Z",
+                    "expires_at": "2026-10-28T00:00:00Z",
+                    "consumed_at": None,
+                    "revoked_at": None,
+                    "token": "<issued-once-invitation-secret>",
+                }
+            ]
+        },
+    )
     token: str | None = Field(repr=False)
 
 
