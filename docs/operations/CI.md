@@ -35,7 +35,9 @@ loopback runner-а, production secrets не используются. Fixture д
 Используются только actions/checkout, actions/upload-artifact и рекомендуемый
 Astral setup-uv, все по commit SHA (аннотированный tag setup-uv разрешён до commit).
 Cache setup-uv зависит от uv.lock и job suffix, не содержит `.venv`/секретов;
-fork/PR cache ограничен правилами GitHub. Lock и frozen sync проверяются заново
+fork/PR cache ограничен правилами GitHub. Две inline allowlist-пометки
+detect-secrets относятся только к явно публичному тестовому паролю и его URL;
+глобальные проверки секретов не отключены. Lock и frozen sync проверяются заново
 независимо от cache hit. Docker job собирает существующий multi-stage/nonroot
 Dockerfile; registry login, push и deployment отсутствуют.
 
@@ -44,8 +46,9 @@ Dockerfile; registry login, push и deployment отсутствуют.
 На начало T-04 `main.protected=true`, rulesets API вернул пустой список, а GET
 branch protection через GitHub-коннектор вернул 403 Resource not accessible by
 integration. Это не подтверждает параметры и не означает, что защита отсутствует.
-Для работы с административным API подготовлен GitHub CLI; нужен безопасный вход
-в аккаунт владельца, без передачи токена в чат.
+Административный API доступен через существующую Git-авторизацию владельца:
+штатный `git credential` helper передаёт credential процессу gh в памяти,
+без печати или записи токена в файлы. Дополнительный device login отменён.
 
 Если административный доступ недоступен, владелец открывает Settings → Branches
 → правило main → Edit (либо Settings → Rules → Rulesets → применяемое к main
@@ -70,18 +73,76 @@ push мог бы изменить общую ветку. Настройки за
 
 ## Доказательства
 
-На этапе подготовки: локальные unit/quality checks и Docker build проходят.
-GitHub run, required checks и красный/зелёный эксперимент подтверждаются ниже
-после фактического выполнения; до этого T-04/G1 не считаются verified.
+Первый [зелёный run #1](https://github.com/inte11ectua1/skinulis/actions/runs/40458001625)
+на commit `b608a9d`: все пять jobs success. Linux Python 3.12.15 / uv 0.13.5;
+343 unit passed, 4 PostgreSQL integration passed. Общее branch coverage app + bot:
+97.79% (493 statements, 94 branches); coverage artifact загружен.
+Dockerfile действительно собран на GitHub runner, без registry push.
+
+После этого административный PUT добавил пять required checks с источником
+GitHub Actions (`app_id=15368`), strict=true. Повторный независимый GET подтвердил:
+
+| Параметр classic branch protection main | Фактическое значение 27.10.2026 |
+|---|---|
+| Required checks | lint, types, tests, docker-build, ci; GitHub Actions |
+| Branch up to date | strict=true |
+| Required PR approval | 1, dismiss_stale_reviews=true |
+| Admin enforcement | enforce_admins=true |
+| Review bypass allowances | отсутствуют |
+| Conversations | required_conversation_resolution=true |
+| Force pushes / deletion | оба false |
+| Rulesets | пустой список; действует classic branch protection |
+
+Существующие настройки сохранены: code-owner review=false, last-push
+approval=false, linear history=false, lock branch=false. Ни одна прежняя защита
+не ослаблялась. Источник: GET /repos/inte11ectua1/skinulis/branches/main/protection
+под административной Git-авторизацией; коннектор с ограниченными permissions
+по-прежнему может получать 403. Это не отменяет проверку через CLI.
+
+[Красный run #2](https://github.com/inte11ectua1/skinulis/actions/runs/40458200449),
+commit `7f221c9`: временный `test_ci_gate_probe.py` даёт 1 failed / 343 passed.
+`tests` и `ci` — failure, `lint`/`types`/`docker-build` — success. Integration и
+coverage в этом run не запускались после ошибки unit-теста; их успех не заявляется.
+На этом head GraphQL вернул statusCheckRollup=FAILURE, mergeStateStatus=BLOCKED,
+reviewDecision=REVIEW_REQUIRED, viewerCanMergeAsAdmin=false. Проверки tests/ci
+в этот момент уже обязательны по повторно прочитанной защите main.
+
+Снимок API без credentials: [T-04_EVIDENCE.json](T-04_EVIDENCE.json).
+Он содержит настройку защиты, точный отрицательный head и check conclusions.
+**Ограничение доказательства:** состояние кнопки Merge/текст причины в UI не
+прочитаны: Computer Use ожидал разрешения macOS Accessibility/Screen Recording.
+BLOCKED мог одновременно объясняться отсутствующим approval; это не выдано за
+визуальное подтверждение блокировки именно из-за CI. Для закрытия этого пункта
+владелец повторяет описанный ниже временный тест и сохраняет merge box с failed
+required checks / Merging is blocked, без возможности admin bypass. Пробовать
+merge или отключать approval для эксперимента не нужно.
+
+Намеренный тест удалён обычным коммитом `48a0471`; в итоговом diff его нет.
+[Восстановленный run #3](https://github.com/inte11ectua1/skinulis/actions/runs/40458675107)
+после удаления probe: все пять jobs success. Это подтверждает переход
+зелёный → намеренно красный → зелёный на настоящем PR. Окончательный run текущего
+head после документационного коммита также указан в PR #19. G1 остаётся
+not verified до независимого review/merge T-04 и оставшейся визуальной проверки.
 
 ## Безопасное повторение эксперимента
 
-После включения required checks создать временный тест в отдельной ветке/PR
-либо временном коммите рабочего PR, например `assert False` с пояснением T-04.
-Не менять финансовую логику или handlers. Дождаться failure у `tests` и `ci`.
-Сохранить run URL, commit SHA и фактическое состояние merge box / API. Затем
-удалить тест обычным коммитом, дождаться зелёного CI на новом head. Никогда не
-merge тестовый PR и не force-push ради удаления доказательств.
+1. Открыть отдельную временную ветку от актуальной main (после принятия T-04)
+   либо временный коммит рабочего PR до approval. Добавить только
+   `tests/unit/test_ci_gate_probe.py` с функцией `def test_ci_gate() -> None:`
+   и строкой `raise AssertionError("T-04 intentional probe")` внутри неё.
+2. Открыть PR в main и дождаться красных `tests` и `ci` в Checks.
+3. В Conversation прокрутить до merge box под аккаунтом inte11ectua1. Сохранить
+   скриншот с SHA/URL PR, failed checks с пометкой Required, текстом
+   Merging is blocked и недоступной Merge. Отсутствие approval может отображаться
+   одновременно: нужна также явная причина failed required status checks.
+4. Проверить отсутствие обхода для владельца. Не нажимать Merge и не отключать
+   требование approval, admin enforcement или status checks.
+5. Удалить только временный тест обычным коммитом, дождаться всех пяти зелёных
+   проверок. Сохранить обе run URLs; закрыть тестовый PR без merge.
+
+Финансовую логику/handlers не менять; не force-push ради удаления доказательств.
+Если явной причины failed required checks нет, сохранить наблюдение и проверить
+имена checks/источник в защите main, не объявлять эксперимент завершённым.
 
 `mergeStateStatus=BLOCKED` сам по себе недостаточен: причиной может быть также
 отсутствующее approval. В UI нужно видеть указание именно на failed required

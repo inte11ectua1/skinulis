@@ -103,7 +103,7 @@ jobs:
         run: uv run coverage run --append -m pytest -m integration
       - name: Combined branch coverage (app + bot, minimum 60%)
         run: |
-          uv run coverage report --fail-under=60 | tee coverage.txt
+          uv run coverage report --precision=2 --fail-under=60 | tee coverage.txt
           uv run coverage xml
           cat coverage.txt >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

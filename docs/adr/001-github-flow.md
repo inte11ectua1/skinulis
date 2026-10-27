@@ -59,20 +59,21 @@
 - [x] Созданы репозиторий, ветка `main`, `CONTRIBUTING.md`, шаблон PR и стартовая документация.
 - [x] Олег и Лера получили доступ на запись.
 - [x] ADR 001 просмотрен Лерой и принят через [PR #6](https://github.com/inte11ectua1/skinulis/pull/6).
-- [ ] В GitHub Settings → Rules → Rulesets/Branches подтверждены все ограничения для `main`: PR, approval, stale approvals, resolved conversations, запрет force-push/deletion и отсутствие bypass.
+- [x] Административным GitHub API 27.10.2026 подтверждены все ограничения main: PR/1 approval, stale dismissal, conversations, enforce_admins, no force-push/deletion и отсутствие review bypass allowances; rulesets пусты, действует classic branch protection.
 - [x] Включено автоматическое удаление merged-веток (подтверждено `delete_branch_on_merge=true` через GitHub API 26.10.2026).
 - [ ] Проверена блокировка прямого push в `main` и PR без approval (без повреждения `main`).
-- [ ] После реализации CI назначены обязательные проверки и подтверждено, что неуспешный CI блокирует merge.
+- [x] После первого зелёного CI назначены required lint/types/tests/docker-build/ci от GitHub Actions, strict=true; повторный GET подтвердил настройку.
+- [ ] Визуально подтверждена причина запрета Merge при failed required checks. Красный run и API BLOCKED получены, но REVIEW_REQUIRED тоже присутствует; UI недоступен из-за macOS permissions.
 
-**Важно:** `main.protected=true` подтверждено GitHub API, но детализация branch protection недоступна подключённой интеграции. Следовательно, отдельные правила, отказ прямому push и обязательные проверки **ещё не подтверждены**. Содержание ADR само по себе не включает защиту ветки.
+**Проверено в T-04:** детализация branch protection прочитана административным CLI через существующую Git-авторизацию; required checks добавлены без ослабления прежних ограничений и проверены повторным GET. Ограниченный коннектор по-прежнему может получать 403. Практический отказ direct push и визуальная причина блокировки Merge — отдельные ещё открытые подтверждения.
 
 ## Подтверждение T-04
 
 Workflow и стабильные check run names `lint`, `types`, `tests`, `docker-build`,
-`ci` подготовлены в T-04. Параметры защиты и фактическая блокировка merge
-подтверждаются отдельно: [CI evidence и инструкция администратора](../operations/CI.md).
-До появления доказательств пункты выше остаются открытыми; один файл workflow
-или общий `BLOCKED` из-за отсутствующего approval не доказывает status-check gate.
+`ci` выполнены на GitHub. Параметры защиты, красный run, API BLOCKED
+и оставшаяся визуальная проверка: [CI evidence и инструкция администратора](../operations/CI.md).
+Общий `BLOCKED` при одновременно отсутствующем approval не выдаётся за
+визуальное доказательство причины; незакрытые пункты выше сохранены.
 
 ## Ссылки
 
