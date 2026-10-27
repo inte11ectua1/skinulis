@@ -38,6 +38,45 @@ Telegram session и HTTP transport; настоящий токен и polling и�
 После локальной настройки `TELEGRAM_BOT_TOKEN` процесс запускается командой
 `uv run python -m bot.main`, останавливается через `Ctrl+C`.
 
+## Публичная аутентификация (T-05)
+
+Реализованы JSON `POST /auth/register`, `POST /auth/login` и Bearer-защищённый
+`GET /users/me`. Register возвращает 201 и профиль, login — access JWT с TTL
+15 минут, me — профиль проверенного пользователя из PostgreSQL. Ошибки ввода —
+400, неверные credentials/JWT — 401, занятый email — 409; все в общей error-оболочке.
+Пароли хэшируются Argon2id, hash в ответах отсутствует. DTO/SQL/JWT-параметры
+пока предложены на review: [контракт T-05](docs/contracts/T-05_IDENTITY.md).
+Telegram bootstrap, группы и привязка аккаунта относятся к T-06.
+
+Перед запуском API задайте в своём `.env` случайный `JWT_SECRET_KEY` минимум
+32 bytes и непустой `POSTGRES_PASSWORD`; настоящие значения в Git/команды не
+вставляйте. Для **нового** `.env` можно выполнить следующий код: существующий
+файл не перезаписывается, секреты не печатаются, права файла — 0600.
+
+```sh
+uv run python - <<'PY'
+import os
+import secrets
+from pathlib import Path
+
+template = Path(".env.example").read_text()
+for name in ("POSTGRES_PASSWORD", "JWT_SECRET_KEY"):
+    template = template.replace(name + "=\n", name + "=" + secrets.token_urlsafe(48) + "\n")
+with Path(".env").open("x") as stream:
+    os.chmod(".env", 0o600)
+    stream.write(template)
+PY
+```
+
+В существующем `.env` добавьте JWT-настройку безопасно в редакторе, сохранив
+остальные значения. Алгоритм фиксирован HS256; `JWT_ACCESS_TOKEN_TTL_MINUTES`
+при необходимости задаётся в пределах 1–60. Миграции не требуют JWT secret.
+После запуска Compose откройте `/docs`: выполните register, затем login и
+введите полученный access token в Authorize → HTTPBearer. `GET /users/me`
+возвращает только actor токена; без Authorization получаете 401. Пароль передаётся
+только JSON body публичному API, никогда Telegram-боту. Для проверки используйте
+отдельный тестовый Compose project/БД, не production и не чужой volume.
+
 ## Запуск API с PostgreSQL
 
 Установите [Docker Desktop или Docker Engine с Compose](https://docs.docker.com/get-started/get-docker/)

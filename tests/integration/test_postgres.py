@@ -23,13 +23,13 @@ def test_migrations_on_empty_database_are_repeatable(database_url: URL) -> None:
         assert inspect(engine).get_table_names() == []
         assert migrate() == 0
         assert migrate() == 0
-        assert inspect(engine).get_table_names() == ["alembic_version"]
+        assert set(inspect(engine).get_table_names()) == {"alembic_version", "users"}
         with engine.connect() as connection:
             assert (
                 connection.execute(
                     text("SELECT version_num FROM alembic_version")
                 ).scalar_one()
-                == "0001_baseline"
+                == "0002_users"
             )
         command.check(Config(str(Path("alembic.ini").resolve())))
     finally:
