@@ -2,7 +2,7 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
-> **Статус 27.10.2026:** этап **M1 Skeleton реализован**: T-03, O-02, L-02, T-04 merged, Issues #10–#13 closed. В `main` доступны FastAPI/PostgreSQL/Alembic/Compose, финансовые pure functions, mock-каркас бота и GitHub Actions CI. До завершения G1 остаются отдельные проверки защиты/блокировки merge, T-05 auth/users принята в PR #26; T-06 groups/Telegram identity реализуется в отдельной ветке с proposed-контрактами, расходы/компенсации ещё не реализованы. [Фактический STATUS](docs/STATUS.md).
+> **Статус 27.10.2026:** этап **M1 Skeleton реализован**: T-03, O-02, L-02, T-04 merged, Issues #10–#13 closed. В `main` доступны FastAPI/PostgreSQL/Alembic/Compose, финансовые pure functions, mock-каркас бота и GitHub Actions CI. До завершения G1 остаются отдельные проверки защиты/блокировки merge, T-05 auth/users принята в PR #26; T-06 groups/Telegram identity реализована в PR #27 по утверждённым tech lead контрактам и ожидает независимого review, расходы/компенсации ещё не реализованы. [Фактический STATUS](docs/STATUS.md).
 
 ## Начало работы
 
@@ -77,12 +77,13 @@ PY
 только JSON body публичному API, никогда Telegram-боту. Для проверки используйте
 отдельный тестовый Compose project/БД, не production и не чужой volume.
 
-## Группы и Telegram identity (T-06, proposed)
+## Группы и Telegram identity (T-06)
 
-[HTTP/SQL контракт и открытое ревью](docs/contracts/T-06_IDENTITY.md) описывает DTO,
-errors, locks, timeout/retry и handoff O-03/L-03. Предложения опубликованы в
-[Issue #22](https://github.com/inte11ectua1/skinulis/issues/22#issuecomment-6436799120);
-ответа Олега/Леры пока нет, реальную интеграцию бота не объявляем согласованной.
+[HTTP/SQL контракт](docs/contracts/T-06_IDENTITY.md) описывает DTO, errors, locks,
+timeout/retry и handoff O-03/L-03. Контракт утверждён
+[решением Тимура в Issue #22](https://github.com/inte11ectua1/skinulis/issues/22#issuecomment-6437632203).
+Это разрешение tech lead, не личное APPROVED от Олега или Леры; независимое review
+и реализация Telegram-клиента L-03 остаются отдельными шагами.
 
 JWT-пользователь создаёт группу `POST /groups` с `{name,client_request_id:UUID}`,
 становится owner/первым member. `GET /groups`, `/groups/{id}` и
@@ -93,7 +94,13 @@ Owner выпускает `POST /groups/{id}/invites` с `{client_request_id:UUID
 Token одноразовый, TTL24h, хранится hash; raw возвращается только при первом выпуске.
 Повтор участника/полная группа не расходуют token. Неизвестная/просроченная/
 использованная/отозванная ссылка -> общий404 без раскрытия закрытой группы.
-HTTP-чтение/отзыв invites ещё ожидают отдельного согласования, их ядро реализовано.
+Owner читает все состояния приглашений через `GET /groups/{id}/invites`
+(пагинация20/max100, сортировка created_at/id) и отзывает unused/expired приглашение
+через `DELETE /groups/{id}/invites/{invite_id}`. Ответы — metadata без token/hash/consumer;
+повтор DELETE возвращает ту же metadata, consumed ->409 без изменения. Бот использует
+идентичные пути с /internal. После timeout выдачи перечитайте страницы, найдите
+client_request_id; если raw token потерян, явно отзовите запись и только потом
+выпустите другую с новым UUID. Восстановить секрет и автоматически выпустить новый нельзя.
 
 У бота отдельные те же групповые операции под `/internal`, credential
 `X-Bot-Service-Token` и `X-Telegram-ID` из sender update. Публичные JWT routes

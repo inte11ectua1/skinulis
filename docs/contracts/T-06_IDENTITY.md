@@ -1,24 +1,27 @@
 # T-06 — группы и Telegram identity
 
-**Proposed для независимого ревью, не согласованный заранее контракт.**
+**Контракт утверждён Тимуром как tech lead 27.10.2026:**
+[решение в Issue #22](https://github.com/inte11ectua1/skinulis/issues/22#issuecomment-6437632203).
+Это архитектурное/интеграционное решение, не независимый APPROVED-review Олега или Леры.
 База `3f6f2d6` после merged PR #26, принятый head `0002_users`.
 [Предложение и запрос ревью в #22](https://github.com/inte11ectua1/skinulis/issues/22#issuecomment-6436799120),
 [handoff Олегу #23](https://github.com/inte11ectua1/skinulis/issues/23#issuecomment-6436883933),
 [handoff Лере #24](https://github.com/inte11ectua1/skinulis/issues/24#issuecomment-6436885598).
-Ответов владельцев пока нет; отсутствие ответа не означает согласия.
+Независимое ревью Олега и Леры запрошено в PR #27 и остаётся обязательным.
 T-05 находится в main, но независимого APPROVED-review PR #26 не получил.
 
-## Установленные правила и предлагаемые решения
+## Установленные правила и утверждённые решения T-06
 
 PRODUCT_RULES уже задаёт owner + первый member, максимум 30, добровольный join,
 одноразовые invites TTL 24 часа с отзывом, link TTL 10 минут, no merge/delete.
-В этой ветке предлагаются конкретные таблицы, DTO, внутренние пути, error.code,
-пагинация, UUID replay и Q-03. Они требуют review до принятия и L-03 integration.
+Таблицы, DTO, внутренние пути, error.code, пагинация, UUID replay и Q-03 для
+имён групп утверждены tech lead. Лера может использовать этот контракт для L-03;
+его независимое клиентское/code review не подменяется решением автора.
 Финансовые Q-03/UQ-03/06–09 этим документом не закрываются.
 
-**Дополнительные GET invites / DELETE revoke пока ожидают отдельного согласования.**
-Ядро чтения/отзыва реализовано и тестируется; HTTP-маршруты ещё не включены.
-Это оставшаяся часть полного T-06, не заявление о готовом пользовательском отзыве.
+GET списка приглашений и DELETE отзыва реализованы в публичном JWT-канале
+и под /internal с отдельной service dependency. Новая миграция для HTTP-слоя
+не требуется; обе операции используют существующий owner-only service.
 
 ## Модель PostgreSQL / handoff O-03
 
@@ -118,7 +121,7 @@ service credential позволяет выдавать себя за Telegram ac
 
 Все input models запрещают extra fields. Нельзя передать owner_id/member_id/user_id/
 telegram_id через публичный JSON. В output ID допустимы как данные, не credentials.
-OpenAPI доступен на /docs и /openapi.json; T-06 endpoints помечены proposed.
+OpenAPI доступен на /docs и /openapi.json; схемы и ошибки соответствуют решению tech lead.
 Значения секретов ниже placeholders, не действующие credentials.
 
 | Метод | JSON / actor | Success |
@@ -128,6 +131,8 @@ OpenAPI доступен на /docs и /openapi.json; T-06 endpoints помеч�
 | GET /groups/{id} | JWT, member | 200 Group |
 | GET /groups/{id}/members | JWT, member; pagination | 200 Page[Member] |
 | POST /groups/{id}/invites | JWT, owner; {client_request_id:UUID} | 201 InviteIssued |
+| GET /groups/{id}/invites | JWT, owner; pagination | 200 Page[InviteProfile], все состояния |
+| DELETE /groups/{id}/invites/{invite_id} | JWT, owner; без body | 200 InviteProfile, повтор без второго эффекта |
 | POST /group-invites/join | JWT; {token} | 200 Group после собственного join |
 | Те же групповые пути с /internal | service credential + Telegram actor | Те же DTO/права, без JWT |
 | GET /internal/users/me | service + Telegram actor | 200 UserProfile, 404 если ещё нет; не создаёт |
@@ -139,21 +144,24 @@ Group: `{id,name,owner_id,created_at}`. Member: `{user_id,joined_at,is_owner}`
 без чужих email/telegram_id/hash. Page: `{items:[...],limit,offset}`, limit1..100,
 default20, offset>=0. Порядок groups(created_at,id), members(joined_at,user_id).
 Последняя пустая страница возвращает items:[]; нет total/has_next.
+Invites сортируются по (created_at,id) ASC и включают active, expired, consumed
+и revoked без фильтра состояний. InviteProfile: те же metadata поля ниже без token;
+token_hash/consumed_by не возвращаются ни GET, ни DELETE.
 InviteIssued: `{id,group_id,client_request_id,created_at,expires_at,consumed_at,revoked_at,token}`.
 Raw token только на первом выпуске, на replay token:null; consumed_by/hash не DTO.
 UserProfile — существующая безопасная схема T-05.
 
-Предлагаемый Q-03 для групп: Unicode NFC → strip внешних Unicode whitespace →
+Утверждённый Q-03 для групп: Unicode NFC → strip внешних Unicode whitespace →
 1..120 codepoints, запрет Unicode category C. Внутренние пробелы и регистр сохраняются;
 одинаковые названия разрешены. Emoji с ZWJ (category Cf) пока отвергаются; это
-осознанная часть предложения для review, не принятое правило финансовых названий.
+осознанное решение tech lead для групп, не правило финансовых названий.
 DB дополнительно ограничивает длину, полная Unicode-политика выполняется API.
 
 ## Invites / UQ-02
 
 `secrets.token_urlsafe(32)` даёт 256-bit secret длиной43; в БД только SHA-256.
 Для случайного высокоэнтропийного секрета SHA-256 применим; пароли по-прежнему Argon2id.
-TTL ровно24h. Предлагаемый Telegram payload `i_<token>` — 45 URL-safe символов
+TTL ровно24h. Утверждённый Telegram payload `i_<token>` — 45 URL-safe символов
 при Telegram лимите64; бот строит `https://t.me/<bot_username>?start=i_<token>`.
 Backend не знает реальное имя бота и не выдаёт выдуманную готовую ссылку.
 Не размещать token в API path/query, логах или сообщении об ошибке.
@@ -168,10 +176,27 @@ Backend не знает реальное имя бота и не выдаёт в
 Создание группы: сохранить один client_request_id и normalized body; replay
 возвращает ту же Group (201), другое имя с тем же ключом ->409 request_conflict.
 Приглашение: сохранить UUID; replay возвращает ту же metadata без исходного секрета,
-а не создаёт новый invite. Потерянный raw token нельзя восстановить. Предлагаемые
-GET/DELETE позволят найти metadata по ключу, отозвать её и только после этого
-явно создать новый invite с новым UUID. **До согласования/включения этих маршрутов
-бот не должен обещать пользователю отзыв или восстановление потерянной ссылки.**
+а не создаёт новый invite. Потерянный raw token нельзя восстановить. После timeout
+GET /groups/{id}/invites (или /internal/groups/{id}/invites для бота) позволяет
+перечитать страницы и найти запись по возвращаемому client_request_id. Отдельный
+filter/search endpoint не вводится. Если секрет потерян, пользователь явно отзывает
+запись DELETE /groups/{id}/invites/{invite_id}, затем создаёт новый invite с новым UUID.
+Автоматического выпуска нового приглашения и восстановления raw token нет.
+
+DELETE берёт groups FOR UPDATE → invite FOR UPDATE, ставит revoked_at и сохраняет
+историю; повтор возвращает ту же metadata (200). Expired unused invite тоже можно
+отозвать. Consumed invite →409 invite_consumed без изменения; неизвестный invite
+в своей группе →404 invite_invalid, чужая/неизвестная группа →404 group_not_found,
+обычный member →403 owner_required. Invite ID другой группы нельзя отозвать, даже
+если actor владеет обеими группами. Join/revoke в гонке дают ровно один эффект.
+После timeout DELETE безопасно повторить тот же путь или перечитать metadata: это
+не потребляет invite повторно и не выпускает новую ссылку.
+
+Пример безопасной metadata (GET items и DELETE response, без действующих секретов):
+
+```json
+{"id":1,"group_id":1,"client_request_id":"00000000-0000-4000-8000-000000000002","created_at":"2026-10-27T00:00:00Z","expires_at":"2026-10-28T00:00:00Z","consumed_at":null,"revoked_at":"2026-10-27T01:00:00Z"}
+```
 
 ## Linking и timeout
 
@@ -212,7 +237,7 @@ Raw code не хранится; использованный digest остаёт
 |404|link_code_invalid|Неверный/expired/used/revoked code|
 |409|request_conflict|Повтор UUID с другим именем|
 |409|already_member / group_full|Join не выполнен, invite не потреблён|
-|409|invite_consumed|Ядро отзыва не отзывает уже использованное приглашение|
+|409|invite_consumed|DELETE не отзывает уже использованное приглашение|
 |409|telegram_identity_conflict|Telegram ID уже занимает существующий аккаунт, merge запрещён|
 |409|telegram_already_linked / email_profile_required|Состояние target несовместимо с linking|
 |500|internal_error|Неожиданный сбой без внутренних деталей|
@@ -228,6 +253,9 @@ Validation400 вместо422, X-Request-ID, безопасные общие с�
 схему/FK/UNIQUE/CHECK, чистую и T-05 миграции, repeat upgrade/check, owner/member,
 cross-group, UUID replay, hash/TTL, join/full/rollback, concurrent same invite,
 последний slot, bootstrap, link double-consume и bootstrap-vs-link no merge.
+GET/DELETE проверены через HTTP в обоих каналах: owner/member/outsider, сортировка
+с одинаковым created_at, empty page, все состояния, без секретов, повтор DELETE,
+expired revoke, consumed conflict и реальная конкурентная HTTP revoke-vs-join.
 Время контролируется clock seam, без ожидания реальных24h/10min.
 Docker smoke использует отдельный Compose project и volume с новыми credentials;
 исходная пользовательская БД не используется. Результаты/evidence — в STATUS и PR.

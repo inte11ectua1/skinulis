@@ -98,7 +98,7 @@ Telegram Bot API token. Compose передаёт service secret только api
 не используют .env оператора. Production reverse proxy должен закрывать /internal
 снаружи; это требование будущего T-09, не результат текущего deployment.
 
-[Контракт T-06](contracts/T-06_IDENTITY.md) фиксирует proposed заголовки, DTO,
+[Контракт T-06](contracts/T-06_IDENTITY.md) фиксирует утверждённые tech lead в Issue #22 заголовки, DTO,
 ошибки, no-merge и безопасные повторы. Следующая ревизия 0003_groups_identity
 добавляет groups, group_members, group_invites, telegram_link_codes после users;
 один head, group-first locks, deferred owner-membership FK, без CASCADE.
