@@ -1,4 +1,4 @@
-# Окружение T-03
+# Окружение API (T-03 / T-05)
 
 Секреты хранятся в локальном `.env` / переменных окружения. В Git находится только
 `.env.example`. Существующий `.env` не перезаписывать. При использовании `.env`
@@ -23,7 +23,8 @@
 | `API_BASE_URL` | Заготовка адреса API для будущего клиента бота | Backend не читает; конфигурацию сервиса bot согласовать с Лерой | `http://localhost:8000` с хоста, `http://api:8000` в Compose |
 | `TELEGRAM_BOT_TOKEN` | Заготовка токена Telegram | Зарезервировано; backend не читает | пусто |
 | `BOT_SERVICE_TOKEN` | Заготовка внутреннего service token | Зарезервировано до авторизации; backend не читает | пусто |
-| `JWT_SECRET_KEY` | Заготовка ключа JWT | Зарезервировано до T-05; backend не читает | пусто |
+| `JWT_SECRET_KEY` | Ключ подписи HS256 | Обязателен для API, минимум 32 UTF-8 bytes случайного значения; без default. Migrate его не требует и не получает | пусто в шаблоне, генерируется локально |
+| `JWT_ACCESS_TOKEN_TTL_MINUTES` | Срок access JWT | Default 15, от 1 до 60; алгоритм HS256 фиксирован кодом | `15` |
 | `TEST_DATABASE_URL` | PostgreSQL для явно выбранных integration tests | Нужен только для `pytest -m integration`; имя базы заканчивается на `_test` | устанавливается тестовым скриптом |
 | `POSTGRES_TEST_PASSWORD` | Пароль временной PostgreSQL из `compose.test.yaml` | Генерируется `scripts/test_integration.py`, в `.env` не нужен | генерируется в памяти |
 
@@ -63,6 +64,13 @@ pool — 3 секунды, `statement_timeout` — 3000 мс; `pool_pre_ping` в
 не создаёт доменных таблиц; Alembic создаёт только свою `alembic_version`.
 Добавление моделей/миграций требует согласования владельцев; нескольких heads
 не оставлять. `Base.metadata.create_all()` не используется.
+
+T-05 добавляет `0002_users` после baseline: users с положительным BIGINT ID,
+CHECK/UNIQUE и nullable identity-парами; [предлагаемый контракт](contracts/T-05_IDENTITY.md).
+API проверяет наличие JWT key при создании приложения; локальная Alembic-команда
+использует DB Settings, не вызывает `require_jwt_secret`. Compose передаёт ключ
+только сервису api, не migrate и не Docker build. Сменив ключ, оператор инвалидирует
+старые tokens; ключ и пароль БД должны быть разными.
 
 ## Изолированные тесты
 

@@ -22,9 +22,15 @@ class Settings(BaseSettings):
     postgres_db: str = Field(default="skinulis", min_length=1)
     postgres_user: str = Field(default="skinulis", min_length=1)
     postgres_password: SecretStr | None = Field(default=None, repr=False)
+    jwt_secret_key: SecretStr | None = Field(default=None, repr=False)
+    jwt_access_token_ttl_minutes: int = Field(default=15, ge=1, le=60)
 
     @field_validator(
-        "database_url", "postgres_password", "app_commit_sha", mode="before"
+        "database_url",
+        "postgres_password",
+        "app_commit_sha",
+        "jwt_secret_key",
+        mode="before",
     )
     @classmethod
     def empty_to_none(cls, value: object) -> object:
@@ -69,3 +75,12 @@ class Settings(BaseSettings):
             port=self.postgres_port,
             database=self.postgres_db,
         )
+
+    def require_jwt_secret(self) -> str:
+        # Only API startup/auth needs JWT; migration-only Settings stays independent.
+        value = self.jwt_secret_key.get_secret_value() if self.jwt_secret_key else ""
+        if len(value.encode("utf-8")) < 32:
+            raise ValueError(
+                "Set JWT_SECRET_KEY to a random secret of at least 32 bytes"
+            )
+        return value
