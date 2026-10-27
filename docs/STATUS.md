@@ -33,7 +33,7 @@
 | Задача | Статус | Ответственный | Условия старта и зависимости |
 |---|---|---|---|
 | [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) Auth/users | **merged, Issue closed** | Тимур | [PR #26](https://github.com/inte11ectua1/skinulis/pull/26) merged 27.10.2026; [CI](https://github.com/inte11ectua1/skinulis/actions/runs/40468385916). Независимого APPROVED review нет; спорные DTO не объявлены согласованными |
-| [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) Groups/Telegram actor | **in progress / contracts proposed** | Тимур | После merged T-05; backend groups/invites/Telegram actor/link с тестами. Дополнительные HTTP GET invites / DELETE revoke ожидают явного разрешения, полного T-06 пока нет; [предложение](https://github.com/inte11ectua1/skinulis/issues/22#issuecomment-6436799120) |
+| [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) Groups/Telegram actor | **draft PR / contracts proposed** | Тимур | После merged T-05; backend groups/invites/Telegram actor/link с тестами. Дополнительные HTTP GET invites / DELETE revoke ожидают явного разрешения, полного T-06 пока нет; [предложение](https://github.com/inte11ectua1/skinulis/issues/22#issuecomment-6436799120) |
 | [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) Finance models/migrations | **open / design ready** | Олег | Модели/fixtures можно проектировать сейчас; final FK/migrations после согласования users/groups c T-05/T-06; без финансового CRUD |
 | [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) Telegram onboarding/groups | **open / mock ready** | Лера | FSM/mock client можно начать сейчас; реальные HTTP-интеграции только по принятым T-05/T-06 OpenAPI/fixtures |
 
@@ -118,8 +118,9 @@ coverage app + bot 98.31%. Ruff/mypy, frozen sync/lock, pip check и аудит
 APPROVED-review нет; DTO/TTL/алгоритм/FK остаются предложениями для согласования; G2 не закрыт.
 
 
-## T-06 — рабочая ветка, контракты proposed
+## T-06 — draft PR #27, контракты proposed
 
+[Draft PR #27](https://github.com/inte11ectua1/skinulis/pull/27), без merge.
 База main после [PR #26](https://github.com/inte11ectua1/skinulis/pull/26),
 0002_users. Добавлены groups/members, hashed invites, service Telegram actor,
 explicit bootstrap и одноразовая привязка; [контракт](contracts/T-06_IDENTITY.md).
@@ -132,8 +133,9 @@ explicit bootstrap и одноразовая привязка; [контракт
 Локально macOS: **484 unit + 60 PostgreSQL17 integration passed**, включая независимые
 конкурирующие транзакции (lock waits подтверждаются pg_stat_activity), миграции
 с чистой и T-05 БД, owner/member FK, ограничения30, single-use и no merge.
-Объединённое branch coverage app/ + bot/ **98,24%** (порог60%). GitHub CI
-будет зафиксирован после фактического выполнения на PR.
+Объединённое branch coverage app/ + bot/ **98,24%** (порог60%). [GitHub CI run](https://github.com/inte11ectua1/skinulis/actions/runs/40474060236)
+на d23eb48: lint/types/tests/docker-build/ci **success**, Linux484 unit +60 integration,
+coverage98,24%. Для текущего head смотрите checks PR #27. Review запрошен у обоих владельцев.
 Frozen/lock, Ruff, strict mypy (59 Python files), pip check и audit72 packages без
 известных уязвимостей прошли; зависимости/lock не изменялись.
 

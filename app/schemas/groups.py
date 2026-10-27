@@ -131,5 +131,5 @@ class LinkIssued(BaseModel):
     expires_at: datetime
 
 
-# Query/path IDs accept canonical decimal text, not booleans/floats/negative IDs.
+# Path IDs are parsed by FastAPI and bounded to positive signed BIGINT.
 PathId = Annotated[int, Field(gt=0, le=2**63 - 1)]
