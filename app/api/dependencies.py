@@ -21,10 +21,13 @@ def get_settings(request: Request) -> Settings:
 
 
 def get_current_user(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
     session: Annotated[Session, Depends(get_session)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> User:
+    if "X-Bot-Service-Token" in request.headers or "X-Telegram-ID" in request.headers:
+        raise ApiError(400, "ambiguous_actor", "Use one authentication channel")
     failure = ApiError(401, "invalid_token", "Invalid or missing access token")
     if credentials is None:
         raise failure
