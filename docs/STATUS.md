@@ -2,35 +2,37 @@
 
 **Срез:** 27 октября 2026 года. Источник истины — GitHub `main`, принятые PR, Issues, логи проверок и реальные URL. Этот документ отражает подтверждённое состояние, а не обещание готовой реализации.
 
+**Этап M1 (Skeleton): завершён по объёму задач.** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12) и [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты, код находится в `main`. **G1 — не полностью подтверждён как формальный gate**: нужна доказательная проверка причины блокировки красного CI в интерфейсе и незавершённые защитные проверки T-01; у PR #19 не зарегистрировано независимого APPROVED-ревью. Это не отменяет успешную реализацию M1.
+
 Статусы задач: `planned → in progress → PR review → merged → verified`. `merged` не равно `verified`: для последнего нужны соответствующие CI, тесты и/или работающий сервис.
 
 ## M0 — подготовка и документация
 
 | Задача | Состояние | Ответственный | Подтверждение / оставшееся |
 |---|---|---|---|
-| [T-01](https://github.com/inte11ectua1/skinulis/issues/2) GitHub и ADR 001 | **in progress** | Тимур | [PR #1](https://github.com/inte11ectua1/skinulis/pull/1) и [PR #6](https://github.com/inte11ectua1/skinulis/pull/6) merged; ADR 001 одобрен Лерой; `main.protected=true`, `delete_branch_on_merge=true`. Параметры защиты подтверждены административным API в T-04: PR/1 approval/stale/conversations/admin enforcement/no force-push/deletion, 5 required checks GitHub Actions, strict=true. Практический отказ direct push и визуальная причина блокировки красного merge box ещё не подтверждены; [evidence](operations/CI.md). Преподаватель по решению Тимура будет приглашён ближе к защите, сейчас не приглашать. |
+| [T-01](https://github.com/inte11ectua1/skinulis/issues/2) GitHub и ADR 001 | **in progress** | Тимур | [PR #1](https://github.com/inte11ectua1/skinulis/pull/1) и [PR #6](https://github.com/inte11ectua1/skinulis/pull/6) merged; ADR 001 принят. `main.protected=true`, auto-delete веток включён. Пять required CI checks настроены; текущий GitHub API сообщает enforcement checks **`non_admins`** — администраторский обход возможен, поэтому предыдущая запись `enforce_admins=true` из T-04 уже не является актуальным доказательством. Практический отказ прямому push и визуальная причина блокировки merge при красном CI не подтверждены. [Evidence](operations/CI.md). Приглашение преподавателя отложено решением Тимура. |
 | [T-02](https://github.com/inte11ectua1/skinulis/issues/5) Python 3.12, uv | **merged** | Тимур | [PR #7](https://github.com/inte11ectua1/skinulis/pull/7) merged после `APPROVED` Олега и исправления уязвимостей; CPython 3.12.15, uv 0.13.5. Локальные macOS проверки в PR, Windows junction issue при `uv python install` остаётся не перепроверенным на обновлённом uv. |
 | [O-01](https://github.com/inte11ectua1/skinulis/issues/3) инварианты | **merged** | Олег | [PR #8](https://github.com/inte11ectua1/skinulis/pull/8) approved Тимуром и merged; финансовые документы, 105 сценариев, вопросы Q-01–Q-10. Это документация, не реализация тестов. |
 | [L-01](https://github.com/inte11ectua1/skinulis/issues/4) Telegram UX | **merged** | Лера | [PR #9](https://github.com/inte11ectua1/skinulis/pull/9) approved Тимуром и merged; сценарии, 42 будущих QA-проверки, вопросы UQ-01–UQ-09. Требующие контрактов пункты остаются открытыми. |
 
 **ADR:** 001 (GitHub Flow) принят PR #6; 002 (uv) принят PR #7. Текстовые статусы приняты в main через [PR #14](https://github.com/inte11ectua1/skinulis/pull/14).
 
-## M1 — Skeleton (вторая фаза, назначенные задачи)
+## M1 — Skeleton (вторая фаза; реализация завершена 27.10.2026)
 
 | Задача | Состояние | Ответственный | Зависимости |
 |---|---|---|---|
 | [T-03](https://github.com/inte11ectua1/skinulis/issues/10) API/DB/Alembic/Compose | **merged** | Тимур | [PR #15](https://github.com/inte11ectua1/skinulis/pull/15) merged; PostgreSQL 17.11, Alembic, Compose, локальное cold-start evidence ниже |
 | [O-02](https://github.com/inte11ectua1/skinulis/issues/11) pure splits и parser | **merged** | Олег | [PR #16](https://github.com/inte11ectua1/skinulis/pull/16) и [#17](https://github.com/inte11ectua1/skinulis/pull/17) merged; parser/splits, Q-01/Q-02 и часть Q-04 приняты; финансовых моделей/API пока нет |
 | [L-02](https://github.com/inte11ectua1/skinulis/issues/12) bot skeleton и mock HTTP | **merged** | Лера | [PR #18](https://github.com/inte11ectua1/skinulis/pull/18) merged; навигация/typed health client/mock-тесты, без live Telegram и онбординга |
-| [T-04](https://github.com/inte11ectua1/skinulis/issues/13) PR CI | **PR review** | Тимур | [PR #19](https://github.com/inte11ectua1/skinulis/pull/19); первый CI зелёный, намеренный сбой даёт tests/ci failure и API BLOCKED; required checks настроены. Визуальная причина merge block ещё требует проверки; [evidence T-04](operations/CI.md) |
+| [T-04](https://github.com/inte11ectua1/skinulis/issues/13) PR CI | **merged, Issue closed** | Тимур | [PR #19](https://github.com/inte11ectua1/skinulis/pull/19) merged 27.10.2026; GitHub Actions lint/types/tests/docker-build/ci, PostgreSQL integration и покрытие ≥60%; [успешный run](https://github.com/inte11ectua1/skinulis/actions/runs/40459119340), [красный run](https://github.com/inte11ectua1/skinulis/actions/runs/40458200449), [подробности](operations/CI.md). PR объединён без зарегистрированного независимого APPROVED review. |
 
-T-03, O-02, L-02 приняты и доступны в main `2de19e2`. T-04 выполняется на этой базе. Согласование shared-контрактов — через issue/PR, без молчаливого изменения PRODUCT_RULES.
+Все T-03, O-02, L-02 и T-04 приняты в `main` (на 27.10.2026 HEAD `d635398`). **Следующая фаза — M2 Identity**: T-05 (auth/JWT), T-06 (группы и Telegram actor), O-03 (финансовые ORM-модели/миграции), L-03 (онбординг и группы в боте). На дату среза отдельные Issues для M2 ещё не назначены. Согласование shared-контрактов — через issue/PR без молчаливого изменения PRODUCT_RULES.
 
 ## Release gates
 
 | Gate | Статус | Условие проверки |
 |---|---|---|
-| G1 — cold start / миграция / health / CI | **not verified** | T-03, T-04: миграции на пустой БД, /health 200 и 503 при отказе DB, reviewed PR с зелёным CI, blocked merge при красном CI |
+| G1 — cold start / миграция / health / CI | **implementation complete; formal verification pending** | Cold start, миграции, /health 200/503 подтверждены в PR #15; CI зелёный и намеренно красный подтверждены в PR #19. Не завершена визуальная проверка failed-required-check причины блокировки; нет независимого approval PR #19; администраторский bypass требует отдельного решения об уровне защиты. |
 | G2 — auth и группы | **not verified** | M2 |
 | G3 — расходы | **not verified** | M3 |
 | G4 — компенсации | **not verified** | M4 |
@@ -39,10 +41,10 @@ T-03, O-02, L-02 приняты и доступны в main `2de19e2`. T-04 вы
 
 ## Открытые вопросы и ограничения
 
-- Защита main и обязательные checks подтверждены административным API, хотя GitHub-коннектор продолжает возвращать 403. Отдельно остаётся визуальная проверка причины блокировки Merge при красном CI и практический отказ direct push; настройки и evidence см. [CI](operations/CI.md).
+- Последний доступный GitHub API подтверждает, что `main` защищена и перечислены required checks, но **enforcement_level=`non_admins`** (администратор не связан ими на тех же условиях). Это изменение после доказательств T-04; необходимо заново проверить фактические admin bypass settings. Визуальная причина блокировки Merge на красном CI и отказ direct push остаются непроверенными; см. [CI](operations/CI.md).
 - Предпросмотр расхода без записи **UQ-03** не имеет принятого API-маршрута; до согласования O-04/O-05 и L-04 нельзя реализовать локальные денежные расчёты или временные расходы ради превью.
 - Денежная грамматика/порядок ID **Q-01/Q-02** приняты в PR #17; прочие Q/UQ закрываются до соответствующих этапов по ответственным.
-- API/PostgreSQL/Docker проверены локально в T-03 ([PR #15](https://github.com/inte11ectua1/skinulis/pull/15)); каркас бота принят PR #18, live Telegram/product E2E не проверены. CI и защита main — отдельное evidence T-04; G1 до подтверждения всех условий не закрывать.
+- API/PostgreSQL/Docker проверены локально в T-03 ([PR #15](https://github.com/inte11ectua1/skinulis/pull/15)); каркас бота принят PR #18, live Telegram и продуктовый E2E не проверены. CI реализован в merged [PR #19](https://github.com/inte11ectua1/skinulis/pull/19). G1 нельзя помечать формально verified до незакрытых доказательств и уточнения admin bypass.
 
 ## Локальные доказательства T-03 (26.10.2026)
 
@@ -61,11 +63,12 @@ T-03, O-02, L-02 приняты и доступны в main `2de19e2`. T-04 вы
 - Runtime UID 10001, без .env/.git/tests/dev dependencies. Тестовые контейнеры
   остановлены, named volumes сохранены; другие проекты и .env не изменялись.
 - Windows/Linux host отдельно не проверены; предупреждение Starlette о будущей
-  смене httpx для TestClient не подавлено. T-04 и G1 остаются отдельной работой.
+  смене httpx для TestClient не подавлено. Реализация T-04 принята, но формальная
+  приёмка G1 остаётся отдельной.
 
 ## Проверки T-04 (27.10.2026)
 
-[PR #19](https://github.com/inte11ectua1/skinulis/pull/19),
+[Merged PR #19](https://github.com/inte11ectua1/skinulis/pull/19) ([Issue #13 closed](https://github.com/inte11ectua1/skinulis/issues/13)),
 [первый зелёный CI](https://github.com/inte11ectua1/skinulis/actions/runs/40458001625),
 [намеренно красный CI](https://github.com/inte11ectua1/skinulis/actions/runs/40458200449).
 На GitHub Linux: 343 unit + 4 PostgreSQL integration passed, branch coverage
@@ -73,10 +76,11 @@ app + bot 97.79%, Docker build success; frozen/lock/Ruff/mypy/secrets/audit пр
 Локально macOS повторены эти проверки и Compose integration runner; actionlint
 также прошёл. Бизнес-код, тесты владельцев и lock не менялись.
 
-Защита main настроена и повторно прочитана: required lint/types/tests/docker-build/ci
-от GitHub Actions, strict up-to-date, PR с 1 approval, stale dismissal, conversations,
-admin enforcement, no force-push/deletion/bypass. Красный head имел API BLOCKED,
-но UI merge box недоступен; конкретная визуальная причина ещё не подтверждена.
-Намеренная ошибка удалена до окончательного review; восстановленный run и снимок
-API — в [CI evidence](operations/CI.md). Issue #13 открыта; G1 остаётся not verified
-до независимого review/merge и оставшегося подтверждения merge box.
+В ходе T-04 административным API были прочитаны required lint/types/tests/docker-build/ci,
+strict up-to-date и правила PR/review; красный head имел API BLOCKED. После merge
+защита **изменилась**: текущий ответ GitHub показывает enforcement_level=non_admins
+для checks. Нельзя сохранять прежнее утверждение о запрете обхода администратором.
+Визуальная конкретная причина блокировки merge box ещё не подтверждена.
+Намеренная ошибка удалена; восстановленный run и снимок *исторических* настроек
+в [CI evidence](operations/CI.md). Issue #13 закрыта после merge PR #19,
+при этом в PR #19 не зарегистрировано чужого approval; G1 формально не verified.
