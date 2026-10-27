@@ -32,7 +32,7 @@
 
 | Задача | Статус | Ответственный | Условия старта и зависимости |
 |---|---|---|---|
-| [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) Auth/users | **in progress** | Тимур | Реализация регистрации/login, Argon2, JWT, PostgreSQL users и `/users/me`; от завершённого T-03/T-04 |
+| [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) Auth/users | **PR review** | Тимур | Реализация регистрации/login, Argon2, JWT, PostgreSQL users и `/users/me`; от завершённого T-03/T-04 |
 | [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) Groups/Telegram actor | **open / blocked for implementation** | Тимур | После принятия T-05; группы, членство, приглашения, сервисная Telegram-идентификация и привязка; API контракты UQ-01/UQ-02 совместно с Лерой |
 | [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) Finance models/migrations | **open / design ready** | Олег | Модели/fixtures можно проектировать сейчас; final FK/migrations после согласования users/groups c T-05/T-06; без финансового CRUD |
 | [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) Telegram onboarding/groups | **open / mock ready** | Лера | FSM/mock client можно начать сейчас; реальные HTTP-интеграции только по принятым T-05/T-06 OpenAPI/fixtures |
@@ -110,5 +110,8 @@ coverage app + bot 98.31%. Ruff/mypy, frozen sync/lock, pip check и аудит
 без токена 401. Проверен migrate без JWT в host/container; логи не содержат
 сгенерированных credentials. Volume сохранён, чужие БД не затронуты.
 
-GitHub CI и ссылка на PR добавляются после публикации и реального запуска.
+[PR #26](https://github.com/inte11ectua1/skinulis/pull/26): первый [GitHub run](https://github.com/inte11ectua1/skinulis/actions/runs/40468232064)
+на commit bf01c59 завершил lint/types/tests/docker-build/ci успешно. Linux: 422 unit,
+22 PostgreSQL integration, общее branch coverage app + bot 98.31%, Docker build
+успешен. Актуальный run окончательного head указан в PR; merge не выполнялся.
 Issue #21 открыта, DTO/TTL/алгоритм и FK требуют независимого review; G2 не закрыт.
