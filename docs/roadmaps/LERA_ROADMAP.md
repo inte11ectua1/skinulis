@@ -13,9 +13,13 @@
 | L-07 | M6 | User guide, E2E smoke, сценарий live demo | all API integrated | инструкция от /start до confirm для 3 users |
 | L-08 | M7 | Репетиция бот-демо, участие в вопросах | L-07 | 5-минутный live demo репетирован |
 
-## Актуальная задача Codex (M1)
+## Завершённая фаза M1 (27.10.2026)
 
-[L-02 / Issue #12](https://github.com/inte11ectua1/skinulis/issues/12) после merged L-01/T-02: создать только каркас aiogram 3, `/start`, `/help`, `/cancel`, меню и typed `httpx.AsyncClient` с mock transport и unit-тестами в своей ветке. Без реального Telegram-токена, polling и DB в тестах, без финансовой математики и вымышленных API-маршрутов. Учитывать [UQ-01–UQ-09](../ux/L-01_CONTRACT_QUESTIONS.md); в особенности UQ-03 server preview должен решаться командой до L-04. PR с независимым human review.
+**L-02** закрыта: [Issue #12](https://github.com/inte11ectua1/skinulis/issues/12), [PR #18](https://github.com/inte11ectua1/skinulis/pull/18). Есть aiogram-каркас, `/start`, `/help`, `/cancel`, типизированный async httpx-клиент для существующего `/health`, mock-тесты. Live Telegram/онбординг пока не подтверждены.
+
+## Следующая задача по плану M2 (Issue ещё не создана)
+
+**L-03** — онбординг/профиль, одноразовая привязка, группы и приглашения через API Тимура (T-05/T-06). Пока реальные DTO/служебные операции не приняты, использовать mocks/fixtures, не изобретать маршруты или вычислять деньги локально. Начать с [UQ-01/UQ-02](../ux/L-01_CONTRACT_QUESTIONS.md); Q-01/Q-02 о денежном формате и внутренних ID уже приняты в [Issue #11](https://github.com/inte11ectua1/skinulis/issues/11).
 
 ## Для своего чата
 «Разбей создание by_items на последовательные кнопки», «Проверь возможные ошибки мастера», «Дай промпт Codex для L-04 без изменения backend», «Составь E2E чек-лист».
