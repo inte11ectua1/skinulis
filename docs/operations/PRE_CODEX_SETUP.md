@@ -1,6 +1,6 @@
 # Подготовка к Codex
 
-> **Исторический чек-лист первоначальной настройки (M0)**, не команда на новые действия. На 27.10.2026 M1 завершён: T-03 #10, O-02 #11, L-02 #12 и T-04 #13 merged/closed. Далее M2: Тимур [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) → [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22), Олег [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23), Лера [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24); **задачи созданы и назначены 27.10.2026**. Преподавателя пока не приглашать. Актуальные факты: [STATUS](../STATUS.md).
+> **Исторический чек-лист первоначальной настройки (M0)**, не команда на новые действия. На 28.10.2026 M1 и M2 завершены **по реализации**. M2: [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21), [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22), [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23), [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) — merged/closed, follow-ups [#29](https://github.com/inte11ectua1/skinulis/issues/29)/[#32](https://github.com/inte11ectua1/skinulis/issues/32) закрыты. **G1/G2 ещё не verified, T-01 открыта; следующий план — M3 Expenses** (Issues ещё не назначены). Преподавателя пока не приглашать. Актуальные факты: [STATUS](../STATUS.md).
 
 ## Ниже — исходные инструкции первоначальной настройки
 
@@ -22,4 +22,4 @@
 ## Особенности
 Тимур — администрирование репозитория, VPS и secrets; Олег — PostgreSQL для интеграционных тестов; Лера — тестовый Telegram-бот, токен только в окружении.
 
-**Актуально после M1:** задачи M2 уже созданы и назначены (#21–#24). Проверять зависимости в соответствующей Issue и работать от свежей `main` через PR с CI/ревью. Формальные доказательства G1/T-01 остаются открытыми.
+**Актуально после M2:** задачи #21–#24 уже закрыты. Перед M3 (T-07, O-04/O-05, L-04) создать/назначить новые Issues, проверить Q/UQ, работать из свежей `main` через PR и независимое ревью; не переносить код из старых M2 Issues. Формальные доказательства G1/T-01 и live Telegram E2E/G2 остаются открытыми.
