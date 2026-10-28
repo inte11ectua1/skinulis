@@ -22,9 +22,18 @@
 - **T-03:** [Issue #10](https://github.com/inte11ectua1/skinulis/issues/10), [PR #15](https://github.com/inte11ectua1/skinulis/pull/15) — FastAPI/PostgreSQL/Alembic/Compose, системные endpoints и cold-start проверены.
 - **T-04:** [Issue #13](https://github.com/inte11ectua1/skinulis/issues/13), [PR #19](https://github.com/inte11ectua1/skinulis/pull/19) — GitHub Actions PR CI (Ruff, mypy, PostgreSQL, coverage, Docker); успешный и намеренно красный run зафиксированы. PR #19 merged без зарегистрированного независимого approval. Формальный G1 не verified из-за оставшейся проверки merge box и текущего admin bypass; [evidence](../operations/CI.md).
 
-## Текущие задачи M2 (Issues назначены 27.10.2026)
+## Завершённая фаза M2 (28.10.2026)
 
-**[T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) — ready:** регистрация/login, JWT/Argon2, users с положительным BIGINT ID, права доступа и negative tests. После T-05: **[T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) — blocked for implementation**: группы, membership/invites, Telegram service actor и безопасная привязка. До FK/DTO согласовать users/groups с Олегом ([O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23)) и Telegram API c Лерой ([L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24)). Не начинать T-09 deploy/CD раньше предусмотренного этапа.
+- **[T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) / [PR #26](https://github.com/inte11ectua1/skinulis/pull/26) — merged/closed:** email registration/login, Argon2id, JWT, users/BIGINT, `0002_users`.
+- **[T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) / [PR #27](https://github.com/inte11ectua1/skinulis/pull/27) — merged/closed:** group/member/invites, bot-service actor, linking, `0003_groups_identity`, утверждённые internal/публичные DTO.
+- **[Issue #29](https://github.com/inte11ectua1/skinulis/issues/29) / [PR #30](https://github.com/inte11ectua1/skinulis/pull/30) — merged/closed:** UTC `Z` wire datetime и non-UTC PostgreSQL regression; это не live Telegram E2E.
+- **[Issue #32](https://github.com/inte11ectua1/skinulis/issues/32) / [PR #33](https://github.com/inte11ectua1/skinulis/pull/33) — closed:** контрактные финансовые решения переданы в финальный PR Олега #31.
+
+**M2 закрыт по коду; gate G2 не verified:** live Telegram E2E и production reverse-proxy restriction `/internal` пока без доказательства. T-01/G1 — отдельные старые контрольные пункты.
+
+## Следующая задача по roadmap — T-07 (M3, Issue ещё не назначена)
+
+Ревью безопасности и интеграции новых expense API O-04/O-05: actor (JWT/bot service), group membership, forbidden/hidden resources, validation/errors, pagination/OpenAPI, audit без раскрытия секретов. Совместно с Олегом/Лерой согласовать границы DTO, idempotency и UQ-03; не реализовывать O-04/O-05 за Олега или L-04 за Леру. T-09 deploy/CD остаётся M5, а не M3.
 
 ## Вопросы для своего ChatGPT-чата
 «Что мой следующий gate?», «Проверь угрозы Telegram actor», «Сформулируй PR description и тестовый план», «Какие доказательства CI/CD нужны для преподавателя?».
