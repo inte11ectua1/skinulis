@@ -1,6 +1,6 @@
 # Фактическое состояние проекта
 
-**Срез:** 28 октября 2026 года, после merged [PR #31](https://github.com/inte11ectua1/skinulis/pull/31), `main` `c3658f3`. Источник истины — GitHub `main`, принятые PR, Issues, CI и реальные результаты проверок. **M2 Identity завершён по реализации (все четыре Issue закрыты), но gate G2 формально не verified**: live Telegram E2E и production-изоляция `/internal` ещё не доказаны. Следующий запланированный этап — M3 Expenses, новые M3 Issues на момент среза не подтверждены как назначенные.
+**Срез:** 28 октября 2026 года, после merged [PR #31](https://github.com/inte11ectua1/skinulis/pull/31), `main` `c3658f3`. Источник истины — GitHub `main`, принятые PR, Issues, CI и реальные результаты проверок. **M2 Identity завершён по реализации (все четыре Issue закрыты), но gate G2 формально не verified**: live Telegram E2E и production-изоляция `/internal` ещё не доказаны. Следующий этап — M3 Expenses: после среза созданы и назначены Issues #35 (T-07), #36 (O-04), #39 (O-05), #37 (L-04); отдельная live Telegram QA G2 — #38. Это новые задачи, не завершённая реализация.
 
 **Этап M1 (Skeleton): завершён по объёму задач.** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12) и [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты, код находится в `main`. **G1 — не полностью подтверждён как формальный gate**: нужна доказательная проверка причины блокировки красного CI в интерфейсе и незавершённые защитные проверки T-01; у PR #19 не зарегистрировано независимого APPROVED-ревью. Это не отменяет успешную реализацию M1.
 
@@ -43,7 +43,18 @@
 
 **Факт против gate:** публичная JWT-аутентификация, группы, Telegram bot-service endpoints и клиент бота реализованы и покрыты CI/PostgreSQL tests. **G2 пока not verified**: нет подтверждённого сквозного *live Telegram* сценария на реальном боте с отдельными пользователями, а production reverse proxy для защиты `/internal` относится к T-09 и не развёрнут/не проверен. Независимое `APPROVED` для PR #31 не зарегистрировано; администраторский merge не заменяет review. Не приписывать этапу M2 работающие расходы, балансы, выплаты либо полный продуктовый E2E.
 
-**Дальше по плану — M3 Expenses:** Тимур **T-07** security/API review; Олег **O-04** CRUD `equal/custom` и **O-05** `by_items` + snapshot; Лера **L-04** мастера расходов по утверждённым API/fixtures. Это **roadmap, не утверждение, что новые Issues уже созданы**. До разработки согласовать оставшиеся финансовые Q/UQ, включая UQ-03 expense preview, без bot-side денежных вычислений.
+## M3 — Expenses (Issues назначены 28.10.2026, реализация впереди)
+
+| Issue | Ответственный | Старт и зависимость |
+|---|---|---|
+| [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) | Тимур | **ready**: security/API contract checkpoint Q-06–Q-09, UQ-03 preview и позднее независимый review O-04/O-05 |
+| [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36) | Олег | **design/tests ready**: `equal/custom` CRUD, membership, group locks, UUID replay; внешний DTO только после T-07 и обратной связи Леры |
+| [O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39) | Олег | **implementation blocked до merged O-04**: `by_items`, item shares, итоговый исторический snapshot и ресторанный тест |
+| [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37) | Лера | **mock-first ready**: FSM расходов, preview UX, список/детали; real HTTP integration после согласованных T-07/O-04/O-05 |
+| [G2 QA #38](https://github.com/inte11ectua1/skinulis/issues/38) | Лера, совместно с Тимуром | **independent QA ready**: настоящий Telegram E2E онбординга и групп в отдельном тестовом окружении; это не production /internal isolation |
+
+**Обязательная координация:** Q-06–Q-09 и UQ-03 **пока не согласованы** для финансового API; не выдумывать preview endpoint и не вычислять суммы в боте. Ни M3, ни G3 нельзя считать verified по самому факту создания Issues. T-01/G1 остаётся открытой независимо от M3.
+
 
 ## Release gates
 
