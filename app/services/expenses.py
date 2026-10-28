@@ -1,10 +1,4 @@
-"""Internal O-04 building blocks; not an HTTP/replay/stale-PUT contract.
-
-No router calls this module until T-07/L-04 approve Q-06..Q-09. In particular,
-create_once refuses any occupied UUID without comparing mutable current data.
-locked_edit exposes transaction primitives, not a last-write-wins PUT service:
-the future adapter must check the approved precondition before replace_snapshot.
-"""
+"""O-04 calculations and locked primitives; expense_crud owns replay/version policy."""
 
 from collections.abc import Collection, Iterable, Iterator
 from contextlib import contextmanager
@@ -35,7 +29,7 @@ class ExpenseAuthorRequired(PermissionError):
 
 
 class ExpenseRequestExists(RuntimeError):
-    """Occupied UUID: approved durable replay history is required, never inferred."""
+    """Occupied UUID in the low-level first-insert helper; HTTP uses expense_crud."""
 
 
 class ExpenseDetailsUnsupported(ValueError):
@@ -87,6 +81,7 @@ class ExpenseSnapshot:
     created_at: datetime
     deleted_at: datetime | None
     shares: tuple[tuple[int, int], ...]
+    version: int
 
 
 def normalize_title(value: str) -> str:
@@ -148,6 +143,7 @@ def _snapshot(expense: Expense, shares: Iterable[tuple[int, int]]) -> ExpenseSna
         expense.created_at,
         expense.deleted_at,
         saved_shares,
+        expense.version,
     )
 
 
@@ -173,10 +169,10 @@ def create_once(
     request_id: UUID,
     draft: ExpenseInput,
 ) -> ExpenseSnapshot:
-    """First insertion only. An occupied key is a blocker, NOT a replay/conflict API.
+    """Low-level first insertion for internal/legacy fixtures, without replay history.
 
-    actor_id is supplied only by a future verified dependency, never JSON input.
-    The final POST service must add approved immutable intent/result persistence.
+    Production routers use expense_crud.create with original intent/result storage.
+    Never infer a replay from this helper or supply an actor from public JSON.
     """
     with write_transaction(session):
         _identifier(group_id)
@@ -194,7 +190,9 @@ def create_once(
             )
             is not None
         ):
-            raise ExpenseRequestExists("Original request history contract is pending")
+            raise ExpenseRequestExists(
+                "Request key exists; use the original-request replay service"
+            )
         prepared = prepare_expense(draft, _members(session, group_id))
         expense = Expense(
             group_id=group_id,
@@ -246,8 +244,12 @@ def list_expenses(
     _identifier(actor_id)
     if type(limit) is not int or type(offset) is not int or limit < 1 or offset < 0:
         raise ValueError("Invalid internal pagination")
-    # HTTP limit bounds/page DTO remain Q-07/Q-08/UQ-05, not chosen by this helper.
+    # HTTP schemas enforce the approved page bounds; this helper also serves tests.
     require_member(session, group_id, actor_id)
+    # No group can contain more than positive signed BIGINT expense IDs. Avoid
+    # narrowing an arbitrary non-negative public offset into PostgreSQL BIGINT.
+    if offset > MAX_USER_ID:
+        return []
     page = (
         select(Expense.id)
         .where(Expense.group_id == group_id, Expense.deleted_at.is_(None))
@@ -273,7 +275,7 @@ def list_expenses(
 
 
 class _ExpenseEditor:
-    """Group-locked primitives only; no HTTP stale-PUT policy is selected here."""
+    """Group-locked primitives; expense_crud enforces the approved version policy."""
 
     def __init__(self, session: Session, expense: Expense) -> None:
         self._session = session
@@ -307,10 +309,7 @@ class _ExpenseEditor:
         )
 
     def replace_snapshot(self, draft: ExpenseInput) -> ExpenseSnapshot:
-        """Atomic primitive AFTER a future adapter's approved stale-write check.
-
-        This is not callable from any route. Do not expose it as unconditional PUT.
-        """
+        """Atomic primitive AFTER expense_crud has checked the expected version."""
         self._check_scope()
         expense, session = self._expense, self._session
         if expense.deleted_at is not None:
@@ -349,8 +348,8 @@ def locked_edit(
 ) -> Iterator[_ExpenseEditor]:
     """Own one transaction, group first, refreshed expense second, author only.
 
-    Caller must enforce the approved replay/stale-write policy in this scope
-    before using a primitive. There is deliberately no standalone PUT wrapper.
+    expense_crud owns approved HTTP version/replay policy in this scope;
+    callers must never use this low-level helper as unconditional public PUT.
     """
     with write_transaction(session):
         _identifier(actor_id)

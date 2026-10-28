@@ -140,8 +140,13 @@ def test_participant_validation_is_delegated_to_o02(participants: Any) -> None:
         prepare_expense(EqualExpense("Еда", "1.00", participants), [2, 5])
 
 
-def test_proposed_expense_routes_are_not_published_before_contract_approval() -> None:
+def test_approved_expense_operations_are_published_in_both_actor_channels() -> None:
     paths = create_app(
         Settings(postgres_password=SecretStr(token_urlsafe(32)), _env_file=None)
     ).openapi()["paths"]
-    assert all("expenses" not in path for path in paths)
+    for prefix in ("", "/internal"):
+        assert {"post", "get"} <= paths[f"{prefix}/groups/{{group_id}}/expenses"].keys()
+        assert "post" in paths[f"{prefix}/groups/{{group_id}}/expenses/preview"]
+        assert {"get", "put", "delete"} <= paths[
+            f"{prefix}/expenses/{{expense_id}}"
+        ].keys()

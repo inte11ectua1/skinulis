@@ -2,7 +2,7 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
-> **Срез после M2, 28.10.2026:** M1 и M2 **завершены по реализации**. В `main` находятся auth/JWT, группы, Telegram onboarding и 5 финансовых ORM-таблиц (PR #26/#27/#28/#31), а также UTC wire-fix PR #30 и финансовые контракты PR #33. Все Issues M2 #21–#24 закрыты. **Финансовые CRUD/балансы/компенсации не реализованы; live Telegram E2E и production-изоляция `/internal` не подтверждены, G2 не verified.** Точные данные и проверки — в [STATUS](docs/STATUS.md).
+> **Кодовая база 28.10.2026:** auth/JWT, группы, Telegram onboarding и финансовое хранилище дополнены Expense API equal/custom, preview и безопасными повторами O-04 ([PR #41](https://github.com/inte11ectua1/skinulis/pull/41)). Контракт [утверждён Тимуром](https://github.com/inte11ectua1/skinulis/issues/36#issuecomment-6469818682); факт merge/независимое review смотрите в GitHub. By_items, публичные балансы/план и settlement state machine остаются следующими этапами. Live Telegram E2E и production-изоляция /internal не подтверждены, G2 не verified. [STATUS](docs/STATUS.md) сохраняет факты merged этапов.
 
 ## Начало работы
 
@@ -25,8 +25,8 @@
 
 - **M1 Skeleton завершён по реализации:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12), [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты. [CI evidence](docs/operations/CI.md).
 - **M2 Identity завершён по коду:** [T-05 #21 / PR #26](https://github.com/inte11ectua1/skinulis/pull/26), [T-06 #22 / PR #27](https://github.com/inte11ectua1/skinulis/pull/27), [O-03 #23 / PR #31](https://github.com/inte11ectua1/skinulis/pull/31), [L-03 #24 / PR #28](https://github.com/inte11ectua1/skinulis/pull/28) merged, соответствующие Issues closed. Финансовая документация принята через PR #33, UTC API даты через PR #30. G2 требует отдельной проверки.
-- **M3 Expenses назначен 28.10.2026:** Тимур [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) — security/HTTP DTO; Олег [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36) → [O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39) — CRUD `equal/custom`, затем `by_items`; Лера [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37) — mock-first expense wizard и позднее API-интеграция. **G2 live Telegram QA отложена** до отдельного сигнала Тимура: [#38](https://github.com/inte11ectua1/skinulis/issues/38) закрыта как `not_planned`, никому не назначена. Финансовые Q-06–Q-09/UQ-03 preview требуют согласования; ни одна M3 фича пока не считается готовой.
-- **Открытые контрольные пункты:** T-01 (практическая проверка защиты `main`) и формальная верификация G1; серверный expense-preview UQ-03 и остальные Q/UQ — до соответствующей реализации.
+- **M3 Expenses:** Олег завершает [O-04 #36 / PR #41](https://github.com/inte11ectua1/skinulis/pull/41) по [контракту T-07](docs/contracts/O-04_EXPENSES.md): equal/custom CRUD, original replay, версии PUT/DELETE, preview и mutation balances при confirmed. [O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39) — только после merge O-04; [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37) готовит клиент по принятым mocks, HTTP-интеграция после merged API. Независимое review — [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35). Live Telegram G2 #38 отложена до отдельного сигнала Тимура.
+- **Открытые контрольные пункты:** T-01 и формальная верификация G1/G2; независимое ревью M3 и последующие финансовые этапы. Expense Q-06–Q-09/UQ-03 утверждены для O-04, что не закрывает вопросы будущих balances/settlements.
 
 Новые задачи: отдельная ветка → PR → проверки CI → согласование затронутых контрактов → merge. [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) и [STATUS](docs/STATUS.md) — актуальные этапы и доказательства.
 
@@ -438,3 +438,33 @@ branch protection; применённые настройки и доказате
 
 Новую зависимость добавляйте командой `uv add <имя>` или `uv add --dev <имя>` для инструмента разработки. Просмотрите изменения `pyproject.toml` и `uv.lock`, запустите проверки и включите оба файла в один PR. Для целевого обновления используйте `uv lock --upgrade-package <имя>` и затем `uv sync --frozen`. Не редактируйте `uv.lock` вручную. Обновление Python или uv тоже оформляйте отдельным проверенным изменением закреплённых версий и инструкций.
 
+
+## Расходы equal/custom — O-04
+
+[Контракт и ошибки](docs/contracts/O-04_EXPENSES.md), [JSON fixtures](docs/finance/fixtures/O-04_EXPENSES.json),
+[реализация и проверки](docs/finance/O-04_CONTRACT_CHECKPOINT.md). Миграция перед запуском:
+`uv run python -m app.core.migrate` (явно настроенная собственная БД, без startup миграций).
+
+Публичный клиент использует Bearer JWT. POST /groups/{id}/expenses принимает title,
+split_mode, amount RUB-string и participants (equal) либо shares (custom), плюс
+стабильный client_request_id UUID. Автор/плательщик берётся из проверенного actor,
+его нельзя подставить в JSON. 201 — первая запись, 200 — исходный сохранённый
+ответ при повторе того же нормализованного намерения/UUID даже после правок/удаления.
+GET /groups/{id}/expenses и GET /expenses/{id} возвращают сохранённые доли с нулями;
+список active, default20/max100, ASC(created_at,id), без пересчёта по новым members.
+
+PUT /expenses/{id} — полная замена только автором, обязательный expected_version;
+DELETE /expenses/{id}?expected_version=N — soft-delete с тем же ограничением автора.
+Stale первый PUT/DELETE —409, успех повышает version. Повтор DELETE автора сохраняет
+прежний tombstone/version. Все мутации возвращают {expense,balances}; при confirmed
+балансы точно пересчитываются, без confirmed допустим null. Confirmed не изменяются.
+
+POST /groups/{id}/expenses/preview проверяет тот же business body без UUID/version,
+считает доли только сервером, ничего не пишет/не резервирует. После изменения
+черновика клиент инвалидирует preview; POST повторно проверяет данные под lock.
+Все шесть операций имеют /internal mirrors с существующим T-06 service actor;
+публичный и служебный каналы не смешиваются. Бот не считает split и не ходит в БД.
+
+После POST timeout повторять прежний UUID/исходное намерение, затем GET для
+актуального экрана. После PUT timeout сначала GET/проверка version и snapshot;
+не отправлять старую правку вслепую. DELETE можно повторить с прежним N.

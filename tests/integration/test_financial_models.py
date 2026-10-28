@@ -266,7 +266,7 @@ def test_upgrade_preserves_identity_and_downgrade_only_removes_finance(
         command.upgrade(config, "head")
         command.upgrade(config, "head")
         assert ScriptDirectory.from_config(config).get_heads() == [
-            "0004_financial_domain"
+            "0005_expense_replay_version"
         ]
         command.check(config)
         with engine.connect() as connection:

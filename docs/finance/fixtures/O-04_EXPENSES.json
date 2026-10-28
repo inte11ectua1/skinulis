@@ -1,0 +1,191 @@
+{
+  "status": "IMPLEMENTED_T07_CONTRACT_CODE_REVIEW_PENDING",
+  "checkpoint": "https://github.com/inte11ectua1/skinulis/issues/36#issuecomment-6469108140",
+  "equal_create": {
+    "client_request_id": "00000000-0000-4000-8000-000000000004",
+    "split_mode": "equal",
+    "title": "Обед",
+    "amount": "100.00",
+    "participants": [
+      2,
+      5,
+      10
+    ]
+  },
+  "custom_create": {
+    "client_request_id": "00000000-0000-4000-8000-000000000005",
+    "split_mode": "custom",
+    "title": "Обед",
+    "amount": "100.00",
+    "shares": [
+      {
+        "user_id": 2,
+        "amount": "0.00"
+      },
+      {
+        "user_id": 5,
+        "amount": "40.00"
+      },
+      {
+        "user_id": 10,
+        "amount": "60.00"
+      }
+    ]
+  },
+  "equal_read": {
+    "id": 7,
+    "group_id": 1,
+    "payer_id": 1,
+    "client_request_id": "00000000-0000-4000-8000-000000000004",
+    "split_mode": "equal",
+    "title": "Обед",
+    "amount": "100.00",
+    "shares": [
+      {
+        "user_id": 2,
+        "amount": "33.34"
+      },
+      {
+        "user_id": 5,
+        "amount": "33.33"
+      },
+      {
+        "user_id": 10,
+        "amount": "33.33"
+      }
+    ],
+    "created_at": "2026-10-28T12:00:00Z",
+    "deleted_at": null,
+    "version": 1
+  },
+  "empty_page": {
+    "items": [],
+    "limit": 20,
+    "offset": 20
+  },
+  "decision": "https://github.com/inte11ectua1/skinulis/issues/36#issuecomment-6469818682",
+  "put_request": {
+    "expected_version": 1,
+    "split_mode": "custom",
+    "title": "Чай",
+    "amount": "1.00",
+    "shares": [
+      {
+        "user_id": 5,
+        "amount": "1.00"
+      }
+    ]
+  },
+  "version_conflict_error": {
+    "error": {
+      "code": "expense_version_conflict",
+      "message": "Expense was changed; reload before editing",
+      "request_id": "example-request-id"
+    }
+  },
+  "create_response": {
+    "expense": {
+      "id": 7,
+      "group_id": 1,
+      "payer_id": 1,
+      "client_request_id": "00000000-0000-4000-8000-000000000004",
+      "split_mode": "equal",
+      "title": "Обед",
+      "amount": "100.00",
+      "shares": [
+        {
+          "user_id": 2,
+          "amount": "33.34"
+        },
+        {
+          "user_id": 5,
+          "amount": "33.33"
+        },
+        {
+          "user_id": 10,
+          "amount": "33.33"
+        }
+      ],
+      "created_at": "2026-10-28T12:00:00Z",
+      "deleted_at": null,
+      "version": 1
+    },
+    "balances": null
+  },
+  "preview_request": {
+    "split_mode": "equal",
+    "title": "Обед",
+    "amount": "100.00",
+    "participants": [
+      2,
+      5,
+      10
+    ]
+  },
+  "preview_response": {
+    "group_id": 1,
+    "payer_id": 1,
+    "split_mode": "equal",
+    "title": "Обед",
+    "amount": "100.00",
+    "shares": [
+      {
+        "user_id": 2,
+        "amount": "33.34"
+      },
+      {
+        "user_id": 5,
+        "amount": "33.33"
+      },
+      {
+        "user_id": 10,
+        "amount": "33.33"
+      }
+    ]
+  },
+  "put_response": {
+    "expense": {
+      "id": 7,
+      "group_id": 1,
+      "payer_id": 1,
+      "client_request_id": "00000000-0000-4000-8000-000000000004",
+      "split_mode": "custom",
+      "title": "Чай",
+      "amount": "1.00",
+      "shares": [
+        {
+          "user_id": 5,
+          "amount": "1.00"
+        }
+      ],
+      "created_at": "2026-10-28T12:00:00Z",
+      "deleted_at": null,
+      "version": 2
+    },
+    "balances": null
+  },
+  "delete_query": {
+    "expected_version": 2
+  },
+  "delete_response": {
+    "expense": {
+      "id": 7,
+      "group_id": 1,
+      "payer_id": 1,
+      "client_request_id": "00000000-0000-4000-8000-000000000004",
+      "split_mode": "custom",
+      "title": "Чай",
+      "amount": "1.00",
+      "shares": [
+        {
+          "user_id": 5,
+          "amount": "1.00"
+        }
+      ],
+      "created_at": "2026-10-28T12:00:00Z",
+      "deleted_at": "2026-10-28T12:02:00Z",
+      "version": 3
+    },
+    "balances": null
+  }
+}

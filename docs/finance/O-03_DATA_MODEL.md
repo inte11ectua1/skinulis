@@ -22,6 +22,14 @@
 заканчивается на **`0004_financial_domain`**; полный `main` merge SHA
 `c3658f3`.
 
+## Продолжение в O-04
+
+По [решению Тимура #36](https://github.com/inte11ectua1/skinulis/issues/36#issuecomment-6469818682)
+ревизия 0005_expense_replay_version после 0004 добавляет expenses.initial_create_intent/result
+JSONB NULL и version BIGINT NOT NULL DEFAULT1 CHECK>0. Legacy history остаётся NULL,
+PK/FK/UUID scope не меняются. [Актуальный Expense API](../contracts/O-04_EXPENSES.md).
+Ниже сохранён срез пяти таблиц O-03; actual head ветки O-04 — 0005.
+
 ## Таблицы
 
 Все ID и `amount_kopecks` — signed BIGINT. У surrogate ID — Identity и CHECK >0.

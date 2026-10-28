@@ -1,6 +1,6 @@
 # O-01 — предлагаемые примеры входных данных API
 
-**Предлагаемый контракт для согласования, не действующий OpenAPI.** Маршруты и discriminated union предусмотрены [TECHNICAL_DECISIONS §6](../TECHNICAL_DECISIONS.md); полные схемы и имена полей пока не реализованы. Числовые ID ниже — синтетические. Типы ID, поля, success-коды, error.code и повторы требуют [Q-01/Q-02/Q-06/Q-07/Q-08](O-01_OPEN_QUESTIONS.md).
+**Исторические примеры O-01, не действующий OpenAPI. Для реализованных equal/custom O-04 действуют [принятый контракт](../contracts/O-04_EXPENSES.md) и [typed JSON fixtures](fixtures/O-04_EXPENSES.json); mutation envelope/replay/version/preview утверждены решением Тимура #36. Остальные примеры by_items/settlements остаются предложениями до своих этапов.** Маршруты и discriminated union предусмотрены [TECHNICAL_DECISIONS §6](../TECHNICAL_DECISIONS.md); полные схемы и имена полей пока не реализованы. Числовые ID ниже — синтетические. Типы ID, поля, success-коды, error.code и повторы требуют [Q-01/Q-02/Q-06/Q-07/Q-08](O-01_OPEN_QUESTIONS.md).
 
 Правила и арифметика: [инварианты](O-01_INVARIANTS.md). Покрытие: [матрица](O-01_TEST_MATRIX.md). Каждый пример проверяет финансовый результат при принятии предлагаемых имён; публикация примеров не принимает схему за команду.
 
