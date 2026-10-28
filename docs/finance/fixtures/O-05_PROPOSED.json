@@ -1,0 +1,604 @@
+{
+  "status": "PROPOSED_BY_ITEMS_WIRE_NOT_IMPLEMENTED",
+  "checkpoint": "https://github.com/inte11ectua1/skinulis/issues/39#issuecomment-6471710129",
+  "preview_request": {
+    "title": "Ресторан",
+    "split_mode": "by_items",
+    "items": [
+      {
+        "title": "Паста",
+        "amount": "700.00",
+        "participants": [
+          10
+        ]
+      },
+      {
+        "title": "Стейк",
+        "amount": "1100.00",
+        "participants": [
+          20
+        ]
+      },
+      {
+        "title": "Салат",
+        "amount": "500.00",
+        "participants": [
+          30
+        ]
+      },
+      {
+        "title": "Пицца",
+        "amount": "900.00",
+        "participants": [
+          30,
+          10,
+          20
+        ]
+      }
+    ]
+  },
+  "preview_response_proposal": {
+    "group_id": 100,
+    "payer_id": 10,
+    "split_mode": "by_items",
+    "title": "Ресторан",
+    "amount": "3200.00",
+    "shares": [
+      {
+        "user_id": 10,
+        "amount": "1000.00"
+      },
+      {
+        "user_id": 20,
+        "amount": "1400.00"
+      },
+      {
+        "user_id": 30,
+        "amount": "800.00"
+      }
+    ],
+    "items": [
+      {
+        "position": 1,
+        "title": "Паста",
+        "amount": "700.00",
+        "shares": [
+          {
+            "user_id": 10,
+            "amount": "700.00"
+          }
+        ]
+      },
+      {
+        "position": 2,
+        "title": "Стейк",
+        "amount": "1100.00",
+        "shares": [
+          {
+            "user_id": 20,
+            "amount": "1100.00"
+          }
+        ]
+      },
+      {
+        "position": 3,
+        "title": "Салат",
+        "amount": "500.00",
+        "shares": [
+          {
+            "user_id": 30,
+            "amount": "500.00"
+          }
+        ]
+      },
+      {
+        "position": 4,
+        "title": "Пицца",
+        "amount": "900.00",
+        "shares": [
+          {
+            "user_id": 10,
+            "amount": "300.00"
+          },
+          {
+            "user_id": 20,
+            "amount": "300.00"
+          },
+          {
+            "user_id": 30,
+            "amount": "300.00"
+          }
+        ]
+      }
+    ]
+  },
+  "create_request": {
+    "title": "Ресторан",
+    "split_mode": "by_items",
+    "items": [
+      {
+        "title": "Паста",
+        "amount": "700.00",
+        "participants": [
+          10
+        ]
+      },
+      {
+        "title": "Стейк",
+        "amount": "1100.00",
+        "participants": [
+          20
+        ]
+      },
+      {
+        "title": "Салат",
+        "amount": "500.00",
+        "participants": [
+          30
+        ]
+      },
+      {
+        "title": "Пицца",
+        "amount": "900.00",
+        "participants": [
+          30,
+          10,
+          20
+        ]
+      }
+    ],
+    "client_request_id": "00000000-0000-4000-8000-000000000039"
+  },
+  "create_response_proposal": {
+    "expense": {
+      "group_id": 100,
+      "payer_id": 10,
+      "split_mode": "by_items",
+      "title": "Ресторан",
+      "amount": "3200.00",
+      "shares": [
+        {
+          "user_id": 10,
+          "amount": "1000.00"
+        },
+        {
+          "user_id": 20,
+          "amount": "1400.00"
+        },
+        {
+          "user_id": 30,
+          "amount": "800.00"
+        }
+      ],
+      "items": [
+        {
+          "position": 1,
+          "title": "Паста",
+          "amount": "700.00",
+          "shares": [
+            {
+              "user_id": 10,
+              "amount": "700.00"
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "title": "Стейк",
+          "amount": "1100.00",
+          "shares": [
+            {
+              "user_id": 20,
+              "amount": "1100.00"
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "title": "Салат",
+          "amount": "500.00",
+          "shares": [
+            {
+              "user_id": 30,
+              "amount": "500.00"
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "title": "Пицца",
+          "amount": "900.00",
+          "shares": [
+            {
+              "user_id": 10,
+              "amount": "300.00"
+            },
+            {
+              "user_id": 20,
+              "amount": "300.00"
+            },
+            {
+              "user_id": 30,
+              "amount": "300.00"
+            }
+          ]
+        }
+      ],
+      "id": 7,
+      "client_request_id": "00000000-0000-4000-8000-000000000039",
+      "created_at": "2026-10-28T12:00:00Z",
+      "deleted_at": null,
+      "version": 1
+    },
+    "balances": null
+  },
+  "detail_response_proposal": {
+    "group_id": 100,
+    "payer_id": 10,
+    "split_mode": "by_items",
+    "title": "Ресторан",
+    "amount": "3200.00",
+    "shares": [
+      {
+        "user_id": 10,
+        "amount": "1000.00"
+      },
+      {
+        "user_id": 20,
+        "amount": "1400.00"
+      },
+      {
+        "user_id": 30,
+        "amount": "800.00"
+      }
+    ],
+    "items": [
+      {
+        "position": 1,
+        "title": "Паста",
+        "amount": "700.00",
+        "shares": [
+          {
+            "user_id": 10,
+            "amount": "700.00"
+          }
+        ]
+      },
+      {
+        "position": 2,
+        "title": "Стейк",
+        "amount": "1100.00",
+        "shares": [
+          {
+            "user_id": 20,
+            "amount": "1100.00"
+          }
+        ]
+      },
+      {
+        "position": 3,
+        "title": "Салат",
+        "amount": "500.00",
+        "shares": [
+          {
+            "user_id": 30,
+            "amount": "500.00"
+          }
+        ]
+      },
+      {
+        "position": 4,
+        "title": "Пицца",
+        "amount": "900.00",
+        "shares": [
+          {
+            "user_id": 10,
+            "amount": "300.00"
+          },
+          {
+            "user_id": 20,
+            "amount": "300.00"
+          },
+          {
+            "user_id": 30,
+            "amount": "300.00"
+          }
+        ]
+      }
+    ],
+    "id": 7,
+    "client_request_id": "00000000-0000-4000-8000-000000000039",
+    "created_at": "2026-10-28T12:00:00Z",
+    "deleted_at": null,
+    "version": 1
+  },
+  "put_request_proposal": {
+    "title": "Копейки",
+    "split_mode": "by_items",
+    "items": [
+      {
+        "title": "Чай",
+        "amount": "0.01",
+        "participants": [
+          10,
+          20,
+          30
+        ]
+      },
+      {
+        "title": "Сбор",
+        "amount": "0.01",
+        "participants": [
+          30,
+          10,
+          20
+        ]
+      }
+    ],
+    "expected_version": 1
+  },
+  "penny_preview_proposal": {
+    "group_id": 100,
+    "payer_id": 10,
+    "split_mode": "by_items",
+    "title": "Копейки",
+    "amount": "0.02",
+    "shares": [
+      {
+        "user_id": 10,
+        "amount": "0.02"
+      },
+      {
+        "user_id": 20,
+        "amount": "0.00"
+      },
+      {
+        "user_id": 30,
+        "amount": "0.00"
+      }
+    ],
+    "items": [
+      {
+        "position": 1,
+        "title": "Чай",
+        "amount": "0.01",
+        "shares": [
+          {
+            "user_id": 10,
+            "amount": "0.01"
+          },
+          {
+            "user_id": 20,
+            "amount": "0.00"
+          },
+          {
+            "user_id": 30,
+            "amount": "0.00"
+          }
+        ]
+      },
+      {
+        "position": 2,
+        "title": "Сбор",
+        "amount": "0.01",
+        "shares": [
+          {
+            "user_id": 10,
+            "amount": "0.01"
+          },
+          {
+            "user_id": 20,
+            "amount": "0.00"
+          },
+          {
+            "user_id": 30,
+            "amount": "0.00"
+          }
+        ]
+      }
+    ]
+  },
+  "original_post_replay_proposal": {
+    "expense": {
+      "group_id": 100,
+      "payer_id": 10,
+      "split_mode": "by_items",
+      "title": "Ресторан",
+      "amount": "3200.00",
+      "shares": [
+        {
+          "user_id": 10,
+          "amount": "1000.00"
+        },
+        {
+          "user_id": 20,
+          "amount": "1400.00"
+        },
+        {
+          "user_id": 30,
+          "amount": "800.00"
+        }
+      ],
+      "items": [
+        {
+          "position": 1,
+          "title": "Паста",
+          "amount": "700.00",
+          "shares": [
+            {
+              "user_id": 10,
+              "amount": "700.00"
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "title": "Стейк",
+          "amount": "1100.00",
+          "shares": [
+            {
+              "user_id": 20,
+              "amount": "1100.00"
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "title": "Салат",
+          "amount": "500.00",
+          "shares": [
+            {
+              "user_id": 30,
+              "amount": "500.00"
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "title": "Пицца",
+          "amount": "900.00",
+          "shares": [
+            {
+              "user_id": 10,
+              "amount": "300.00"
+            },
+            {
+              "user_id": 20,
+              "amount": "300.00"
+            },
+            {
+              "user_id": 30,
+              "amount": "300.00"
+            }
+          ]
+        }
+      ],
+      "id": 7,
+      "client_request_id": "00000000-0000-4000-8000-000000000039",
+      "created_at": "2026-10-28T12:00:00Z",
+      "deleted_at": null,
+      "version": 1
+    },
+    "balances": null
+  },
+  "normalized_intent_proposal": {
+    "group_id": 100,
+    "actor_id": 10,
+    "title": "Ресторан",
+    "split_mode": "by_items",
+    "amount_kopecks": 320000,
+    "items": [
+      {
+        "title": "Паста",
+        "amount_kopecks": 70000,
+        "participants": [
+          10
+        ]
+      },
+      {
+        "title": "Стейк",
+        "amount_kopecks": 110000,
+        "participants": [
+          20
+        ]
+      },
+      {
+        "title": "Салат",
+        "amount_kopecks": 50000,
+        "participants": [
+          30
+        ]
+      },
+      {
+        "title": "Пицца",
+        "amount_kopecks": 90000,
+        "participants": [
+          10,
+          20,
+          30
+        ]
+      }
+    ]
+  },
+  "reordered_items_same_key_conflict_request": {
+    "title": "Ресторан",
+    "split_mode": "by_items",
+    "items": [
+      {
+        "title": "Пицца",
+        "amount": "900.00",
+        "participants": [
+          30,
+          10,
+          20
+        ]
+      },
+      {
+        "title": "Салат",
+        "amount": "500.00",
+        "participants": [
+          30
+        ]
+      },
+      {
+        "title": "Стейк",
+        "amount": "1100.00",
+        "participants": [
+          20
+        ]
+      },
+      {
+        "title": "Паста",
+        "amount": "700.00",
+        "participants": [
+          10
+        ]
+      }
+    ],
+    "client_request_id": "00000000-0000-4000-8000-000000000039"
+  },
+  "invalid_item_request": {
+    "title": "Ресторан",
+    "split_mode": "by_items",
+    "items": [
+      {
+        "title": "Паста",
+        "amount": "700.00",
+        "participants": [
+          10
+        ]
+      },
+      {
+        "title": "Стейк",
+        "amount": "0.00",
+        "participants": [
+          20
+        ]
+      },
+      {
+        "title": "Салат",
+        "amount": "500.00",
+        "participants": [
+          30
+        ]
+      },
+      {
+        "title": "Пицца",
+        "amount": "900.00",
+        "participants": [
+          30,
+          10,
+          20
+        ]
+      }
+    ],
+    "client_request_id": "00000000-0000-4000-8000-000000000039"
+  },
+  "invalid_item_error_proposal": {
+    "error": {
+      "code": "validation_error",
+      "message": "Invalid request data",
+      "request_id": "example-request-id"
+    }
+  }
+}

@@ -8,15 +8,31 @@ from typing import Literal
 from unicodedata import category, normalize
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import (
+    BigInteger,
+    String,
+    cast,
+    delete,
+    literal,
+    null,
+    select,
+    union_all,
+)
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import Select
 
 from app.core.errors import ApiError
 from app.core.identity_tokens import utc_now
-from app.models import Expense, ExpenseItem, ExpenseShare, GroupMember
+from app.models import Expense, ExpenseItem, ExpenseItemShare, ExpenseShare, GroupMember
 from app.services.groups import require_member
 from app.services.money import parse_money, validate_expense_amount
-from app.services.splits import MAX_USER_ID, split_custom, split_equal
+from app.services.splits import (
+    MAX_ITEMS,
+    MAX_USER_ID,
+    SplitError,
+    split_custom,
+    split_equal,
+)
 from app.services.transactions import write_transaction
 
 
@@ -56,15 +72,48 @@ class CustomExpense:
     shares: tuple[tuple[int, str], ...]
 
 
-type ExpenseInput = EqualExpense | CustomExpense
+@dataclass(frozen=True, slots=True)
+class ReceiptItemInput:
+    """Internal ordered item; not an approved HTTP DTO."""
+
+    title: str
+    amount: str
+    participants: tuple[int, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ByItemsExpense:
+    title: str
+    items: tuple[ReceiptItemInput, ...]
+
+
+type ExpenseInput = EqualExpense | CustomExpense | ByItemsExpense
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedExpenseItem:
+    position: int
+    title: str
+    amount_kopecks: int
+    shares: tuple[tuple[int, int], ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ExpenseItemSnapshot:
+    id: int
+    position: int
+    title: str
+    amount_kopecks: int
+    shares: tuple[tuple[int, int], ...]
 
 
 @dataclass(frozen=True, slots=True)
 class PreparedExpense:
     title: str
-    split_mode: Literal["equal", "custom"]
+    split_mode: Literal["equal", "custom", "by_items"]
     amount_kopecks: int
     shares: tuple[tuple[int, int], ...]
+    items: tuple[PreparedExpenseItem, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,6 +131,7 @@ class ExpenseSnapshot:
     deleted_at: datetime | None
     shares: tuple[tuple[int, int], ...]
     version: int
+    items: tuple[ExpenseItemSnapshot, ...] = ()
 
 
 def normalize_title(value: str) -> str:
@@ -98,6 +148,26 @@ def normalize_title(value: str) -> str:
 
 def prepare_expense(draft: ExpenseInput, members: Collection[int]) -> PreparedExpense:
     title = normalize_title(draft.title)
+    if isinstance(draft, ByItemsExpense):
+        if not 1 <= len(draft.items) <= MAX_ITEMS:
+            raise SplitError("A receipt must contain between 1 and 50 items")
+        total = 0
+        combined: dict[int, int] = {}
+        items: list[PreparedExpenseItem] = []
+        for position, item in enumerate(draft.items, 1):
+            item_title = normalize_title(item.title)
+            amount = validate_expense_amount(parse_money(item.amount))
+            shares = split_equal(amount, item.participants, group_members=members)
+            total += amount
+            validate_expense_amount(total)
+            for user_id, share in shares.items():
+                combined[user_id] = combined.get(user_id, 0) + share
+            items.append(
+                PreparedExpenseItem(position, item_title, amount, tuple(shares.items()))
+            )
+        return PreparedExpense(
+            title, "by_items", total, tuple(sorted(combined.items())), tuple(items)
+        )
     amount = validate_expense_amount(parse_money(draft.amount))
     if isinstance(draft, EqualExpense):
         mode: Literal["equal", "custom"] = "equal"
@@ -125,13 +195,36 @@ def _members(session: Session, group_id: int) -> list[int]:
     )
 
 
-def _snapshot(expense: Expense, shares: Iterable[tuple[int, int]]) -> ExpenseSnapshot:
+def _snapshot(
+    expense: Expense,
+    shares: Iterable[tuple[int, int]],
+    items: tuple[ExpenseItemSnapshot, ...] = (),
+) -> ExpenseSnapshot:
     saved_shares = tuple(shares)
     if (
         not saved_shares
         or sum(amount for _, amount in saved_shares) != expense.amount_kopecks
     ):
         raise ExpenseSnapshotInvalid("Stored expense snapshot is inconsistent")
+    if expense.split_mode == "by_items":
+        if not 1 <= len(items) <= MAX_ITEMS:
+            raise ExpenseSnapshotInvalid("Stored receipt item set is inconsistent")
+        combined: dict[int, int] = {}
+        for item in items:
+            if (
+                not item.shares
+                or sum(amount for _, amount in item.shares) != item.amount_kopecks
+            ):
+                raise ExpenseSnapshotInvalid("Stored item snapshot is inconsistent")
+            for user_id, amount in item.shares:
+                combined[user_id] = combined.get(user_id, 0) + amount
+        if (
+            sum(item.amount_kopecks for item in items) != expense.amount_kopecks
+            or tuple(sorted(combined.items())) != saved_shares
+        ):
+            raise ExpenseSnapshotInvalid("Stored final and item snapshots disagree")
+    elif items:
+        raise ExpenseSnapshotInvalid("Unexpected receipt details for a simple expense")
     return ExpenseSnapshot(
         expense.id,
         expense.group_id,
@@ -144,6 +237,7 @@ def _snapshot(expense: Expense, shares: Iterable[tuple[int, int]]) -> ExpenseSna
         expense.deleted_at,
         saved_shares,
         expense.version,
+        items,
     )
 
 
@@ -160,6 +254,31 @@ def _insert_shares(
         for user_id, amount in prepared.shares
     )
     session.flush()
+    if prepared.items:
+        items = [
+            ExpenseItem(
+                expense_id=expense.id,
+                group_id=expense.group_id,
+                title=item.title,
+                amount_kopecks=item.amount_kopecks,
+                position=item.position,
+            )
+            for item in prepared.items
+        ]
+        session.add_all(items)
+        session.flush()
+        session.add_all(
+            ExpenseItemShare(
+                item_id=stored.id,
+                expense_id=expense.id,
+                group_id=expense.group_id,
+                user_id=user_id,
+                amount_kopecks=amount,
+            )
+            for stored, item in zip(items, prepared.items, strict=True)
+            for user_id, amount in item.shares
+        )
+        session.flush()
 
 
 def create_once(
@@ -205,36 +324,136 @@ def create_once(
         session.add(expense)
         session.flush()
         _insert_shares(session, expense, prepared)
+        if prepared.items:
+            return _read_snapshots(
+                session, select(Expense.id).where(Expense.id == expense.id)
+            )[0]
         return _snapshot(expense, prepared.shares)
+
+
+def _read_snapshots(session: Session, selected: Select[int]) -> list[ExpenseSnapshot]:
+    """One MVCC snapshot, no final-share × item-share Cartesian product.
+
+    Materialize only page IDs, then append final/detail rows with UNION ALL.
+    Network/database statement count does not grow with receipts or positions.
+    """
+    page = selected.cte("expense_page")
+    details = union_all(
+        select(
+            ExpenseShare.expense_id,
+            literal("final", String).label("kind"),
+            cast(null(), BigInteger).label("item_id"),
+            cast(null(), BigInteger).label("position"),
+            cast(null(), String).label("title"),
+            cast(null(), BigInteger).label("item_amount"),
+            ExpenseShare.user_id,
+            ExpenseShare.amount_kopecks.label("share_amount"),
+        ).join(page, page.c.id == ExpenseShare.expense_id),
+        select(
+            ExpenseItem.expense_id,
+            literal("item", String),
+            ExpenseItem.id,
+            ExpenseItem.position,
+            ExpenseItem.title,
+            ExpenseItem.amount_kopecks,
+            ExpenseItemShare.user_id,
+            ExpenseItemShare.amount_kopecks,
+        )
+        .join(page, page.c.id == ExpenseItem.expense_id)
+        .outerjoin(ExpenseItemShare, ExpenseItemShare.item_id == ExpenseItem.id),
+    ).subquery("financial_rows")
+    rows = session.execute(
+        select(
+            Expense,
+            details.c.kind,
+            details.c.item_id,
+            details.c.position,
+            details.c.title,
+            details.c.item_amount,
+            details.c.user_id,
+            details.c.share_amount,
+        )
+        .join(page, page.c.id == Expense.id)
+        .outerjoin(details, details.c.expense_id == Expense.id)
+        .order_by(
+            Expense.created_at,
+            Expense.id,
+            details.c.kind,
+            details.c.position,
+            details.c.user_id,
+        )
+        .execution_options(populate_existing=True)
+    )
+    values: dict[
+        int,
+        tuple[
+            Expense,
+            list[tuple[int, int]],
+            dict[tuple[int, int, str, int], list[tuple[int, int]]],
+        ],
+    ] = {}
+    for (
+        expense,
+        kind,
+        item_id,
+        position,
+        title,
+        item_amount,
+        user_id,
+        share_amount,
+    ) in rows:
+        entry = values.setdefault(expense.id, (expense, [], {}))
+        if kind == "final":
+            entry[1].append((user_id, share_amount))
+        elif kind == "item":
+            item_shares = entry[2].setdefault(
+                (item_id, position, title, item_amount), []
+            )
+            if user_id is not None:
+                item_shares.append((user_id, share_amount))
+    return [
+        _snapshot(
+            expense,
+            shares,
+            tuple(
+                ExpenseItemSnapshot(
+                    item_id, position, title, amount, tuple(item_shares)
+                )
+                for (item_id, position, title, amount), item_shares in items.items()
+            ),
+        )
+        for expense, shares, items in values.values()
+    ]
+
+
+def validate_receipts(session: Session, group_id: int) -> None:
+    """Validate stored details against final snapshots; never redistribute shares."""
+    _read_snapshots(
+        session,
+        select(Expense.id).where(
+            Expense.group_id == group_id,
+            Expense.deleted_at.is_(None),
+            Expense.split_mode == "by_items",
+        ),
+    )
 
 
 def read_expense(session: Session, actor_id: int, expense_id: int) -> ExpenseSnapshot:
     _identifier(actor_id)
     _identifier(expense_id)
-    # One SQL snapshot for metadata AND shares: a concurrent replacement cannot
-    # leave a reader with old metadata and new shares from a second SELECT.
-    rows = session.execute(
-        select(Expense, ExpenseShare)
+    values = _read_snapshots(
+        session,
+        select(Expense.id)
         .join(
             GroupMember,
             (GroupMember.group_id == Expense.group_id)
             & (GroupMember.user_id == actor_id),
         )
-        .outerjoin(ExpenseShare, ExpenseShare.expense_id == Expense.id)
-        .where(Expense.id == expense_id, Expense.deleted_at.is_(None))
-        .order_by(ExpenseShare.user_id)
-        .execution_options(populate_existing=True)
-    ).all()
-    if not rows:
-        raise ExpenseNotFound("Expense not found")
-    return _snapshot(
-        rows[0][0],
-        (
-            (share.user_id, share.amount_kopecks)
-            for _, share in rows
-            if share is not None
-        ),
+        .where(Expense.id == expense_id, Expense.deleted_at.is_(None)),
     )
+    if not values:
+        raise ExpenseNotFound("Expense not found")
+    return values[0]
 
 
 def list_expenses(
@@ -244,34 +463,17 @@ def list_expenses(
     _identifier(actor_id)
     if type(limit) is not int or type(offset) is not int or limit < 1 or offset < 0:
         raise ValueError("Invalid internal pagination")
-    # HTTP schemas enforce the approved page bounds; this helper also serves tests.
     require_member(session, group_id, actor_id)
-    # No group can contain more than positive signed BIGINT expense IDs. Avoid
-    # narrowing an arbitrary non-negative public offset into PostgreSQL BIGINT.
     if offset > MAX_USER_ID:
         return []
-    page = (
+    return _read_snapshots(
+        session,
         select(Expense.id)
         .where(Expense.group_id == group_id, Expense.deleted_at.is_(None))
         .order_by(Expense.created_at, Expense.id)
         .limit(limit)
-        .offset(offset)
-        .subquery()
+        .offset(offset),
     )
-    rows = session.execute(
-        select(Expense, ExpenseShare)
-        .join(page, page.c.id == Expense.id)
-        .outerjoin(ExpenseShare, ExpenseShare.expense_id == Expense.id)
-        .order_by(Expense.created_at, Expense.id, ExpenseShare.user_id)
-        .execution_options(populate_existing=True)
-    ).all()
-    values: dict[int, tuple[Expense, list[tuple[int, int]]]] = {}
-    for expense, share in rows:
-        if expense.id not in values:
-            values[expense.id] = (expense, [])
-        if share is not None:
-            values[expense.id][1].append((share.user_id, share.amount_kopecks))
-    return [_snapshot(expense, shares) for expense, shares in values.values()]
 
 
 class _ExpenseEditor:
@@ -299,39 +501,53 @@ class _ExpenseEditor:
 
     def snapshot(self) -> ExpenseSnapshot:
         self._check_scope()
-        shares = self._session.execute(
-            select(ExpenseShare.user_id, ExpenseShare.amount_kopecks)
-            .where(ExpenseShare.expense_id == self._expense.id)
-            .order_by(ExpenseShare.user_id)
-        )
-        return _snapshot(
-            self._expense, ((user_id, amount) for user_id, amount in shares)
-        )
+        return _read_snapshots(
+            self._session, select(Expense.id).where(Expense.id == self._expense.id)
+        )[0]
 
-    def replace_snapshot(self, draft: ExpenseInput) -> ExpenseSnapshot:
-        """Atomic primitive AFTER expense_crud has checked the expected version."""
+    def replace_snapshot(
+        self, draft: ExpenseInput, *, allow_receipt: bool = False
+    ) -> ExpenseSnapshot:
+        """Storage replacement; HTTP mode transitions still require checkpoint approval.
+
+        The existing adapter cannot opt into receipt replacement accidentally.
+        Explicit internal opt-in is for O-05 storage/concurrency tests until approved.
+        """
         self._check_scope()
         expense, session = self._expense, self._session
         if expense.deleted_at is not None:
             raise ExpenseNotFound("Expense not found")
-        if (
-            expense.split_mode not in ("equal", "custom")
+        has_items = (
+            expense.split_mode == "by_items"
             or session.scalar(
                 select(ExpenseItem.id)
                 .where(ExpenseItem.expense_id == expense.id)
                 .limit(1)
             )
             is not None
-        ):
-            raise ExpenseDetailsUnsupported("Receipt replacement belongs to O-05")
+        )
+        if (has_items or isinstance(draft, ByItemsExpense)) and not allow_receipt:
+            raise ExpenseDetailsUnsupported(
+                "Receipt transitions require O-05 checkpoint approval"
+            )
         prepared = prepare_expense(draft, _members(session, expense.group_id))
+        if has_items:
+            self.snapshot()  # Do not repair a corrupted historical receipt silently.
+            session.execute(
+                delete(ExpenseItemShare).where(
+                    ExpenseItemShare.expense_id == expense.id
+                )
+            )
+            session.execute(
+                delete(ExpenseItem).where(ExpenseItem.expense_id == expense.id)
+            )
         session.execute(
             delete(ExpenseShare).where(ExpenseShare.expense_id == expense.id)
         )
         expense.title, expense.split_mode = prepared.title, prepared.split_mode
         expense.amount_kopecks = prepared.amount_kopecks
         _insert_shares(session, expense, prepared)
-        return _snapshot(expense, prepared.shares)
+        return self.snapshot()
 
     def mark_deleted(self) -> ExpenseSnapshot:
         """Set the tombstone once; keep all shares/items/settlements unchanged."""

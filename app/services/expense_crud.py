@@ -17,6 +17,7 @@ from app.schemas.expenses import (
 from app.services import expenses
 from app.services.expense_balances import mutation_balances
 from app.services.expenses import (
+    ByItemsExpense,
     CustomExpense,
     ExpenseInput,
     ExpenseSnapshot,
@@ -29,6 +30,8 @@ from app.services.transactions import write_transaction
 
 
 def _prepare(session: Session, group_id: int, draft: ExpenseInput) -> PreparedExpense:
+    if isinstance(draft, ByItemsExpense):
+        raise ApiError(400, "validation_error", "Receipt HTTP contract awaits approval")
     members = expenses._members(session, group_id)
     ids = (
         [user_id for user_id, _ in draft.shares]
@@ -76,6 +79,10 @@ def _result(session: Session, value: ExpenseSnapshot) -> ExpenseMutation:
 def _intent(
     group_id: int, actor_id: int, draft: ExpenseInput, prepared: PreparedExpense
 ) -> dict[str, Any]:
+    if isinstance(draft, ByItemsExpense):
+        raise expenses.ExpenseDetailsUnsupported(
+            "Ordered receipt intention awaits approval"
+        )
     result: dict[str, Any] = dict(
         group_id=group_id,
         actor_id=actor_id,
@@ -153,6 +160,8 @@ def preview(
 ) -> PreviewProfile:
     require_member(session, group_id, actor_id)
     value = _prepare(session, group_id, draft)
+    if value.split_mode == "by_items":
+        raise expenses.ExpenseDetailsUnsupported("Receipt preview DTO awaits approval")
     return PreviewProfile(
         group_id=group_id,
         payer_id=actor_id,

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Expense, ExpenseShare, GroupMember, Settlement
 from app.schemas.expenses import BalanceProfile
-from app.services.expenses import ExpenseSnapshotInvalid
+from app.services.expenses import ExpenseSnapshotInvalid, validate_receipts
 from app.services.money import format_money
 
 
@@ -33,6 +33,7 @@ def mutation_balances(session: Session, group_id: int) -> list[BalanceProfile] |
     for amount, count, total in snapshots:
         if count == 0 or total != amount:
             raise ExpenseSnapshotInvalid("Stored expense snapshot is inconsistent")
+    validate_receipts(session, group_id)
     members = list(
         session.scalars(
             select(GroupMember.user_id)
