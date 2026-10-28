@@ -121,7 +121,7 @@ coverage app + bot 98.31%. Ruff/mypy, frozen sync/lock, pip check и аудит
 22 PostgreSQL integration, общее branch coverage app + bot 98.31%, Docker build
 успешен. Окончательный [run](https://github.com/inte11ectua1/skinulis/actions/runs/40468385916)
 на fc5cd23 также успешен. PR #26 merged, Issue #21 closed. Независимого
-APPROVED-review нет; DTO/TTL/алгоритм/FK остаются предложениями для согласования; G2 не закрыт.
+APPROVED-review нет; на момент T-05 DTO/TTL/алгоритм/FK были вынесены как предложения. Часть identity-контрактов позже принята tech lead в T-06; это не заменяет независимый review и не закрывает G2.
 
 
 ## T-06 — PR #27, контракт утверждён tech lead
