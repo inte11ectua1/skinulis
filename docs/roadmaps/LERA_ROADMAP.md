@@ -17,9 +17,13 @@
 
 **L-02** закрыта: [Issue #12](https://github.com/inte11ectua1/skinulis/issues/12), [PR #18](https://github.com/inte11ectua1/skinulis/pull/18). Есть aiogram-каркас, `/start`, `/help`, `/cancel`, типизированный async httpx-клиент для существующего `/health`, mock-тесты. Live Telegram/онбординг пока не подтверждены.
 
-## Текущая назначенная задача M2
+## Завершённая фаза M2 (28.10.2026)
 
-**[L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) — assigned, mock-ready:** онбординг/профиль, одноразовая привязка, группы/приглашения через API Тимура ([T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) → [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22)). Сразу можно готовить mock FSM/fixtures, но не внедрять неподтверждённые HTTP endpoints/DTO. Начать с [UQ-01/UQ-02](../ux/L-01_CONTRACT_QUESTIONS.md) и согласования с Тимуром. Финансовые Q-01/Q-02 уже приняты в [Issue #11](https://github.com/inte11ectua1/skinulis/issues/11); бот не вычисляет деньги.
+**[L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) / [PR #28](https://github.com/inte11ectua1/skinulis/pull/28) — merged/closed.** Реализованы `/start` → явный Create/Link, Telegram-only и привязка существующего API-профиля, меню/создание групп, участники, одноразовые invite/deep links, отзыв/обработка used/expired, типизированный internal httpx client, FSM и восстановление после неопределённого ответа. Есть mocked Telegram session и интеграционные проверки с HTTP API + PostgreSQL; CI 5/5 успешно ([run](https://github.com/inte11ectua1/skinulis/actions/runs/40658217735)). **Live Telegram E2E на настоящем боте пока не подтверждено**, G2 формально pending; production isolation `/internal` — задача T-09. UTC-даты на backend унифицированы [PR #30](https://github.com/inte11ectua1/skinulis/pull/30).
+
+## Следующая задача roadmap — L-04 (M3, Issue ещё не назначена)
+
+Telegram expense wizard `equal/custom/by_items`, списки/детали по реальным O-04/O-05 OpenAPI/fixtures; до утверждения API допустимы mocks/FSM, **никакого bot-side подсчёта долей**. Серверный expense preview **UQ-03 не согласован** — не изобретать endpoint; согласовать с Олегом и Тимуром до UX-интеграции.
 
 ## Для своего чата
 «Разбей создание by_items на последовательные кнопки», «Проверь возможные ошибки мастера», «Дай промпт Codex для L-04 без изменения backend», «Составь E2E чек-лист».
