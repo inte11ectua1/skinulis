@@ -1,8 +1,9 @@
-"""Approved O-04 request transactions, original replay and optimistic writes."""
+"""Approved O-04/O-05 request transactions, original replay and optimistic writes."""
 
 from typing import Any
 from uuid import UUID
 
+from pydantic import TypeAdapter
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -10,13 +11,15 @@ from app.core.errors import ApiError
 from app.models import Expense
 from app.schemas.expenses import (
     ExpenseMutation,
-    ExpenseProfile,
-    PreviewProfile,
+    ExpenseResponse,
+    ItemProfile,
+    PreviewResponse,
     ShareProfile,
 )
 from app.services import expenses
 from app.services.expense_balances import mutation_balances
 from app.services.expenses import (
+    ByItemsExpense,
     CustomExpense,
     ExpenseInput,
     ExpenseSnapshot,
@@ -31,9 +34,13 @@ from app.services.transactions import write_transaction
 def _prepare(session: Session, group_id: int, draft: ExpenseInput) -> PreparedExpense:
     members = expenses._members(session, group_id)
     ids = (
-        [user_id for user_id, _ in draft.shares]
-        if isinstance(draft, CustomExpense)
-        else list(draft.participants)
+        [uid for item in draft.items for uid in item.participants]
+        if isinstance(draft, ByItemsExpense)
+        else (
+            [user_id for user_id, _ in draft.shares]
+            if isinstance(draft, CustomExpense)
+            else list(draft.participants)
+        )
     )
     if not set(ids) <= set(members):
         raise ApiError(
@@ -45,8 +52,26 @@ def _prepare(session: Session, group_id: int, draft: ExpenseInput) -> PreparedEx
         raise ApiError(400, "validation_error", "Invalid expense data") from error
 
 
-def _profile(value: ExpenseSnapshot) -> ExpenseProfile:
-    return ExpenseProfile.model_validate(
+def _items(
+    values: tuple[expenses.PreparedExpenseItem, ...]
+    | tuple[expenses.ExpenseItemSnapshot, ...],
+) -> list[ItemProfile]:
+    return [
+        ItemProfile(
+            position=item.position,
+            title=item.title,
+            amount=format_money(item.amount_kopecks),
+            shares=[
+                ShareProfile(user_id=uid, amount=format_money(amount))
+                for uid, amount in item.shares
+            ],
+        )
+        for item in values
+    ]
+
+
+def _profile(value: ExpenseSnapshot) -> ExpenseResponse:
+    return TypeAdapter(ExpenseResponse).validate_python(
         {
             "id": value.id,
             "group_id": value.group_id,
@@ -62,6 +87,9 @@ def _profile(value: ExpenseSnapshot) -> ExpenseProfile:
             "created_at": value.created_at,
             "deleted_at": value.deleted_at,
             "version": value.version,
+            **(
+                {"items": _items(value.items)} if value.split_mode == "by_items" else {}
+            ),
         }
     )
 
@@ -83,7 +111,16 @@ def _intent(
         split_mode=prepared.split_mode,
         amount_kopecks=prepared.amount_kopecks,
     )
-    if isinstance(draft, CustomExpense):
+    if isinstance(draft, ByItemsExpense):
+        result["items"] = [
+            dict(
+                title=item.title,
+                amount_kopecks=item.amount_kopecks,
+                participants=[uid for uid, _ in item.shares],
+            )
+            for item in prepared.items
+        ]
+    elif isinstance(draft, CustomExpense):
         result["shares"] = [[user_id, amount] for user_id, amount in prepared.shares]
     else:
         result["participants"] = [user_id for user_id, _ in prepared.shares]
@@ -140,7 +177,12 @@ def create(
         session.add(expense)
         session.flush()
         expenses._insert_shares(session, expense, prepared)
-        result = _result(session, expenses._snapshot(expense, prepared.shares))
+        result = _result(
+            session,
+            expenses._read_snapshots(
+                session, select(Expense.id).where(Expense.id == expense.id)
+            )[0],
+        )
         # The ONLY service assignments to history: first successful creation.
         expense.initial_create_intent = intention
         expense.initial_create_result = result.model_dump(mode="json")
@@ -150,23 +192,28 @@ def create(
 
 def preview(
     session: Session, group_id: int, actor_id: int, draft: ExpenseInput
-) -> PreviewProfile:
+) -> PreviewResponse:
     require_member(session, group_id, actor_id)
     value = _prepare(session, group_id, draft)
-    return PreviewProfile(
-        group_id=group_id,
-        payer_id=actor_id,
-        title=value.title,
-        split_mode=value.split_mode,
-        amount=format_money(value.amount_kopecks),
-        shares=[
-            ShareProfile(user_id=uid, amount=format_money(amount))
-            for uid, amount in value.shares
-        ],
+    return TypeAdapter(PreviewResponse).validate_python(
+        dict(
+            group_id=group_id,
+            payer_id=actor_id,
+            title=value.title,
+            split_mode=value.split_mode,
+            amount=format_money(value.amount_kopecks),
+            shares=[
+                ShareProfile(user_id=uid, amount=format_money(amount))
+                for uid, amount in value.shares
+            ],
+            **(
+                {"items": _items(value.items)} if value.split_mode == "by_items" else {}
+            ),
+        )
     )
 
 
-def read(session: Session, actor_id: int, expense_id: int) -> ExpenseProfile:
+def read(session: Session, actor_id: int, expense_id: int) -> ExpenseResponse:
     try:
         return _profile(expenses.read_expense(session, actor_id, expense_id))
     except expenses.ExpenseNotFound:
@@ -175,7 +222,7 @@ def read(session: Session, actor_id: int, expense_id: int) -> ExpenseProfile:
 
 def page(
     session: Session, group_id: int, actor_id: int, limit: int, offset: int
-) -> list[ExpenseProfile]:
+) -> list[ExpenseResponse]:
     return [
         _profile(value)
         for value in expenses.list_expenses(
@@ -201,7 +248,7 @@ def update(
         with expenses.locked_edit(session, actor_id, expense_id) as editor:
             _version(editor._expense, expected)
             _prepare(session, editor._expense.group_id, draft)
-            editor.replace_snapshot(draft)
+            editor.replace_snapshot(draft, allow_receipt=True)
             session.flush()
             return _result(session, editor.snapshot())
     except expenses.ExpenseNotFound:

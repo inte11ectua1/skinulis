@@ -1,4 +1,4 @@
-"""Expense DTOs approved by T-07: issue #36 comment 6469818682."""
+"""Expense DTOs: T-07 #36/6469818682 and O-05 #39/6473059675."""
 
 import re
 from typing import Annotated, Literal, Self
@@ -16,8 +16,10 @@ from pydantic import (
 from app.schemas.auth import UserId
 from app.schemas.timestamps import UTCDateTime
 from app.services.expenses import (
+    ByItemsExpense,
     CustomExpense,
     EqualExpense,
+    ReceiptItemInput,
     normalize_title,
     prepare_expense,
 )
@@ -90,6 +92,43 @@ class CustomInput(Input):
         return self
 
 
+class ReceiptItem(Input):
+    participants: list[UserId] = Field(min_length=1, max_length=30)
+
+    def draft(self) -> ReceiptItemInput:
+        return ReceiptItemInput(self.title, self.amount, tuple(self.participants))
+
+
+class ByItemsInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+    title: str = Field(strict=True, examples=["Ресторан"])
+    split_mode: Literal["by_items"]
+    items: list[ReceiptItem] = Field(min_length=1, max_length=50)
+
+    @field_validator("title")
+    @classmethod
+    def title_policy(cls, value: str) -> str:
+        return normalize_title(value)
+
+    def draft(self) -> ByItemsExpense:
+        return ByItemsExpense(self.title, tuple(item.draft() for item in self.items))
+
+    @model_validator(mode="after")
+    def exact_input(self) -> Self:
+        prepare_expense(
+            self.draft(), {uid for item in self.items for uid in item.participants}
+        )
+        return self
+
+
+class ByItemsCreate(ByItemsInput):
+    client_request_id: UUID
+
+
+class ByItemsUpdate(ByItemsInput):
+    expected_version: Version
+
+
 class EqualCreate(EqualInput):
     client_request_id: UUID
 
@@ -107,13 +146,13 @@ class CustomUpdate(CustomInput):
 
 
 type PreviewInput = Annotated[
-    EqualInput | CustomInput, Field(discriminator="split_mode")
+    EqualInput | CustomInput | ByItemsInput, Field(discriminator="split_mode")
 ]
 type CreateInput = Annotated[
-    EqualCreate | CustomCreate, Field(discriminator="split_mode")
+    EqualCreate | CustomCreate | ByItemsCreate, Field(discriminator="split_mode")
 ]
 type UpdateInput = Annotated[
-    EqualUpdate | CustomUpdate, Field(discriminator="split_mode")
+    EqualUpdate | CustomUpdate | ByItemsUpdate, Field(discriminator="split_mode")
 ]
 
 
@@ -122,21 +161,40 @@ class ShareProfile(BaseModel):
     amount: str
 
 
-class PreviewProfile(BaseModel):
+class _PreviewFields(BaseModel):
     group_id: UserId
     payer_id: UserId
-    split_mode: Literal["equal", "custom"]
     title: str
     amount: str
     shares: list[ShareProfile]
 
 
-class ExpenseProfile(BaseModel):
+class ItemProfile(BaseModel):
+    position: int = Field(ge=1, le=50)
+    title: str
+    amount: str
+    shares: list[ShareProfile]
+
+
+class PreviewProfile(_PreviewFields):
+    split_mode: Literal["equal", "custom"]
+
+
+class ReceiptPreviewProfile(_PreviewFields):
+    split_mode: Literal["by_items"]
+    items: list[ItemProfile] = Field(min_length=1, max_length=50)
+
+
+type PreviewResponse = Annotated[
+    PreviewProfile | ReceiptPreviewProfile, Field(discriminator="split_mode")
+]
+
+
+class _ExpenseFields(BaseModel):
     id: UserId
     group_id: UserId
     payer_id: UserId
     client_request_id: UUID
-    split_mode: Literal["equal", "custom", "by_items"]
     title: str
     amount: str
     shares: list[ShareProfile]
@@ -145,11 +203,25 @@ class ExpenseProfile(BaseModel):
     version: Version
 
 
+class ExpenseProfile(_ExpenseFields):
+    split_mode: Literal["equal", "custom"]
+
+
+class ReceiptExpenseProfile(_ExpenseFields):
+    split_mode: Literal["by_items"]
+    items: list[ItemProfile] = Field(min_length=1, max_length=50)
+
+
+type ExpenseResponse = Annotated[
+    ExpenseProfile | ReceiptExpenseProfile, Field(discriminator="split_mode")
+]
+
+
 class BalanceProfile(BaseModel):
     user_id: UserId
     balance: str
 
 
 class ExpenseMutation(BaseModel):
-    expense: ExpenseProfile
+    expense: ExpenseResponse
     balances: list[BalanceProfile] | None

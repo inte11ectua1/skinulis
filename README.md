@@ -468,3 +468,12 @@ POST /groups/{id}/expenses/preview проверяет тот же business body 
 После POST timeout повторять прежний UUID/исходное намерение, затем GET для
 актуального экрана. После PUT timeout сначала GET/проверка version и snapshot;
 не отправлять старую правку вслепую. DELETE можно повторить с прежним N.
+
+## O-05: ресторанные чеки by_items
+
+Принятый [контракт O-05](docs/contracts/O-05_BY_ITEMS.md) расширяет прежние public/internal
+операции третьим split_mode=by_items. Вместо root amount передаются items с title,amount,
+participants; сервер рассчитывает per-item и final shares с нулями. Ответы by_items
+содержат items, equal/custom сохраняют прежний JSON без items. Все full-PUT переходы
+разрешены с expected_version; original POST replay хранит исходные позиции/порядок.
+[Fixtures](docs/finance/fixtures/O-05_BY_ITEMS.json); решение Тимура в Issue39/6473059675.
