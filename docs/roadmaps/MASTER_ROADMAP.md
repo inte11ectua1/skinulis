@@ -1,6 +1,6 @@
 # Общий roadmap (зависимости, интеграция, gate)
 
-**Статус на 27.10.2026:** реализация **M1 Skeleton завершена**, Issues T-03 #10, O-02 #11, L-02 #12, T-04 #13 закрыты после merged PR #15–#19. Формальное закрытие gate G1 требует дополнительных доказательств (см. [STATUS](../STATUS.md), [CI](../operations/CI.md)). T-01 из M0 всё ещё открыта. Следующая фаза по плану — **M2 Identity**, Issues M2 пока не созданы. M0–M7 — фазы, не календарные недели.
+**Статус на 28.10.2026:** **M1 Skeleton и M2 Identity завершены по реализации**. Для M2 [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21), [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22), [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23), [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) closed, PR #26/#27/#28/#31 merged; follow-ups #29/#32 также closed. **G1/G2 не считаются формально verified**, см. [STATUS](../STATUS.md), [CI](../operations/CI.md). T-01 из M0 открыта. **Следующая фаза по roadmap — M3 Expenses (новые Issues/назначения ещё не подтверждены).** M0–M7 — фазы, не календарные недели.
 
 | Фаза | Тимур (T) | Олег (O) | Лера (L) | Общий gate |
 |---|---|---|---|---|
@@ -22,13 +22,22 @@
 
 **Реализация M1 завершена.** Для G1 подтверждены локальные cold start/миграции/health и CI (включая намеренно красный run); окончательное доказательство блокировки merge из-за failed required checks в GitHub UI отсутствует, а PR #19 объединён без зарегистрированного независимого approval. Текущая защита для administrators отличается от первоначального ADR (см. STATUS).
 
-## Текущая фаза — M2 Identity (Issues назначены 27.10.2026)
+## Завершённая фаза M2 — Identity (28.10.2026)
 
-- **Тимур:** [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) — регистрация/login, Argon2/JWT/users, **можно начинать**; затем [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) — groups/invites/проверенный Telegram actor, **после T-05**.
-- **Олег:** [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) — SQLAlchemy-модели финансов/Alembic; **можно проектировать** параллельно T-05, но финальные FK/migrations только после согласования users/groups с Тимуром.
-- **Лера:** [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) — онбординг, профиль, группы/приглашения; **можно делать mock FSM**, интеграцию — после принятого API-контракта T-05/T-06, UQ-01/UQ-02.
+- **Тимур:** [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) / [PR #26](https://github.com/inte11ectua1/skinulis/pull/26) — users, Argon2id, JWT auth, `0002_users`; [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) / [PR #27](https://github.com/inte11ectua1/skinulis/pull/27) — groups/membership/invites, service Telegram actor/link, `0003_groups_identity`. Follow-up [#29](https://github.com/inte11ectua1/skinulis/issues/29) / [PR #30](https://github.com/inte11ectua1/skinulis/pull/30) — UTC `Z` API dates. Всё merged/closed.
+- **Олег:** [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) / [PR #31](https://github.com/inte11ectua1/skinulis/pull/31) — пять финансовых ORM-таблиц, constraints/FK/исторические доли и `0004_financial_domain`; docs checkpoint через [PR #33](https://github.com/inte11ectua1/skinulis/pull/33), [#32](https://github.com/inte11ectua1/skinulis/issues/32). Merge и закрытие 28.10, [финальный CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/40678199167).
+- **Лера:** [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) / [PR #28](https://github.com/inte11ectua1/skinulis/pull/28) — Telegram onboarding, profile, groups/invites, типизированный HTTP service client, FSM/timeout и mock + PostgreSQL integration. Merged/closed 28.10.
 
-Все четыре Issues созданы с назначенными владельцами; это **план работ**, а не результат реализации. До подтверждённого API и сквозных проверок не отмечать G2 verified или работающий профиль/группы.
+**G2 — implementation complete, not verified:** тесты backend/бота и CI есть, но нет подтверждённого live Telegram E2E и production-изоляции `/internal`. Финансовые таблицы O-03 — это **хранилище**, не расходы CRUD, balances или settlements state machine.
+
+## Следующая фаза — M3 Expenses (план, не назначение)
+
+- **Тимур T-07:** review безопасности и консистентности публичного/internal API, actor permissions, error DTO и пагинации на фоне новых финансовых операций.
+- **Олег O-04 → O-05:** создать CRUD расходов `equal/custom` с group-first транзакциями, правами, идемпотентностью, затем `by_items` с сохранением positions/final snapshots. Не менять принятые Q-01/Q-02; применять Q-03 API Unicode-валидацию и Q-10 нулевые доли, оставшиеся Q-04/Q-06/Q-08/Q-09 согласовать на сервисной границе.
+- **Лера L-04:** мастера расходов по реальным OpenAPI/fixtures O-04/O-05; пока контракты не согласованы — mocks, без вычисления денег в боте. **UQ-03 expense preview остаётся открытым**, не придумывать endpoint.
+- **Интеграция/gate G3:** ресторанный тест, все три split modes, CRUD/soft-delete, cross-group denial и сценарии в Telegram; считать verified только по реальным доказательствам, а не по названию этапа.
+
+Новые GitHub Issues M3 должны быть созданы и назначены отдельно перед кодом; предыдущие Issue M2 не переиспользовать.
 
 ## Release gates
 - **G1 (после M1):** cold start, migration, /health 200, one real reviewed PR with green CI.
