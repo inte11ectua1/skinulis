@@ -1,6 +1,7 @@
 """Financial storage; aggregate and authorization rules belong to later services."""
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import (
@@ -18,7 +19,8 @@ from sqlalchemy import (
     Uuid,
     func,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from app.models.base import Base
 
@@ -28,6 +30,7 @@ class Expense(Base):
     __table_args__ = (
         PrimaryKeyConstraint(name="pk_expenses"),
         CheckConstraint("id > 0", name="ck_expenses_id_positive"),
+        CheckConstraint("version > 0", name="ck_expenses_version"),
         CheckConstraint(
             "char_length(title) BETWEEN 1 AND 120", name="ck_expenses_title"
         ),
@@ -67,6 +70,18 @@ class Expense(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    initial_create_intent: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    initial_create_result: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    version: Mapped[int] = mapped_column(BigInteger, server_default="1")
+
+    @validates("initial_create_intent", "initial_create_result")
+    def immutable_create_history(
+        self, key: str, value: dict[str, Any] | None
+    ) -> dict[str, Any] | None:
+        previous = getattr(self, key, None)
+        if previous is not None and previous != value:
+            raise ValueError("Original expense creation history is immutable")
+        return value
 
 
 class ExpenseItem(Base):
