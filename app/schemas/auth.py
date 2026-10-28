@@ -1,11 +1,12 @@
 """Proposed T-05 public DTOs; bot-service/onboarding remain T-06."""
 
 import unicodedata
-from datetime import datetime
 from typing import Annotated, Literal
 
 from email_validator import EmailNotValidError, validate_email
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
+
+from app.schemas.timestamps import UTCDateTime
 
 UserId = Annotated[int, Field(strict=True, gt=0, le=2**63 - 1)]
 
@@ -69,7 +70,7 @@ class UserProfile(BaseModel):
     id: UserId
     email: str | None
     telegram_id: UserId | None
-    created_at: datetime
+    created_at: UTCDateTime
 
 
 class TokenResponse(BaseModel):
