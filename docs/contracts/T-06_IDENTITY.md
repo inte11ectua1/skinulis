@@ -157,6 +157,30 @@ UserProfile — существующая безопасная схема T-05.
 осознанное решение tech lead для групп, не правило финансовых названий.
 DB дополнительно ограничивает длину, полная Unicode-политика выполняется API.
 
+## UTC wire timestamps (#29)
+
+По [решению в Issue #29](https://github.com/inte11ectua1/skinulis/issues/29) все
+`created_at`, `joined_at`, `expires_at`, `consumed_at`, `revoked_at` в response DTO
+передаются как UTC ISO 8601 с **Z**; nullable даты остаются JSON null. Правило
+одинаково для публичных и /internal маршрутов, вложенных Page.items, bootstrap,
+link и повторных ответов. Общий тип UTCDateTime описан в
+[контракте T-05](T-05_IDENTITY.md#utc-wire-timestamps-29).
+
+Сохраняются секунды и микросекунды: `YYYY-MM-DDTHH:MM:SS[.ffffff]Z`. Только aware
+значения приводятся к UTC через astimezone(UTC), без подмены tzinfo. Naive значения
+response DTO отвергаются; часовой пояс не предполагается неявно.
+
+Первый и повторный DELETE приглашения возвращают байтово одинаковую JSON metadata,
+включая revoked_at, даже когда session timezone PostgreSQL — Europe/Moscow.
+Например, прежнее различие `12:00:00.123456Z` / `15:00:00.123456+03:00` для одного
+instant исчезает: оба ответа содержат `12:00:00.123456Z`. GET списка приглашений
+использует тот же формат для active/expired/consumed/revoked записей.
+
+TIMESTAMPTZ и DB-значения не меняются; TTL invite24h и link10min сохраняются.
+Регрессия проверяет обе PostgreSQL session timezone (UTC и Europe/Moscow) на
+отдельных UUID-БД, сравнивает ответы со stored instants/TTL и использует реальный
+неизменённый ApiClient Леры. Установка UTC на сервере не является исправлением.
+
 ## Invites / UQ-02
 
 `secrets.token_urlsafe(32)` даёт 256-bit secret длиной43; в БД только SHA-256.

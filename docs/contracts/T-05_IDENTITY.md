@@ -98,6 +98,27 @@ rate limiting и production HTTPS здесь не реализованы. JWT к
 email/password login нельзя переносить в Telegram. Bot-service actor в T-06
 должен иметь отдельную схему доверия/credential, не произвольный Telegram ID в JSON.
 
+## UTC wire timestamps (#29)
+
+[Решение tech lead / Issue #29](https://github.com/inte11ectua1/skinulis/issues/29):
+все datetime-поля HTTP response DTO передаются в UTC, ISO 8601 с суффиксом **Z**.
+Формат `YYYY-MM-DDTHH:MM:SS[.ffffff]Z`: дробная часть отсутствует при нулевых
+микросекундах, иначе сохраняется микросекундная точность. `UserProfile.created_at`
+имеет один формат в register, /users/me и внутренних Telegram-ответах T-06.
+
+Общий тип `app.schemas.timestamps.UTCDateTime` требует timezone-aware значение и
+преобразует его через `astimezone(UTC)` при валидации response DTO; стандартная
+JSON-сериализация Pydantic v2 выдаёт Z. Naive datetime отвергается как некорректное
+значение response DTO: сервер не угадывает локальную зону и не присваивает UTC.
+Это проверка серверных данных, не новое поле/операция публичного API.
+
+Например, `2026-10-28T15:00:00.123456+03:00` сериализуется как
+`2026-10-28T12:00:00.123456Z`: instant и микросекунды совпадают. Часовой пояс
+PostgreSQL session (UTC/Europe/Moscow и др.) не определяет внешний формат API.
+TIMESTAMPTZ, хранимые значения, миграции, JWT timestamps/TTL и бизнес-правила
+не меняются. Клиент L-03 уже разбирает aware ISO datetime через Pydantic;
+изменений bot/** для UTC Z не требуется.
+
 ## HTTP DTO и ошибки
 
 Живой OpenAPI — `/openapi.json`, Swagger — `/docs`. Input forbids extra fields:

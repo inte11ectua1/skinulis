@@ -2,13 +2,13 @@
 
 import re
 import unicodedata
-from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 
 from app.schemas.auth import UserId
+from app.schemas.timestamps import UTCDateTime
 
 
 class Input(BaseModel):
@@ -96,12 +96,12 @@ class GroupProfile(BaseModel):
     id: UserId
     name: str
     owner_id: UserId
-    created_at: datetime
+    created_at: UTCDateTime
 
 
 class MemberProfile(BaseModel):
     user_id: UserId
-    joined_at: datetime
+    joined_at: UTCDateTime
     is_owner: bool
 
 
@@ -131,10 +131,10 @@ class InviteProfile(BaseModel):
     id: UserId
     group_id: UserId
     client_request_id: UUID
-    created_at: datetime
-    expires_at: datetime
-    consumed_at: datetime | None
-    revoked_at: datetime | None
+    created_at: UTCDateTime
+    expires_at: UTCDateTime
+    consumed_at: UTCDateTime | None
+    revoked_at: UTCDateTime | None
 
 
 class InviteIssued(InviteProfile):
@@ -159,7 +159,7 @@ class InviteIssued(InviteProfile):
 
 class LinkIssued(BaseModel):
     code: str = Field(repr=False)
-    expires_at: datetime
+    expires_at: UTCDateTime
 
 
 # Path IDs are parsed by FastAPI and bounded to positive signed BIGINT.
