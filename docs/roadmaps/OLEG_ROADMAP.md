@@ -19,9 +19,15 @@
 
 **O-02** закрыта: [Issue #11](https://github.com/inte11ectua1/skinulis/issues/11), [PR #16](https://github.com/inte11ectua1/skinulis/pull/16) и [#17](https://github.com/inte11ectua1/skinulis/pull/17). Реализованы pure `parse_money`/`format_money`, `equal/custom/by_items` и unit-тесты. Q-01/Q-02 утверждены, часть Q-04 подтверждена; Q-03 и Q-05–Q-10 требуют отдельных решений до зависимых этапов. ORM/финансовых API здесь нет.
 
-## Текущая назначенная задача M2
+## Завершённая фаза M2 (28.10.2026)
 
-**[O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) — assigned, design ready:** SQLAlchemy-модели expenses/items/shares/settlements и Alembic. Математический и ORM-дизайн можно проработать сейчас; прежде чем мержить финальные FK/migrations, согласовать users из [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) и groups из [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) с Тимуром, а Q-03/Q-10 — с Тимуром и Лерой. Избегать конкурирующих Alembic heads. Не начинать O-04 CRUD и выплаты под видом O-03.
+**[O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) / [PR #31](https://github.com/inte11ectua1/skinulis/pull/31) — merged/closed.** Финансовые SQLAlchemy models `expenses`, `expense_items`, `expense_shares`, `expense_item_shares`, `settlements`, миграция `0004_financial_domain` после `0003_groups_identity`; signed BIGINT суммы, composite membership FK, RESTRICT, immutable-by-design snapshots через сервис будущего этапа, soft-delete fields. [PR #33](https://github.com/inte11ectua1/skinulis/pull/33) и [Issue #32](https://github.com/inte11ectua1/skinulis/issues/32) зафиксировали решения Q-03/Q-04/Q-10/position/resolved_at. [Финальный CI](https://github.com/inte11ectua1/skinulis/actions/runs/40678199167) прошёл все пять jobs. **Нет O-04/O-05 HTTP CRUD, group-first financial services, balances или settlement state machine**; SQL constraints не гарантируют межстрочные суммы. Независимый APPROVED-review PR #31 в GitHub не зарегистрирован.
+
+## Следующие задачи roadmap — O-04 → O-05 (M3, Issues ещё не назначены)
+
+**O-04:** групповые транзакции `SELECT groups FOR UPDATE`, расход `equal/custom`, доступ только участникам и редактирование только автором, `client_request_id`/replay, пагинация и soft-delete без изменения подтверждённых компенсаций; реализовать принятую Q-03 Unicode-политику на API boundary. Уточнить Q-06/Q-07/Q-08/Q-09 до фиксации DTO.
+
+**O-05:** `by_items` 1..50 позиций, серверный итог из позиций, сохранённый итоговый `expense_shares` snapshot и **нулевые строки явно выбранных долей** Q-10. Не суммировать item shares второй раз в balances. Согласовать серверный expense preview UQ-03 до L-04 — он не утверждён.
 
 ## Для своего чата
 «Проверь расчёты на контрпример», «Составь тест конкурентного подтверждения для PostgreSQL», «Раздели O-07 на безопасные PR», «Проверь атомарность изменения расхода».
