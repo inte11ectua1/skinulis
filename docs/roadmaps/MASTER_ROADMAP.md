@@ -37,7 +37,7 @@
 - **Лера [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37):** мастера расходов по реальным OpenAPI/fixtures O-04/O-05; пока контракты не согласованы — mocks, без вычисления денег в боте. **UQ-03 expense preview остаётся открытым**, не придумывать endpoint.
 - **Интеграция/gate G3:** ресторанный тест, все три split modes, CRUD/soft-delete, cross-group denial и сценарии в Telegram; считать verified только по реальным доказательствам, а не по названию этапа.
 
-Issues #35–#39 созданы и назначены. O-05 **blocked** до merge O-04; L-04 может готовить mocks до реального API; T-07 согласует финансовые DTO и UQ-03 до фиксации контракта. **G2 live Telegram QA сейчас никому не назначена:** [#38](https://github.com/inte11ectua1/skinulis/issues/38) закрыта как `not_planned` по просьбе Тимура; тестирование начнём только после его отдельного сигнала. G2 остаётся unverified, production `/internal` — T-09. Предыдущие Issues M2 не переиспользовать.
+Активные M3 Issues #35, #36, #37 и #39 созданы и назначены; #38 закрыта как `not_planned` до сигнала Тимура. O-05 **blocked** до merge O-04; L-04 может готовить mocks до реального API; T-07 согласует финансовые DTO и UQ-03 до фиксации контракта. **G2 live Telegram QA сейчас никому не назначена:** [#38](https://github.com/inte11ectua1/skinulis/issues/38) закрыта как `not_planned` по просьбе Тимура; тестирование начнём только после его отдельного сигнала. G2 остаётся unverified, production `/internal` — T-09. Предыдущие Issues M2 не переиспользовать.
 
 ## Release gates
 - **G1 (после M1):** cold start, migration, /health 200, one real reviewed PR with green CI.
