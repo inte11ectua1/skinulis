@@ -1,6 +1,6 @@
 # Общий roadmap (зависимости, интеграция, gate)
 
-**Статус на 28.10.2026:** **M1 Skeleton и M2 Identity завершены по реализации**. Для M2 [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21), [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22), [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23), [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) closed, PR #26/#27/#28/#31 merged; follow-ups #29/#32 также closed. **G1/G2 не считаются формально verified**, см. [STATUS](../STATUS.md), [CI](../operations/CI.md). T-01 из M0 открыта. **Следующая фаза по roadmap — M3 Expenses (новые Issues/назначения ещё не подтверждены).** M0–M7 — фазы, не календарные недели.
+**Статус на 28.10.2026:** **M1 Skeleton и M2 Identity завершены по реализации**. Для M2 [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21), [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22), [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23), [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) closed, PR #26/#27/#28/#31 merged; follow-ups #29/#32 также closed. **G1/G2 не считаются формально verified**, см. [STATUS](../STATUS.md), [CI](../operations/CI.md). T-01 из M0 открыта. **M3 Expenses теперь назначен:** T-07 #35, O-04 #36, O-05 #39, L-04 #37; G2 live QA #38 — отдельный follow-up. **Ни одна M3 Issue ещё не означает реализованную функцию.** M0–M7 — фазы, не календарные недели.
 
 | Фаза | Тимур (T) | Олег (O) | Лера (L) | Общий gate |
 |---|---|---|---|---|
@@ -30,14 +30,14 @@
 
 **G2 — implementation complete, not verified:** тесты backend/бота и CI есть, но нет подтверждённого live Telegram E2E и production-изоляции `/internal`. Финансовые таблицы O-03 — это **хранилище**, не расходы CRUD, balances или settlements state machine.
 
-## Следующая фаза — M3 Expenses (план, не назначение)
+## Текущая фаза — M3 Expenses (Issues назначены 28.10.2026)
 
-- **Тимур T-07:** review безопасности и консистентности публичного/internal API, actor permissions, error DTO и пагинации на фоне новых финансовых операций.
-- **Олег O-04 → O-05:** создать CRUD расходов `equal/custom` с group-first транзакциями, правами, идемпотентностью, затем `by_items` с сохранением positions/final snapshots. Не менять принятые Q-01/Q-02; применять Q-03 API Unicode-валидацию и Q-10 нулевые доли, оставшиеся Q-04/Q-06/Q-08/Q-09 согласовать на сервисной границе.
-- **Лера L-04:** мастера расходов по реальным OpenAPI/fixtures O-04/O-05; пока контракты не согласованы — mocks, без вычисления денег в боте. **UQ-03 expense preview остаётся открытым**, не придумывать endpoint.
+- **Тимур [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35):** review безопасности и консистентности публичного/internal API, actor permissions, error DTO и пагинации на фоне новых финансовых операций.
+- **Олег [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36) → [O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39):** создать CRUD расходов `equal/custom` с group-first транзакциями, правами, идемпотентностью, затем `by_items` с сохранением positions/final snapshots. Не менять принятые Q-01/Q-02; применять Q-03 API Unicode-валидацию и Q-10 нулевые доли, оставшиеся Q-04/Q-06/Q-08/Q-09 согласовать на сервисной границе.
+- **Лера [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37):** мастера расходов по реальным OpenAPI/fixtures O-04/O-05; пока контракты не согласованы — mocks, без вычисления денег в боте. **UQ-03 expense preview остаётся открытым**, не придумывать endpoint.
 - **Интеграция/gate G3:** ресторанный тест, все три split modes, CRUD/soft-delete, cross-group denial и сценарии в Telegram; считать verified только по реальным доказательствам, а не по названию этапа.
 
-Новые GitHub Issues M3 должны быть созданы и назначены отдельно перед кодом; предыдущие Issue M2 не переиспользовать.
+Issues #35–#39 созданы и назначены. O-05 **blocked** до merge O-04; L-04 может готовить mocks до реального API; T-07 согласует финансовые DTO и UQ-03 до фиксации контракта. Отдельная [G2 live QA #38](https://github.com/inte11ectua1/skinulis/issues/38) назначена Лере для локальных реальных Telegram-сценариев, при этом production /internal остаётся T-09. Предыдущие Issues M2 не переиспользовать.
 
 ## Release gates
 - **G1 (после M1):** cold start, migration, /health 200, one real reviewed PR with green CI.
