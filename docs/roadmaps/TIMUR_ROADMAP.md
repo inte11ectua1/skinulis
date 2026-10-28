@@ -31,9 +31,9 @@
 
 **M2 закрыт по коду; gate G2 не verified:** live Telegram E2E и production reverse-proxy restriction `/internal` пока без доказательства. T-01/G1 — отдельные старые контрольные пункты.
 
-## Следующая задача по roadmap — T-07 (M3, Issue ещё не назначена)
+## Текущая задача — [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) (M3, назначена 28.10.2026)
 
-Ревью безопасности и интеграции новых expense API O-04/O-05: actor (JWT/bot service), group membership, forbidden/hidden resources, validation/errors, pagination/OpenAPI, audit без раскрытия секретов. Совместно с Олегом/Лерой согласовать границы DTO, idempotency и UQ-03; не реализовывать O-04/O-05 за Олега или L-04 за Леру. T-09 deploy/CD остаётся M5, а не M3.
+Ревью безопасности и интеграции новых expense API [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36)/[O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39): actor (JWT/bot service), group membership, forbidden/hidden resources, validation/errors, pagination/OpenAPI, audit без раскрытия секретов. Совместно с Олегом и Лерой ([L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37)) согласовать границы DTO, idempotency и UQ-03; не реализовывать O-04/O-05 за Олега или L-04 за Леру. Отдельная [G2 QA #38](https://github.com/inte11ectua1/skinulis/issues/38) возложена на Леру с твоим участием в запуске тестового API/бота и review evidence; это не production gate. T-09 deploy/CD остаётся M5, а не M3.
 
 ## Вопросы для своего ChatGPT-чата
 «Что мой следующий gate?», «Проверь угрозы Telegram actor», «Сформулируй PR description и тестовый план», «Какие доказательства CI/CD нужны для преподавателя?».
