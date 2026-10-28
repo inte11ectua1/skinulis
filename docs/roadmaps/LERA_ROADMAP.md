@@ -21,11 +21,11 @@
 
 **[L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) / [PR #28](https://github.com/inte11ectua1/skinulis/pull/28) — merged/closed.** Реализованы `/start` → явный Create/Link, Telegram-only и привязка существующего API-профиля, меню/создание групп, участники, одноразовые invite/deep links, отзыв/обработка used/expired, типизированный internal httpx client, FSM и восстановление после неопределённого ответа. Есть mocked Telegram session и интеграционные проверки с HTTP API + PostgreSQL; CI 5/5 успешно ([run](https://github.com/inte11ectua1/skinulis/actions/runs/40658217735)). **Live Telegram E2E на настоящем боте пока не подтверждено**, G2 формально pending; production isolation `/internal` — задача T-09. UTC-даты на backend унифицированы [PR #30](https://github.com/inte11ectua1/skinulis/pull/30).
 
-## Назначенные задачи — [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37) (M3) и [G2 QA #38](https://github.com/inte11ectua1/skinulis/issues/38)
+## Назначенная задача — [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37) (M3)
 
 **L-04:** Telegram expense wizard `equal/custom/by_items`, списки/детали; mock-first можно начинать уже сейчас, реальные маршруты — после принятых [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) и merged [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36)/[O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39) OpenAPI/fixtures; до утверждения API допустимы mocks/FSM, **никакого bot-side подсчёта долей**. Серверный expense preview **UQ-03 не согласован** — не изобретать endpoint; согласовать с Олегом и Тимуром до UX-интеграции.
 
-**G2 QA #38:** провести на настоящем тестовом Telegram двухпользовательский `/start → create/link → invite/join → group` вместе с Тимуром. Результаты записать в Issue; production `/internal` isolation отдельно T-09.
+**G2 live QA пока не начинать:** по решению Тимура [Issue #38](https://github.com/inte11ectua1/skinulis/issues/38) закрыта как `not_planned` и снята с назначения. Тестировать реальный Telegram будем только после его отдельного сигнала; G2 остаётся неподтверждённым. Это не отменяет обычных mock/unit/integration тестов L-04. Production `/internal` isolation отдельно T-09.
 
 ## Для своего чата
 «Разбей создание by_items на последовательные кнопки», «Проверь возможные ошибки мастера», «Дай промпт Codex для L-04 без изменения backend», «Составь E2E чек-лист».
