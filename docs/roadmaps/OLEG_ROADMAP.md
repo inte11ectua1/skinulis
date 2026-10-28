@@ -23,11 +23,11 @@
 
 **[O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) / [PR #31](https://github.com/inte11ectua1/skinulis/pull/31) — merged/closed.** Финансовые SQLAlchemy models `expenses`, `expense_items`, `expense_shares`, `expense_item_shares`, `settlements`, миграция `0004_financial_domain` после `0003_groups_identity`; signed BIGINT суммы, composite membership FK, RESTRICT, immutable-by-design snapshots через сервис будущего этапа, soft-delete fields. [PR #33](https://github.com/inte11ectua1/skinulis/pull/33) и [Issue #32](https://github.com/inte11ectua1/skinulis/issues/32) зафиксировали решения Q-03/Q-04/Q-10/position/resolved_at. [Финальный CI](https://github.com/inte11ectua1/skinulis/actions/runs/40678199167) прошёл все пять jobs. **Нет O-04/O-05 HTTP CRUD, group-first financial services, balances или settlement state machine**; SQL constraints не гарантируют межстрочные суммы. Независимый APPROVED-review PR #31 в GitHub не зарегистрирован.
 
-## Следующие задачи roadmap — O-04 → O-05 (M3, Issues ещё не назначены)
+## Назначенные задачи M3 — [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36) → [O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39) (28.10.2026)
 
-**O-04:** групповые транзакции `SELECT groups FOR UPDATE`, расход `equal/custom`, доступ только участникам и редактирование только автором, `client_request_id`/replay, пагинация и soft-delete без изменения подтверждённых компенсаций; реализовать принятую Q-03 Unicode-политику на API boundary. Уточнить Q-06/Q-07/Q-08/Q-09 до фиксации DTO.
+**O-04 #36 — design/tests можно начинать; финальные DTO после [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35):** групповые транзакции `SELECT groups FOR UPDATE`, расход `equal/custom`, доступ только участникам и редактирование только автором, `client_request_id`/replay, пагинация и soft-delete без изменения подтверждённых компенсаций; реализовать принятую Q-03 Unicode-политику на API boundary. Уточнить Q-06/Q-07/Q-08/Q-09 до фиксации DTO.
 
-**O-05:** `by_items` 1..50 позиций, серверный итог из позиций, сохранённый итоговый `expense_shares` snapshot и **нулевые строки явно выбранных долей** Q-10. Не суммировать item shares второй раз в balances. Согласовать серверный expense preview UQ-03 до L-04 — он не утверждён.
+**O-05 #39 — реализация после merged O-04; дизайн заранее допустим:** `by_items` 1..50 позиций, серверный итог из позиций, сохранённый итоговый `expense_shares` snapshot и **нулевые строки явно выбранных долей** Q-10. Не суммировать item shares второй раз в balances. Согласовать серверный expense preview UQ-03 с Тимуром [#35](https://github.com/inte11ectua1/skinulis/issues/35) и Лерой [#37](https://github.com/inte11ectua1/skinulis/issues/37) до реальной интеграции L-04; он не утверждён.
 
 ## Для своего чата
 «Проверь расчёты на контрпример», «Составь тест конкурентного подтверждения для PostgreSQL», «Раздели O-07 на безопасные PR», «Проверь атомарность изменения расхода».
