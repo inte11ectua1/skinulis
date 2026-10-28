@@ -30,13 +30,18 @@ def test_migrations_on_empty_database_are_repeatable(database_url: URL) -> None:
             "group_members",
             "group_invites",
             "telegram_link_codes",
+            "expenses",
+            "expense_items",
+            "expense_shares",
+            "expense_item_shares",
+            "settlements",
         }
         with engine.connect() as connection:
             assert (
                 connection.execute(
                     text("SELECT version_num FROM alembic_version")
                 ).scalar_one()
-                == "0003_groups_identity"
+                == "0004_financial_domain"
             )
         command.check(Config(str(Path("alembic.ini").resolve())))
     finally:

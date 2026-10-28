@@ -117,7 +117,7 @@ def test_t05_upgrade_preserves_users_and_one_head(database_url: URL) -> None:
         command.upgrade(config, "head")
         command.upgrade(config, "head")
         assert ScriptDirectory.from_config(config).get_heads() == [
-            "0003_groups_identity"
+            "0004_financial_domain"
         ]
         command.check(config)
         with Session(engine) as session:
