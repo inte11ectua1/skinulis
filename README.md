@@ -2,7 +2,7 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
-> **Статус 27.10.2026:** этап **M1 Skeleton реализован**: T-03, O-02, L-02, T-04 merged, Issues #10–#13 closed. В `main` доступны FastAPI/PostgreSQL/Alembic/Compose, финансовые pure functions, mock-каркас бота и GitHub Actions CI. До завершения G1 остаются отдельные проверки защиты/блокировки merge, T-05 auth/users принята в PR #26; T-06 groups/Telegram identity реализована в PR #27 по утверждённым tech lead контрактам и ожидает независимого review, расходы/компенсации ещё не реализованы. [Фактический STATUS](docs/STATUS.md).
+> **Срез L-03, 28.10.2026:** M1, T-05 (PR #26) и T-06 (PR #27) merged. Клиент L-03 подключает Telegram-онбординг, профиль, группы и приглашения по утверждённому T-06; ожидает независимого ревью. Расходы/компенсации ещё не реализованы, live Telegram E2E и G2 не подтверждены. [STATUS](docs/STATUS.md) обновляется после человеческого merge и местами отстаёт от GitHub.
 
 ## Начало работы
 
@@ -24,19 +24,23 @@
 ## Этапы и ближайшая работа
 
 - **M1 Skeleton завершён по реализации:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12), [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты. [CI evidence](docs/operations/CI.md).
-- **M2 Identity — назначенные Issues:** Тимур — [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) (merged PR #26), затем [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) (после T-05); Олег — [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) (модели можно проектировать, финальные FK/migrations согласовать с users/groups); Лера — [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) (mock FSM сейчас, реальная API-интеграция после согласованных контрактов).
+- **M2 Identity:** T-05 #21 / PR #26 и T-06 #22 / PR #27 merged. Олег — [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23), собственные финансовые модели и миграции. Лера — [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24), клиент онбординга/групп по утверждённым T-06, mock и настоящие API/PostgreSQL тесты; human review обязателен.
 - **Открытые контрольные пункты:** T-01 (практическая проверка защиты `main`) и формальная верификация G1; серверный expense-preview UQ-03 и остальные Q/UQ — до соответствующей реализации.
 
 Новые задачи: отдельная ветка → PR → проверки CI → согласование затронутых контрактов → merge. [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) и [STATUS](docs/STATUS.md) — актуальные этапы и доказательства.
 
-## Каркас Telegram-бота (L-02)
+## Telegram-бот: онбординг и группы (L-03)
 
-Команды `/start`, `/help`, `/cancel`, стартовое меню и проверка доступности API
-описаны в [инструкции запуска бота](docs/bot/L-02_SETUP.md). Тесты используют mock
-Telegram session и HTTP transport; настоящий токен и polling им не нужны.
-Регистрация, приглашения, расходы и компенсации пока недоступны.
-После локальной настройки `TELEGRAM_BOT_TOKEN` процесс запускается командой
-`uv run python -m bot.main`, останавливается через `Ctrl+C`.
+`/start` читает профиль через T-06. Новый пользователь явно выбирает создание
+Telegram-only профиля либо привязку API-аккаунта одноразовым кодом (10 минут).
+Работают профиль, список/создание групп, участники, приглашения владельца,
+отзыв и добровольное вступление по deep-link. Расходы/компенсации — следующие задачи.
+Настройка `TELEGRAM_BOT_TOKEN`, отдельного `BOT_SERVICE_TOKEN`, адреса API,
+команды, FSM и восстановление после timeout: [инструкция L-03](docs/bot/L-03_SETUP.md).
+Запуск — `uv run python -m bot.main`, остановка — `Ctrl+C`, один polling-процесс.
+Unit-тесты используют MockTransport и mocked Telegram session без настоящего токена,
+сети и БД. Отдельные integration-тесты запускают настоящий локальный HTTP API
+и PostgreSQL с заменой только Telegram session; это не live Telegram E2E.
 
 ## Публичная аутентификация (T-05)
 
@@ -116,8 +120,8 @@ TTL10min, один раз, атомарно, merge уже существующи
 UUID, передавайте реальные тестовые секреты только в Authorize/body, не в URL.
 Никогда не отправляйте пароль/JWT в Telegram. API требует отдельный service token,
 миграции — нет. **В production T-09 внешний proxy обязан закрыть весь /internal**;
-production-изоляция и live Telegram в T-06 не развёртываются. Бот L-02 ещё не вызывает
-эти операции, его handlers/client остаются за Лерой в L-03.
+production-изоляция и live Telegram в T-06 не развёртываются. Клиент L-03 использует
+утверждённые internal mirrors; детали проверки описаны в инструкции бота.
 
 ## Запуск API с PostgreSQL
 

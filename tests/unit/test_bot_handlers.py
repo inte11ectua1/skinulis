@@ -22,7 +22,7 @@ from aiogram.types import (
 )
 
 from bot.api_client import ApiClient
-from bot.handlers import ACTIVE, FAILED, HELP, PRIVATE, UNAVAILABLE, UNKNOWN, WELCOME
+from bot.handlers import ACTIVE, FAILED, HELP, PRIVATE, UNAVAILABLE, UNKNOWN
 from bot.keyboards import main_menu
 from bot.main import create_dispatcher
 from bot.states import Navigation
@@ -41,10 +41,13 @@ class Harness:
     api: ApiClient
     requests: list[httpx.Request]
     update_id: int = 0
+    actor: int = 123
 
     @property
     def state(self) -> FSMContext:
-        return self.dispatcher.fsm.get_context(bot=self.bot, chat_id=123, user_id=123)
+        return self.dispatcher.fsm.get_context(
+            bot=self.bot, chat_id=self.actor, user_id=self.actor
+        )
 
     @property
     def sent(self) -> list[SendMessage]:
@@ -52,6 +55,7 @@ class Harness:
             call.args[1]
             for call in self.session.await_args_list
             if isinstance(call.args[1], SendMessage)
+            and call.args[1].chat_id == self.actor
         ]
 
     def message(self, text: str, *, chat_type: ChatType = ChatType.PRIVATE) -> Message:
@@ -67,8 +71,8 @@ class Harness:
         return Message(
             message_id=1,
             date=datetime.now(UTC),
-            chat=Chat(id=123, type=chat_type),
-            from_user=User(id=123, is_bot=False, first_name="Тест"),
+            chat=Chat(id=self.actor, type=chat_type),
+            from_user=User(id=self.actor, is_bot=False, first_name="Тест"),
             text=text,
             entities=entities,
         )
@@ -88,13 +92,17 @@ class Harness:
         self,
         data: str | None,
         *,
-        user_id: int = 123,
+        user_id: int | None = None,
         message: Message | InaccessibleMessage | None = None,
     ) -> None:
         self.update_id += 1
         callback = CallbackQuery(
             id=str(self.update_id),
-            from_user=User(id=user_id, is_bot=False, first_name="Тест"),
+            from_user=User(
+                id=user_id if user_id is not None else self.actor,
+                is_bot=False,
+                first_name="Тест",
+            ),
             chat_instance="test-chat",
             data=data,
             message=message if message is not None else self.message("Меню"),
@@ -117,11 +125,31 @@ async def harness() -> AsyncIterator[Harness]:
 
     def respond(request: httpx.Request) -> httpx.Response:
         requests.append(request)
-        assert request.method == "GET" and request.url.path == "/health"
-        return httpx.Response(200, json={"status": "ok", "database": "ok"})
+        assert request.method == "GET"
+        if request.url.path == "/health":
+            return httpx.Response(200, json={"status": "ok", "database": "ok"})
+        if request.url.path == "/internal/users/me":
+            return httpx.Response(
+                200,
+                json={
+                    "id": 1,
+                    "email": None,
+                    "telegram_id": 123,
+                    "created_at": "2026-10-27T00:00:00Z",
+                },
+            )
+        if request.url.path == "/internal/groups":
+            return httpx.Response(200, json={"items": [], "limit": 20, "offset": 0})
+        raise AssertionError("Unexpected request")
 
     transport = httpx.MockTransport(respond)
-    async with ApiClient("http://api.test", transport=transport) as api:
+    from pydantic import SecretStr
+
+    async with ApiClient(
+        "http://api.test",
+        service_token=SecretStr(secrets.token_urlsafe(48)),
+        transport=transport,
+    ) as api:
         try:
             yield Harness(telegram, dispatcher, session, api, requests)
         finally:
@@ -133,21 +161,22 @@ async def harness() -> AsyncIterator[Harness]:
 async def test_start_repeat_and_no_false_profile_success(harness: Harness) -> None:
     for _ in range(2):
         await harness.send("/start")
-        assert harness.sent[-1].text == WELCOME
+        assert harness.sent[-1].text == "Что хотите сделать?"
         assert harness.sent[-1].reply_markup == main_menu()
         assert await harness.state.get_state() == Navigation.menu.state
         assert await harness.state.get_data() == {}
     combined = " ".join(message.text for message in harness.sent)
     assert "Профиль создан" not in combined
     assert "Вы авторизованы" not in combined
-    assert not harness.requests
+    assert len(harness.requests) == 2
+    assert all(request.method == "GET" for request in harness.requests)
 
 
 @pytest.mark.anyio
 async def test_deep_link_is_not_consumed_or_echoed(harness: Harness) -> None:
     payload = secrets.token_urlsafe(24)
     await harness.send("/start " + payload)
-    assert "Приглашения пока недоступны" in harness.sent[-1].text
+    assert "Не удалось открыть приглашение" in harness.sent[-1].text
     assert payload not in harness.sent[-1].text
     assert await harness.state.get_data() == {}
     assert not harness.requests
@@ -174,7 +203,7 @@ async def test_cancel_clears_draft_and_returns_to_menu(harness: Harness) -> None
         assert await harness.state.get_state() == Navigation.menu.state
         assert await harness.state.get_data() == {}
         assert harness.sent[-1].reply_markup == main_menu()
-        assert "Сохранённые записи" in harness.sent[-1].text
+        assert "Сохранённые записи" in harness.sent[-2].text
 
 
 @pytest.mark.anyio
@@ -184,13 +213,18 @@ async def test_cancel_clears_draft_and_returns_to_menu(harness: Harness) -> None
 async def test_menu_and_repeated_buttons_are_honest(
     harness: Harness, action: str
 ) -> None:
-    for _ in range(2):
-        await harness.click(action)
+    await harness.click(action)
+    if action == "menu:pending":
         assert harness.sent[-1].text == UNAVAILABLE
-        assert await harness.state.get_state() == Navigation.menu.state
-        assert await harness.state.get_data() == {}
-    assert len(harness.sent) == 2
-    assert not harness.requests
+    elif action == "menu:create":
+        assert "Как назовём" in harness.sent[-1].text
+        await harness.click(action)
+        assert harness.sent[-1].text == ACTIVE
+    elif action == "menu:profile":
+        assert "Telegram-only" in harness.sent[-1].text
+    else:
+        assert "пока нет групп" in harness.sent[-1].text
+    assert all(request.method == "GET" for request in harness.requests)
 
 
 @pytest.mark.anyio
@@ -250,7 +284,7 @@ async def test_foreign_and_inaccessible_callbacks_do_not_change_state(
 async def test_service_availability_does_not_authenticate(harness: Harness) -> None:
     await harness.click("menu:health")
     assert "Сервис доступен" in harness.sent[-1].text
-    assert "Регистрация" in harness.sent[-1].text
+    assert "Профиль и права" in harness.sent[-1].text
     assert "Профиль создан" not in harness.sent[-1].text
     assert len(harness.requests) == 1
 
