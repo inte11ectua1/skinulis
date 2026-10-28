@@ -1,6 +1,6 @@
 # Фактическое состояние проекта
 
-**Срез:** 27 октября 2026 года. Источник истины — GitHub `main`, принятые PR, Issues, логи проверок и реальные URL. Этот документ отражает подтверждённое состояние, а не обещание готовой реализации.
+**Срез:** 28 октября 2026 года, после merged [PR #31](https://github.com/inte11ectua1/skinulis/pull/31), `main` `c3658f3`. Источник истины — GitHub `main`, принятые PR, Issues, CI и реальные результаты проверок. **M2 Identity завершён по реализации (все четыре Issue закрыты), но gate G2 формально не verified**: live Telegram E2E и production-изоляция `/internal` ещё не доказаны. Следующий запланированный этап — M3 Expenses, новые M3 Issues на момент среза не подтверждены как назначенные.
 
 **Этап M1 (Skeleton): завершён по объёму задач.** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12) и [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты, код находится в `main`. **G1 — не полностью подтверждён как формальный gate**: нужна доказательная проверка причины блокировки красного CI в интерфейсе и незавершённые защитные проверки T-01; у PR #19 не зарегистрировано независимого APPROVED-ревью. Это не отменяет успешную реализацию M1.
 
@@ -26,25 +26,31 @@
 | [L-02](https://github.com/inte11ectua1/skinulis/issues/12) bot skeleton и mock HTTP | **merged** | Лера | [PR #18](https://github.com/inte11ectua1/skinulis/pull/18) merged; навигация/typed health client/mock-тесты, без live Telegram и онбординга |
 | [T-04](https://github.com/inte11ectua1/skinulis/issues/13) PR CI | **merged, Issue closed** | Тимур | [PR #19](https://github.com/inte11ectua1/skinulis/pull/19) merged 27.10.2026; GitHub Actions lint/types/tests/docker-build/ci, PostgreSQL integration и покрытие ≥60%; [успешный run](https://github.com/inte11ectua1/skinulis/actions/runs/40459119340), [красный run](https://github.com/inte11ectua1/skinulis/actions/runs/40458200449), [подробности](operations/CI.md). PR объединён без зарегистрированного независимого APPROVED review. |
 
-Все T-03, O-02, L-02 и T-04 приняты в `main` (на 27.10.2026 HEAD `d635398`). **Следующая фаза — M2 Identity**: T-05 (auth/JWT), T-06 (группы и Telegram actor), O-03 (финансовые ORM-модели/миграции), L-03 (онбординг и группы в боте). Созданы и назначены Issues M2: [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) и [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) — Тимур; [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) — Олег; [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) — Лера. Согласование shared-контрактов — через issue/PR без молчаливого изменения PRODUCT_RULES.
+Все T-03, O-02, L-02, T-04 завершены по M1, а **M2 также принят в `main`**: [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21), [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22), [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23), [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) закрыты. Контракты T-05/T-06 и финансовые Q-03/Q-04/Q-10 согласованы решениями техлида с указанными границами; это не заменяет независимые ревью и проверку G2. Исторический M1-срез `d635398` сохранён в доказательствах ниже.
 
-## M2 — Identity (27.10.2026; T-05 merged, T-06 в работе)
+## M2 — Identity (реализация закрыта 28.10.2026, G2 pending)
 
-| Задача | Статус | Ответственный | Условия старта и зависимости |
+| Задача | Состояние в GitHub | Ответственный | Реализовано и доказательства |
 |---|---|---|---|
-| [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) Auth/users | **merged, Issue closed** | Тимур | [PR #26](https://github.com/inte11ectua1/skinulis/pull/26) merged 27.10.2026; [CI](https://github.com/inte11ectua1/skinulis/actions/runs/40468385916). Независимого APPROVED review нет; спорные DTO не объявлены согласованными |
-| [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) Groups/Telegram actor | **backend complete / independent review requested** | Тимур | После merged T-05; backend groups/invites/Telegram actor/link с тестами. GET/DELETE invites и internal mirrors добавлены по [решению tech lead](https://github.com/inte11ectua1/skinulis/issues/22#issuecomment-6437632203); 511 unit +68 PostgreSQL integration, coverage98,40%, Docker/CI passed; независимое review PR #27 |
-| [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) Finance models/migrations | **open / design ready** | Олег | Модели/fixtures можно проектировать сейчас; final FK/migrations после согласования users/groups c T-05/T-06; без финансового CRUD |
-| [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) Telegram onboarding/groups | **open / mock ready** | Лера | FSM/mock client можно начать сейчас; реальные HTTP-интеграции только по принятым T-05/T-06 OpenAPI/fixtures |
+| [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21) Auth/users | **merged / Issue closed** | Тимур | [PR #26](https://github.com/inte11ectua1/skinulis/pull/26): `users`, Argon2id, email register/login, JWT `/users/me`, миграция `0002_users`. [Final CI](https://github.com/inte11ectua1/skinulis/actions/runs/40468385916) green; 422 unit +22 PostgreSQL integration, 98,31% coverage (срез T-05). |
+| [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22) Groups/invites/actor | **merged / Issue closed** | Тимур | [PR #27](https://github.com/inte11ectua1/skinulis/pull/27) merged 27.10: `groups/group_members`, одноразовые invites, owner-only GET/DELETE и internal mirrors, service Telegram actor, bootstrap/link, `0003_groups_identity`. [Контракт](contracts/T-06_IDENTITY.md) принят техлидом, backend race/permission/smoke tests зафиксированы ниже. |
+| [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23) Finance ORM/Alembic | **merged / Issue closed** | Олег | [PR #31](https://github.com/inte11ectua1/skinulis/pull/31) merged 28.10 после документационного [PR #33](https://github.com/inte11ectua1/skinulis/pull/33) в его ветку: пять таблиц `expenses/expense_items/expense_shares/expense_item_shares/settlements`, линейная `0004_financial_domain` после `0003`. [CI](https://github.com/inte11ectua1/skinulis/actions/runs/40678199167) на final PR head **5/5 success**. PR-отчёт: 587 unit +138 PostgreSQL integration, coverage 96,63%; **нет финансового CRUD/балансов/автомата компенсаций**. |
+| [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) Telegram onboarding/groups | **merged / Issue closed** | Лера | [PR #28](https://github.com/inte11ectua1/skinulis/pull/28) merged 28.10: aiogram FSM, explicit Create/Link, профиль/группы/приглашения, типизированный httpx internal API, safe timeout/retry, mock и API+PostgreSQL integration. [CI](https://github.com/inte11ectua1/skinulis/actions/runs/40658217735) **5/5 success**; 571 unit +70 integration по отчёту PR. **Не live Telegram E2E**. |
 
-**Правило интеграции M2:** не создавать конкурентные Alembic heads; Тимур согласовывает `users/groups` ID/FK с Олегом до финальной миграции O-03 и Telegram service DTO/deep links с Лерой до L-03 integration. Решения T-06/UQ-01/02/04/05 утверждены tech lead в Issue #22; независимое ревью остаётся необходимым. Backend auth/group/actor проверены тестами, но G2 не подтверждён без L-03/live Telegram E2E.
+**M2 follow-ups закрыты:**
+- [#29](https://github.com/inte11ectua1/skinulis/issues/29) / [PR #30](https://github.com/inte11ectua1/skinulis/pull/30) — каноническая сериализация datetime в UTC `Z` для T-05/T-06 API, regression на PostgreSQL с не-UTC timezone.
+- [#32](https://github.com/inte11ectua1/skinulis/issues/32) / [PR #33](https://github.com/inte11ectua1/skinulis/pull/33) — финансовые контракты Q-03 (NFC/trim/Unicode category C **на будущей входной границе O-04/O-05**), Q-10 (явные нулевые доли), Q-04 (BIGINT/NUMERIC), `position` и `resolved_at`. PR #33 сначала объединён **в ветку Олега**, затем вместе с PR #31 оказался в `main`. Открытые аспекты Q-04/Q-10 для будущих API не считаются закрытыми.
+
+**Факт против gate:** публичная JWT-аутентификация, группы, Telegram bot-service endpoints и клиент бота реализованы и покрыты CI/PostgreSQL tests. **G2 пока not verified**: нет подтверждённого сквозного *live Telegram* сценария на реальном боте с отдельными пользователями, а production reverse proxy для защиты `/internal` относится к T-09 и не развёрнут/не проверен. Независимое `APPROVED` для PR #31 не зарегистрировано; администраторский merge не заменяет review. Не приписывать этапу M2 работающие расходы, балансы, выплаты либо полный продуктовый E2E.
+
+**Дальше по плану — M3 Expenses:** Тимур **T-07** security/API review; Олег **O-04** CRUD `equal/custom` и **O-05** `by_items` + snapshot; Лера **L-04** мастера расходов по утверждённым API/fixtures. Это **roadmap, не утверждение, что новые Issues уже созданы**. До разработки согласовать оставшиеся финансовые Q/UQ, включая UQ-03 expense preview, без bot-side денежных вычислений.
 
 ## Release gates
 
 | Gate | Статус | Условие проверки |
 |---|---|---|
 | G1 — cold start / миграция / health / CI | **implementation complete; formal verification pending** | Cold start, миграции, /health 200/503 подтверждены в PR #15; CI зелёный и намеренно красный подтверждены в PR #19. Не завершена визуальная проверка failed-required-check причины блокировки; нет независимого approval PR #19; администраторский bypass требует отдельного решения об уровне защиты. |
-| G2 — auth и группы | **not verified** | M2 |
+| G2 — auth и группы | **implementation complete; formal verification pending** | M2 код merged и CI зелёный; live Telegram E2E и production-изоляция `/internal` не подтверждены |
 | G3 — расходы | **not verified** | M3 |
 | G4 — компенсации | **not verified** | M4 |
 | G5 — публикация и CD | **not verified** | M5 |
@@ -120,7 +126,7 @@ APPROVED-review нет; DTO/TTL/алгоритм/FK остаются предл�
 
 ## T-06 — PR #27, контракт утверждён tech lead
 
-[PR #27](https://github.com/inte11ectua1/skinulis/pull/27), без merge.
+[PR #27](https://github.com/inte11ectua1/skinulis/pull/27), **merged 27.10.2026**. Последующие строки в этом разделе — исторический срез до merge; актуальное M2-резюме см. выше.
 База main после [PR #26](https://github.com/inte11ectua1/skinulis/pull/26),
 0002_users. Добавлены groups/members, hashed invites, service Telegram actor,
 explicit bootstrap и одноразовая привязка; [контракт](contracts/T-06_IDENTITY.md).
@@ -149,8 +155,7 @@ link201/consume200/reuse404, bad service401, cross-group404. Alembic head/check
 Контейнеры остановлены, named volume сохранён; пользовательские БД не трогались.
 
 HTTP GET списка/DELETE отзыва и /internal mirrors включены по утверждённому
-контракту. Результаты полного scope приведены ниже. Issue #22 остаётся открытой до merge; G2 не verified: нужны независимое
-ревью и L-03/live Telegram E2E.
+контракту. Результаты полного scope приведены ниже. **Issue #22 закрыта после merge PR #27**. G2 не verified: live Telegram E2E и production-изоляция остаются непроверенными.
 Production reverse proxy/изоляция /internal относятся к T-09 и не развёрнуты.
 
 
@@ -182,6 +187,6 @@ consumed DELETE409, join после отзыва404. Ответы и логи б
 [GitHub CI после завершения scope](https://github.com/inte11ectua1/skinulis/actions/runs/40478372227)
 на a07b52c: lint/types/tests/docker-build/ci success, Linux511 unit +68 integration,
 coverage98,40%. Последний head проверяется checks PR #27 перед Ready for review.
-T-06 backend завершён; независимое review Олега/Леры и merge остаются впереди.
-Issue #22 открыта до merge; live Telegram и production-изоляция /internal
-не проверены, G2 не помечается verified.
+T-06 backend впоследствии merged через PR #27, Issue #22 закрыта.
+Эти цифры — проверка на head до merge, не live Telegram E2E. Production-изоляция /internal
+не проверена, G2 не помечается verified.
