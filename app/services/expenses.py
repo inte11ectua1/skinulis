@@ -1,4 +1,4 @@
-"""O-04 calculations and locked primitives; expense_crud owns replay/version policy."""
+"""O-04/O-05 calculations and locked storage; expense_crud owns replay/version policy."""
 
 from collections.abc import Collection, Iterable, Iterator
 from contextlib import contextmanager
@@ -74,7 +74,7 @@ class CustomExpense:
 
 @dataclass(frozen=True, slots=True)
 class ReceiptItemInput:
-    """Internal ordered item; not an approved HTTP DTO."""
+    """Internal ordered item; HTTP validation lives in schemas.expenses."""
 
     title: str
     amount: str
@@ -508,10 +508,10 @@ class _ExpenseEditor:
     def replace_snapshot(
         self, draft: ExpenseInput, *, allow_receipt: bool = False
     ) -> ExpenseSnapshot:
-        """Storage replacement; HTTP mode transitions still require checkpoint approval.
+        """Storage replacement; HTTP opts in only after author/version verification.
 
-        The existing adapter cannot opt into receipt replacement accidentally.
-        Explicit internal opt-in is for O-05 storage/concurrency tests until approved.
+        Internal callers retain an explicit guard against accidental detail loss.
+        All mode transitions are approved by T-07 issue39/6473059675.
         """
         self._check_scope()
         expense, session = self._expense, self._session
@@ -528,7 +528,7 @@ class _ExpenseEditor:
         )
         if (has_items or isinstance(draft, ByItemsExpense)) and not allow_receipt:
             raise ExpenseDetailsUnsupported(
-                "Receipt transitions require O-05 checkpoint approval"
+                "Receipt replacement requires explicit caller opt-in"
             )
         prepared = prepare_expense(draft, _members(session, expense.group_id))
         if has_items:

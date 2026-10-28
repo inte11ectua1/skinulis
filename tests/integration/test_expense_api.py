@@ -22,7 +22,16 @@ from app.core.migrate import main as migrate
 from app.core.security import create_access_token
 from app.db import Database
 from app.main import create_app
-from app.models import Expense, ExpenseShare, Group, GroupMember, Settlement, User
+from app.models import (
+    Expense,
+    ExpenseItem,
+    ExpenseItemShare,
+    ExpenseShare,
+    Group,
+    GroupMember,
+    Settlement,
+    User,
+)
 
 pytestmark = pytest.mark.integration
 NOW = datetime(2026, 10, 28, 10, tzinfo=UTC)
@@ -936,3 +945,283 @@ def test_wire_dates_remain_utc_when_database_session_timezone_differs(a: API) ->
         assert deleted["expense"]["deleted_at"].endswith("Z")
     finally:
         event.remove(a.db.engine, "connect", timezone)
+
+
+def receipt(*, pennies: bool = False) -> dict[str, Any]:
+    items = [
+        dict(title="Паста", amount="700.00", participants=[1]),
+        dict(title="Стейк", amount="1100.00", participants=[2]),
+        dict(title="Салат", amount="500.00", participants=[5]),
+        dict(title="Пицца", amount="900.00", participants=[5, 1, 2]),
+    ]
+    if pennies:
+        items = [
+            dict(title=str(n), amount="0.01", participants=[5, 2, 1]) for n in range(2)
+        ]
+    return dict(
+        title=" Ресторан ",
+        split_mode="by_items",
+        items=items,
+        client_request_id=str(uuid4()),
+    )
+
+
+@pytest.mark.parametrize("internal", [False, True])
+@pytest.mark.parametrize("pennies", [False, True])
+def test_receipt_http_lifecycle_original_replay(
+    a: API, internal: bool, pennies: bool
+) -> None:
+    prefix = "/internal" if internal else ""
+    headers = a.headers(internal=internal)
+    payload = receipt(pennies=pennies)
+    business = {k: v for k, v in payload.items() if k != "client_request_id"}
+    preview = a.client.post(
+        f"{prefix}/groups/{a.group}/expenses/preview", headers=headers, json=business
+    )
+    assert preview.status_code == 200, preview.text
+    with a.db.sessions() as session:
+        assert session.scalar(select(func.count()).select_from(Expense)) == 0
+    created = a.create(payload, internal=internal)
+    assert created.status_code == 201, created.text
+    original = created.json()
+    exp = original["expense"]
+    eid = exp["id"]
+    assert exp["amount"] == ("0.02" if pennies else "3200.00")
+    assert [r["amount"] for r in exp["shares"]] == (
+        ["0.02", "0.00", "0.00"] if pennies else ["1000.00", "1400.00", "800.00"]
+    )
+    for field in ("items", "amount", "shares", "title", "split_mode"):
+        assert exp[field] == preview.json()[field]
+    assert [i["position"] for i in exp["items"]] == list(
+        range(1, len(exp["items"]) + 1)
+    )
+    assert all(
+        set(i) == {"position", "title", "amount", "shares"} for i in exp["items"]
+    )
+    detail = a.client.get(f"{prefix}/expenses/{eid}", headers=headers)
+    assert detail.json() == exp
+    page = a.client.get(f"{prefix}/groups/{a.group}/expenses", headers=headers).json()
+    assert page == dict(items=[exp], limit=20, offset=0)
+    reordered = deepcopy(payload)
+    for item in reordered["items"]:
+        item["participants"].reverse()
+    replay = a.create(reordered, internal=internal)
+    assert replay.status_code == 200 and replay.json() == original
+    changed = deepcopy(payload)
+    changed["items"].reverse()
+    error(a.create(changed, internal=internal), 409, "request_conflict")
+    error(a.create(payload, actor=1, internal=internal), 409, "request_conflict")
+    update_body = {
+        k: v
+        for k, v in receipt(pennies=not pennies).items()
+        if k != "client_request_id"
+    } | dict(expected_version=1)
+    updated = a.client.put(
+        f"{prefix}/expenses/{eid}", headers=headers, json=update_body
+    )
+    assert updated.status_code == 200 and updated.json()["expense"]["version"] == 2
+    error(
+        a.client.put(f"{prefix}/expenses/{eid}", headers=headers, json=update_body),
+        409,
+        "expense_version_conflict",
+    )
+    assert a.create(payload, internal=internal).json() == original
+    deleted = a.client.delete(
+        f"{prefix}/expenses/{eid}?expected_version=2", headers=headers
+    )
+    assert deleted.status_code == 200 and deleted.json()["expense"]["version"] == 3
+    repeated = a.client.delete(
+        f"{prefix}/expenses/{eid}?expected_version=1", headers=headers
+    )
+    assert repeated.json() == deleted.json()
+    error(
+        a.client.get(f"{prefix}/expenses/{eid}", headers=headers),
+        404,
+        "expense_not_found",
+    )
+    assert a.create(payload, internal=internal).json() == original
+    with a.db.sessions() as session:
+        row = session.get(Expense, eid)
+        assert row is not None and row.initial_create_result == original
+        assert session.scalar(select(func.count()).select_from(ExpenseItem)) == (
+            4 if pennies else 2
+        )
+
+
+@pytest.mark.parametrize("internal", [False, True])
+@pytest.mark.parametrize("old", ["equal", "custom", "by_items"])
+@pytest.mark.parametrize("new", ["equal", "custom", "by_items"])
+def test_all_http_mode_transitions_with_confirmed(
+    a: API, internal: bool, old: str, new: str
+) -> None:
+    bodies = {
+        "equal": equal(),
+        "custom": {k: v for k, v in put().items() if k != "expected_version"}
+        | dict(client_request_id=str(uuid4())),
+        "by_items": receipt(),
+    }
+    original = a.create(bodies[old], internal=internal).json()
+    eid = original["expense"]["id"]
+    with a.db.sessions() as session, session.begin():
+        settlement = Settlement(
+            group_id=a.group,
+            sender_id=1,
+            receiver_id=2,
+            amount_kopecks=50,
+            status="confirmed",
+            client_request_id=uuid4(),
+            created_at=NOW,
+            resolved_at=NOW,
+        )
+        session.add(settlement)
+        session.flush()
+        sid = settlement.id
+    prefix = "/internal" if internal else ""
+    headers = a.headers(internal=internal)
+    body = {k: v for k, v in bodies[new].items() if k != "client_request_id"} | dict(
+        expected_version=1
+    )
+    response = a.client.put(f"{prefix}/expenses/{eid}", headers=headers, json=body)
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert result["expense"]["split_mode"] == new and result["expense"]["version"] == 2
+    assert ("items" in result["expense"]) == (new == "by_items")
+    assert result["balances"] is not None
+    from app.services.money import parse_money
+
+    assert (
+        sum(
+            (-1 if b["balance"].startswith("-") else 1)
+            * parse_money(b["balance"].lstrip("-"))
+            for b in result["balances"]
+        )
+        == 0
+    )
+    assert a.create(bodies[old], internal=internal).json() == original
+    with a.db.sessions() as session:
+        saved = session.get(Settlement, sid)
+        assert (
+            saved is not None
+            and saved.status == "confirmed"
+            and saved.amount_kopecks == 50
+        )
+        assert session.scalar(select(func.count()).select_from(ExpenseItem)) == (
+            4 if new == "by_items" else 0
+        )
+
+
+@pytest.mark.parametrize("internal", [False, True])
+def test_receipt_invalid_foreign_author_and_constraint_rollback(
+    a: API, internal: bool
+) -> None:
+    prefix = "/internal" if internal else ""
+    headers = a.headers(internal=internal)
+    original = a.create(receipt(), internal=internal).json()
+    eid = original["expense"]["id"]
+    body = {
+        k: v for k, v in receipt(pennies=True).items() if k != "client_request_id"
+    } | dict(expected_version=1)
+    error(
+        a.client.put(
+            f"{prefix}/expenses/{eid}", headers=a.headers(1, internal), json=body
+        ),
+        403,
+        "expense_author_required",
+    )
+    error(
+        a.client.get(f"{prefix}/expenses/{eid}", headers=a.headers(10, internal)),
+        404,
+        "expense_not_found",
+    )
+    foreign = deepcopy(body)
+    foreign["items"][1]["participants"] = [10]
+    error(
+        a.client.put(f"{prefix}/expenses/{eid}", headers=headers, json=foreign),
+        400,
+        "invalid_participants",
+    )
+    invalid = deepcopy(body)
+    invalid["items"][1]["amount"] = "0.00"
+    error(
+        a.client.put(f"{prefix}/expenses/{eid}", headers=headers, json=invalid),
+        400,
+        "validation_error",
+    )
+
+    def fail_item(session: Session, context: Any, instances: Any) -> None:
+        for item in session.new:
+            if isinstance(item, ExpenseItemShare):
+                item.amount_kopecks = -1
+
+    event.listen(Session, "before_flush", fail_item)
+    try:
+        error(
+            a.client.put(f"{prefix}/expenses/{eid}", headers=headers, json=body),
+            500,
+            "internal_error",
+        )
+    finally:
+        event.remove(Session, "before_flush", fail_item)
+    assert (
+        a.client.get(f"{prefix}/expenses/{eid}", headers=headers).json()
+        == original["expense"]
+    )
+
+
+@pytest.mark.parametrize("conflict", [False, True])
+def test_overlapping_receipt_posts_original_history(a: API, conflict: bool) -> None:
+    payload = receipt()
+    second = deepcopy(payload)
+    if conflict:
+        second["items"].reverse()
+    responses = overlap(a, [lambda: a.create(payload), lambda: a.create(second)])
+    assert sorted(r.status_code for r in responses) == (
+        [201, 409] if conflict else [200, 201]
+    )
+    if not conflict:
+        assert responses[0].json() == responses[1].json()
+    with a.db.sessions() as session:
+        assert session.scalar(select(func.count()).select_from(Expense)) == 1
+        assert session.scalar(select(func.count()).select_from(ExpenseItem)) == 4
+
+
+def test_overlapping_receipt_put_delete_versions(a: API) -> None:
+    eid = a.create(receipt()).json()["expense"]["id"]
+    body = {
+        k: v for k, v in receipt(pennies=True).items() if k != "client_request_id"
+    } | dict(expected_version=1)
+    headers = a.headers()
+    path = f"/expenses/{eid}"
+    responses = overlap(
+        a,
+        [
+            lambda: a.client.put(path, headers=headers, json=body),
+            lambda: a.client.delete(path + "?expected_version=1", headers=headers),
+        ],
+    )
+    statuses = sorted(r.status_code for r in responses)
+    assert statuses in ([200, 404], [200, 409])
+    if statuses == [200, 409]:
+        error(
+            a.client.delete(path + "?expected_version=1", headers=headers),
+            409,
+            "expense_version_conflict",
+        )
+    else:
+        error(a.client.get(path, headers=headers), 404, "expense_not_found")
+
+
+@pytest.mark.parametrize("internal", [False, True])
+@pytest.mark.parametrize("count", [0, 51])
+def test_receipt_http_count_and_actor_boundaries(
+    a: API, internal: bool, count: int
+) -> None:
+    body = receipt()
+    body["items"] = [body["items"][0]] * count
+    error(a.create(body, internal=internal), 400, "validation_error")
+    body = receipt()
+    body["items"][0]["participants"] = [10]
+    error(a.create(body, internal=internal), 400, "invalid_participants")
+    error(a.create(receipt(), actor=10, internal=internal), 404, "group_not_found")
+    with a.db.sessions() as session:
+        assert session.scalar(select(func.count()).select_from(Expense)) == 0

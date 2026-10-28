@@ -201,3 +201,12 @@ coverage98,40%. Последний head проверяется checks PR #27 п�
 T-06 backend впоследствии merged через PR #27, Issue #22 закрыта.
 Эти цифры — проверка на head до merge, не live Telegram E2E. Production-изоляция /internal
 не проверена, G2 не помечается verified.
+
+## O-05 — PR #42 (28.10.2026)
+
+Новый by_items контракт принят Тимуром в #39/6473059675; HTTP preview/create/read/page/
+PUT/DELETE и /internal mirrors реализованы в ветке feat/O-05-by-items-expenses.
+Позиции/нули/ordered original replay/версии и все смены режимов покрыты тестами.
+Контракт: contracts/O-05_BY_ITEMS.md, fixtures: finance/fixtures/O-05_BY_ITEMS.json.
+Финальные проверки нового head и статус независимого review — в PR42. Не merged,
+Issue39 остаётся открытой до приёмки. Это не личный APPROVED Леры; G2 отложено.

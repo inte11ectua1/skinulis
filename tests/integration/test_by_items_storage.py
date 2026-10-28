@@ -572,7 +572,7 @@ def test_old_equal_post_replay_keeps_its_original_json_after_internal_receipt_re
         assert "items" not in replay.json()["expense"]
 
 
-def test_by_items_wire_remains_closed_until_checkpoint_approval(h: Harness) -> None:
+def test_by_items_wire_opens_after_checkpoint_approval(h: Harness) -> None:
     headers = {
         "Authorization": "Bearer "
         + create_access_token(10, h.settings.require_jwt_secret(), 15)
@@ -588,8 +588,8 @@ def test_by_items_wire_remains_closed_until_checkpoint_approval(h: Harness) -> N
             f"/groups/{h.group}/expenses", json=payload, headers=headers
         )
         assert (
-            response.status_code == 400
-            and response.json()["error"]["code"] == "validation_error"
+            response.status_code == 201
+            and response.json()["expense"]["items"][0]["amount"] == "1.00"
         )
     with h.db.sessions() as session:
-        assert session.scalar(select(func.count()).select_from(Expense)) == 0
+        assert session.scalar(select(func.count()).select_from(Expense)) == 1

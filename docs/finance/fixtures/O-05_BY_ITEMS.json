@@ -1,6 +1,6 @@
 {
-  "status": "PROPOSED_BY_ITEMS_WIRE_NOT_IMPLEMENTED",
-  "checkpoint": "https://github.com/inte11ectua1/skinulis/issues/39#issuecomment-6471710129",
+  "status": "ACCEPTED_T07_O05",
+  "checkpoint": "https://github.com/inte11ectua1/skinulis/issues/39#issuecomment-6473059675",
   "preview_request": {
     "title": "Ресторан",
     "split_mode": "by_items",
@@ -37,7 +37,7 @@
       }
     ]
   },
-  "preview_response_proposal": {
+  "preview_response": {
     "group_id": 100,
     "payer_id": 10,
     "split_mode": "by_items",
@@ -149,7 +149,7 @@
     ],
     "client_request_id": "00000000-0000-4000-8000-000000000039"
   },
-  "create_response_proposal": {
+  "create_response": {
     "expense": {
       "group_id": 100,
       "payer_id": 10,
@@ -232,7 +232,7 @@
     },
     "balances": null
   },
-  "detail_response_proposal": {
+  "detail_response": {
     "group_id": 100,
     "payer_id": 10,
     "split_mode": "by_items",
@@ -312,7 +312,7 @@
     "deleted_at": null,
     "version": 1
   },
-  "put_request_proposal": {
+  "put_request": {
     "title": "Копейки",
     "split_mode": "by_items",
     "items": [
@@ -337,7 +337,7 @@
     ],
     "expected_version": 1
   },
-  "penny_preview_proposal": {
+  "penny_preview": {
     "group_id": 100,
     "payer_id": 10,
     "split_mode": "by_items",
@@ -398,7 +398,7 @@
       }
     ]
   },
-  "original_post_replay_proposal": {
+  "original_post_replay": {
     "expense": {
       "group_id": 100,
       "payer_id": 10,
@@ -481,7 +481,7 @@
     },
     "balances": null
   },
-  "normalized_intent_proposal": {
+  "normalized_intent": {
     "group_id": 100,
     "actor_id": 10,
     "title": "Ресторан",
@@ -594,7 +594,7 @@
     ],
     "client_request_id": "00000000-0000-4000-8000-000000000039"
   },
-  "invalid_item_error_proposal": {
+  "invalid_item_error": {
     "error": {
       "code": "validation_error",
       "message": "Invalid request data",
