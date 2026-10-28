@@ -1,18 +1,26 @@
 # O-03 — финансовые таблицы и границы гарантий
 
-**Статус: финансовая схема в Draft PR #31, Refs #23.** ORM и миграция
-реализуют только слой данных, не готовый финансовый API. Тимур утвердил
-решения для O-03 по Q-03, Q-10, части Q-04, `position` и `resolved_at`
-в [Issue #23](https://github.com/inte11ectua1/skinulis/issues/23#issuecomment-6467181035).
-Это решение техлида, **не** собственное ревью Леры: её UX/DTO-подтверждение
-и независимый code review PR #31 ещё ожидаются.
+**Статус на 28.10.2026: схема O-03 merged в `main` через
+[PR #31](https://github.com/inte11ectua1/skinulis/pull/31),
+[Issue #23](https://github.com/inte11ectua1/skinulis/issues/23) closed.**
+Миграция `0004_financial_domain` — актуальный head при завершении M2;
+финансовый **HTTP CRUD, balances и settlement state machine не реализованы**.
+Тимур утвердил технические решения Q-03, storage-части Q-04/Q-10,
+`position` и `resolved_at` [в Issue #23](https://github.com/inte11ectua1/skinulis/issues/23#issuecomment-6467181035);
+обновление финансовых документов принято через
+[PR #33](https://github.com/inte11ectua1/skinulis/pull/33) в ветку Олега
+и вошло в `main` с PR #31. Это согласование tech lead, **не**
+независимое `APPROVED`: у PR #31 оно не зарегистрировано;
+клиентское UX-подтверждение Леры не следует выдумывать.
 
 Основание: [Issue #23](https://github.com/inte11ectua1/skinulis/issues/23),
 [согласованный identity T-06](https://github.com/inte11ectua1/skinulis/issues/22#issuecomment-6437632203),
 [первоначальный финансовый checkpoint](https://github.com/inte11ectua1/skinulis/issues/23#issuecomment-6466134697),
 [задача документационного согласования #32](https://github.com/inte11ectua1/skinulis/issues/32).
-На старте main `fe3574a` включает PR #17/#19/#26/#27/#28/#30;
-проверенный head — `0003_groups_identity`.
+Историческая исходная база ветки O-03: `main fe3574a`, Alembic
+`0003_groups_identity`. После merge PR #31 текущая линейная цепочка
+заканчивается на **`0004_financial_domain`**; полный `main` merge SHA
+`c3658f3`.
 
 ## Таблицы
 
@@ -247,5 +255,9 @@ uv run coverage report --include="app/models/finance.py"
 Прошли sync --frozen, lock --check, Ruff check/format, mypy .,
 pre-commit --all-files, uv pip check, uv audit --locked и git diff --check.
 Единственное предупреждение тестов — существующая Starlette/httpx deprecation;
-зависимости в O-03 не менялись. GitHub Actions проверяется отдельно в PR:
-локальные результаты не означают успешного remote run или approval контракта.
+зависимости в O-03 не менялись. На итоговом head PR #31 после документационного merge PR #33
+[GitHub Actions run](https://github.com/inte11ectua1/skinulis/actions/runs/40678199167)
+завершился успешно по всем пяти jobs:
+`lint`, `types`, `tests`, `docker-build`, `ci`.
+Это подтверждает CI и интеграционные проверки, но не независимый
+`APPROVED` review или готовый финансовый API.
