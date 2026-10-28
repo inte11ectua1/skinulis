@@ -1,0 +1,54 @@
+{
+  "status": "PROPOSED_NOT_IMPLEMENTED_NOT_OPENAPI",
+  "checkpoint": "https://github.com/inte11ectua1/skinulis/issues/36#issuecomment-6469108140",
+  "equal_create": {
+    "client_request_id": "00000000-0000-4000-8000-000000000004",
+    "split_mode": "equal",
+    "title": "Обед",
+    "amount": "100.00",
+    "participants": [2, 5, 10]
+  },
+  "custom_create": {
+    "client_request_id": "00000000-0000-4000-8000-000000000005",
+    "split_mode": "custom",
+    "title": "Обед",
+    "amount": "100.00",
+    "shares": [
+      {"user_id": 2, "amount": "0.00"},
+      {"user_id": 5, "amount": "40.00"},
+      {"user_id": 10, "amount": "60.00"}
+    ]
+  },
+  "equal_read": {
+    "id": 7,
+    "group_id": 1,
+    "payer_id": 1,
+    "client_request_id": "00000000-0000-4000-8000-000000000004",
+    "split_mode": "equal",
+    "title": "Обед",
+    "amount": "100.00",
+    "shares": [
+      {"user_id": 2, "amount": "33.34"},
+      {"user_id": 5, "amount": "33.33"},
+      {"user_id": 10, "amount": "33.33"}
+    ],
+    "created_at": "2026-10-28T12:00:00Z",
+    "deleted_at": null,
+    "version": 1
+  },
+  "put_proposal": {
+    "expected_version": 1,
+    "split_mode": "custom",
+    "title": "Чай",
+    "amount": "1.00",
+    "shares": [{"user_id": 5, "amount": "1.00"}]
+  },
+  "empty_page": {"items": [], "limit": 20, "offset": 20},
+  "error_proposal": {
+    "error": {
+      "code": "expense_version_conflict",
+      "message": "Expense was changed; reload before editing",
+      "request_id": "example-request-id"
+    }
+  }
+}
