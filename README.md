@@ -2,7 +2,7 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
-> **Срез L-03, 28.10.2026:** M1, T-05 (PR #26) и T-06 (PR #27) merged. Клиент L-03 подключает Telegram-онбординг, профиль, группы и приглашения по утверждённому T-06; ожидает независимого ревью. Расходы/компенсации ещё не реализованы, live Telegram E2E и G2 не подтверждены. [STATUS](docs/STATUS.md) обновляется после человеческого merge и местами отстаёт от GitHub.
+> **Срез после M2, 28.10.2026:** M1 и M2 **завершены по реализации**. В `main` находятся auth/JWT, группы, Telegram onboarding и 5 финансовых ORM-таблиц (PR #26/#27/#28/#31), а также UTC wire-fix PR #30 и финансовые контракты PR #33. Все Issues M2 #21–#24 закрыты. **Финансовые CRUD/балансы/компенсации не реализованы; live Telegram E2E и production-изоляция `/internal` не подтверждены, G2 не verified.** Точные данные и проверки — в [STATUS](docs/STATUS.md).
 
 ## Начало работы
 
@@ -24,7 +24,8 @@
 ## Этапы и ближайшая работа
 
 - **M1 Skeleton завершён по реализации:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12), [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты. [CI evidence](docs/operations/CI.md).
-- **M2 Identity:** T-05 #21 / PR #26 и T-06 #22 / PR #27 merged. Олег — [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23), собственные финансовые модели и миграции. Лера — [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24), клиент онбординга/групп по утверждённым T-06, mock и настоящие API/PostgreSQL тесты; human review обязателен.
+- **M2 Identity завершён по коду:** [T-05 #21 / PR #26](https://github.com/inte11ectua1/skinulis/pull/26), [T-06 #22 / PR #27](https://github.com/inte11ectua1/skinulis/pull/27), [O-03 #23 / PR #31](https://github.com/inte11ectua1/skinulis/pull/31), [L-03 #24 / PR #28](https://github.com/inte11ectua1/skinulis/pull/28) merged, соответствующие Issues closed. Финансовая документация принята через PR #33, UTC API даты через PR #30. G2 требует отдельной проверки.
+- **Следующий M3 Expenses (план, не назначение):** Тимур T-07 — безопасность и API review, Олег O-04/O-05 — CRUD `equal/custom/by_items`, Лера L-04 — expense wizard после согласованного API. Финансовый preview UQ-03 не утверждён.
 - **Открытые контрольные пункты:** T-01 (практическая проверка защиты `main`) и формальная верификация G1; серверный expense-preview UQ-03 и остальные Q/UQ — до соответствующей реализации.
 
 Новые задачи: отдельная ветка → PR → проверки CI → согласование затронутых контрактов → merge. [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) и [STATUS](docs/STATUS.md) — актуальные этапы и доказательства.
@@ -41,6 +42,20 @@ Telegram-only профиля либо привязку API-аккаунта од
 Unit-тесты используют MockTransport и mocked Telegram session без настоящего токена,
 сети и БД. Отдельные integration-тесты запускают настоящий локальный HTTP API
 и PostgreSQL с заменой только Telegram session; это не live Telegram E2E.
+
+## Финансовое хранилище (O-03, не CRUD)
+
+[PR #31](https://github.com/inte11ectua1/skinulis/pull/31) добавил
+SQLAlchemy 2 sync-модели `expenses`, `expense_items`, `expense_shares`,
+`expense_item_shares`, `settlements` и единую миграцию
+`0004_financial_domain → 0003_groups_identity`. Суммы хранятся в signed BIGINT
+копейках, итоговые доли отделены от деталей позиций, FK проверяют членство,
+soft-delete не уничтожает историю. [Контракт и точные ограничения](docs/finance/O-03_DATA_MODEL.md)
+уточнены через [PR #33](https://github.com/inte11ectua1/skinulis/pull/33):
+Q-03 Unicode/NFC — **будущая валидация на API-границе**, Q-10 сохраняет
+явно выбранные нулевые доли, Q-04 использует точные SQL NUMERIC-агрегаты.
+Модель БД сама не гарантирует сумму shares, permission checks, state machine,
+идемпотентный replay и бизнес-правила; это O-04–O-07, не текущий API.
 
 ## Публичная аутентификация (T-05)
 
@@ -86,8 +101,9 @@ PY
 [HTTP/SQL контракт](docs/contracts/T-06_IDENTITY.md) описывает DTO, errors, locks,
 timeout/retry и handoff O-03/L-03. Контракт утверждён
 [решением Тимура в Issue #22](https://github.com/inte11ectua1/skinulis/issues/22#issuecomment-6437632203).
-Это разрешение tech lead, не личное APPROVED от Олега или Леры; независимое review
-и реализация Telegram-клиента L-03 остаются отдельными шагами.
+Это разрешение tech lead, не автоматическое личное APPROVED от Олега или Леры.
+**Backend T-06 уже merged (PR #27), Telegram-клиент L-03 также merged (PR #28)**;
+live Telegram E2E и production-изоляция `/internal` остаются отдельными проверками.
 
 JWT-пользователь создаёт группу `POST /groups` с `{name,client_request_id:UUID}`,
 становится owner/первым member. `GET /groups`, `/groups/{id}` и
@@ -147,7 +163,11 @@ docker compose up --build
 Для запуска в фоне используйте `docker compose up --build -d`.
 При первом запуске будет создан отдельный named volume PostgreSQL. База ждёт
 готовности, сервис `migrate` выполняет `alembic upgrade head`, и только его exit 0
-разрешает старт API. Создаются users, groups/members, invites/link codes; финансовых таблиц пока нет.
+разрешает старт API. Создаются `users`, `groups/group_members`, `group_invites`, `telegram_link_codes`,
+а после `0004_financial_domain` также **`expenses`, `expense_items`,
+`expense_shares`, `expense_item_shares`, `settlements`**.
+Это только схема хранения — endpoints CRUD расходов/балансы/settlement transitions
+пока не реализованы.
 
 ```sh
 docker compose ps -a
@@ -366,8 +386,11 @@ uv run python scripts/test_integration.py --cov --cov-append --cov-report=term-m
 ```
 
 Второй запуск дополняет отчёт первого проверками настоящей PostgreSQL.
-Unit-прогон включает существующие денежные функции и mock-тесты каркаса бота;
-он не проверяет реальный Telegram и ещё не реализованные продуктовые API.
+Unit-прогон включает pure money functions, тесты auth/groups и mock-тесты
+Telegram FSM/client; PostgreSQL integration отдельно тестирует уже реализованный
+backend и интеграцию L-03 с подменённой Telegram session. Ни один из этих прогонов
+**не является live Telegram E2E** и не доказывает финансовый CRUD или работу
+не реализованных O-04–O-07.
 Автоматизация этих проверок и статус защиты описаны ниже.
 Starlette выдаёт предупреждение о будущем переходе TestClient с httpx на httpx2;
 согласованный httpx пока работает, предупреждение не подавлено, новый стек не введён.
@@ -411,7 +434,7 @@ branch protection; применённые настройки и доказате
 
 ## Изменение зависимостей
 
-Причина выбора uv описана в [принятом ADR 002](docs/adr/002-uv.md), одобренном через PR #7. T-03 добавляет FastAPI, Pydantic v2, pydantic-settings, sync SQLAlchemy, psycopg 3 (binary), Alembic и Uvicorn. L-02 добавляет aiogram 3.x и переносит существующий httpx из dev в runtime для клиента бота. Необходимое для aiogram согласование версии Pydantic и ограничения описаны в инструкции бота. Авторизация остаётся за следующими задачами.
+Причина выбора uv описана в [принятом ADR 002](docs/adr/002-uv.md), одобренном через PR #7. T-03 добавляет FastAPI, Pydantic v2, pydantic-settings, sync SQLAlchemy, psycopg 3 (binary), Alembic и Uvicorn. L-02 добавляет aiogram 3.x и переносит существующий httpx из dev в runtime для клиента бота. Необходимое для aiogram согласование версии Pydantic и ограничения описаны в инструкции бота. Авторизация T-05/T-06, Telegram-клиент L-03 и финансовое хранилище O-03 уже реализованы; следующая продуктовая функциональность — M3 расходы.
 
 Новую зависимость добавляйте командой `uv add <имя>` или `uv add --dev <имя>` для инструмента разработки. Просмотрите изменения `pyproject.toml` и `uv.lock`, запустите проверки и включите оба файла в один PR. Для целевого обновления используйте `uv lock --upgrade-package <имя>` и затем `uv sync --frozen`. Не редактируйте `uv.lock` вручную. Обновление Python или uv тоже оформляйте отдельным проверенным изменением закреплённых версий и инструкций.
 
