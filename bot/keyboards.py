@@ -1,6 +1,15 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
+def action_keyboard(nonce: str, labels: list[str]) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=label, callback_data=f"l3:{nonce}:{index}")]
+            for index, label in enumerate(labels)
+        ]
+    )
+
+
 def main_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[

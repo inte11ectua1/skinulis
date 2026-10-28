@@ -1,5 +1,8 @@
 # L-02 — запуск и границы каркаса бота
 
+> Историческая инструкция L-02. Текущие настройки, возможности и проверки после
+> интеграции T-06 находятся в [L-03_SETUP.md](L-03_SETUP.md).
+
 Основание: [Issue #12](https://github.com/inte11ectua1/skinulis/issues/12),
 [UX L-01](../ux/L-01_TELEGRAM_UX.md),
 [реестр UQ](../ux/L-01_CONTRACT_QUESTIONS.md). База — `main` `6ae205c`,

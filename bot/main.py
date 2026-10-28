@@ -10,20 +10,25 @@ from pydantic import ValidationError
 from bot.api_client import ApiClient
 from bot.config import BotSettings
 from bot.handlers import create_router
+from bot.middleware import DeliveredUpdates, protect_telegram_logs
 
 logger = logging.getLogger(__name__)
 
 
 def create_dispatcher() -> Dispatcher:
+    protect_telegram_logs()
     dispatcher = Dispatcher(
         storage=MemoryStorage(), events_isolation=SimpleEventIsolation()
     )
+    dispatcher.update.outer_middleware(DeliveredUpdates())
     dispatcher.include_router(create_router())
     return dispatcher
 
 
 async def run(settings: BotSettings) -> None:
-    async with ApiClient(str(settings.api_base_url)) as api:
+    async with ApiClient(
+        str(settings.api_base_url), service_token=settings.bot_service_token
+    ) as api:
         async with Bot(
             token=settings.telegram_bot_token.get_secret_value()
         ).context() as telegram:
@@ -47,7 +52,9 @@ def main() -> int:
     try:
         settings = BotSettings()
     except ValidationError:
-        logger.error("Проверьте TELEGRAM_BOT_TOKEN и API_BASE_URL в окружении или .env")
+        logger.error(
+            "Проверьте TELEGRAM_BOT_TOKEN, BOT_SERVICE_TOKEN и API_BASE_URL в окружении или .env"
+        )
         return 2
     try:
         asyncio.run(run(settings))

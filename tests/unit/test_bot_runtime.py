@@ -36,7 +36,8 @@ async def test_run_closes_api_and_telegram_sessions(
     clients: list[ApiClient] = []
     session = AsyncMock(spec=BaseSession)
 
-    def api_factory(base_url: str) -> ApiClient:
+    def api_factory(base_url: str, *, service_token: SecretStr) -> ApiClient:
+        assert service_token == settings.bot_service_token
         client = ApiClient(
             base_url,
             transport=httpx.MockTransport(
@@ -88,7 +89,7 @@ def test_configuration_from_environment_hides_secret(
     assert str(configured.api_base_url) == "http://api:8000/"
     assert token not in repr(configured)
     assert service_secret not in repr(configured)
-    assert "bot_service_token" not in type(configured).model_fields
+    assert configured.bot_service_token.get_secret_value() == service_secret
 
 
 @pytest.mark.parametrize(

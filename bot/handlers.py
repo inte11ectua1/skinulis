@@ -1,75 +1,72 @@
-"""L-02 navigation only; never infer authentication from a button or FSM state."""
+"""L-03 handlers; approved T-06 API only."""
 
 import logging
 
-from aiogram import F, Router
+from aiogram import Bot, F, Router
 from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ErrorEvent, Message
+from pydantic import SecretStr
 
-from bot.api_client import ApiError, HealthApi
+from bot.actions import dispatch_action
+from bot.api_client import ApiError, ApiFailure, BotApi
+from bot.dto import valid_capability
+from bot.group_views import begin_group, group_name, show_groups
 from bot.keyboards import main_menu
-from bot.states import Navigation
+from bot.states import GroupFlow, Navigation, Onboarding
+from bot.ui import ACTIVE as ACTIVE
+from bot.ui import FAILED as FAILED
+from bot.ui import HELP as HELP
+from bot.ui import PRIVATE as PRIVATE
+from bot.ui import UNAVAILABLE as UNAVAILABLE
+from bot.ui import (
+    UNCERTAIN,
+    UNCERTAIN_KINDS,
+    check_profile,
+    offer_onboarding,
+    ready,
+    recover_identity,
+    safe_error,
+)
+from bot.ui import UNKNOWN as UNKNOWN
+from bot.ui import WELCOME as WELCOME
 
-WELCOME = (
-    "Привет! Я «Скинулись» — помогу учитывать общие расходы. "
-    "Банковские переводы вы делаете сами.\n"
-    "Сейчас доступно стартовое меню. Регистрация и привязка аккаунта пока недоступны; "
-    "профиль этим действием не создаётся. Пароль сюда отправлять не нужно."
-)
-HELP = (
-    "«Скинулись» — сервис учёта общих расходов. Бот не переводит деньги.\n"
-    "/start — открыть стартовое меню\n"
-    "/help — эта справка\n"
-    "/cancel — очистить незавершённый ввод и вернуться в меню\n"
-    "Регистрация, группы, расходы и компенсации ещё недоступны. "
-    "После перезапуска незавершённый ввод может потеряться."
-)
-UNAVAILABLE = (
-    "Эта функция пока недоступна. Она появится после подключения соответствующего API. "
-    "Регистрация этим действием не выполняется."
-)
-ACTIVE = (
-    "Есть незавершённый ввод. Чтобы отменить его и открыть меню, используйте /cancel."
-)
-UNKNOWN = "Эта кнопка больше не действует. Откройте /start или используйте /cancel."
-PRIVATE = "Откройте личный чат с ботом, чтобы управлять расходами."
-FAILED = "Не удалось обработать действие. Попробуйте /start или /cancel."
 logger = logging.getLogger(__name__)
 
 
-async def enter_menu(state: FSMContext) -> bool:
+async def start(
+    message: Message, state: FSMContext, command: CommandObject, api: BotApi
+) -> None:
     if await state.get_state() not in (None, Navigation.menu.state):
-        return False
-    await state.set_state(Navigation.menu)
-    return True
-
-
-async def start(message: Message, state: FSMContext, command: CommandObject) -> None:
-    if not await enter_menu(state):
         await message.answer(ACTIVE)
         return
-    text = WELCOME
+    if message.from_user is None or message.from_user.id != message.chat.id:
+        return
+    await state.clear()
     if command.args:
-        # TODO(UQ-02): approved deep-link parsing/join; never echo or retain payload.
-        text += "\nПриглашения пока недоступны. Откройте ссылку после их подключения."
-    await message.answer(text, reply_markup=main_menu())
+        payload = command.args
+        if not payload.startswith("i_") or not valid_capability(payload[2:]):
+            await message.answer(
+                "Не удалось открыть приглашение. Проверьте ссылку или попросите новую."
+            )
+            return
+        await state.update_data(invite=SecretStr(payload[2:]))
+    await check_profile(message, state, api, message.from_user.id)
 
 
 async def help_command(message: Message) -> None:
-    await message.answer(HELP, reply_markup=main_menu())
+    await message.answer(HELP)
 
 
-async def cancel(message: Message, state: FSMContext) -> None:
+async def cancel(message: Message, state: FSMContext, api: BotApi) -> None:
     await state.clear()
-    await state.set_state(Navigation.menu)
     await message.answer(
-        "Незавершённый ввод очищен. Стартовое меню. "
-        "Сохранённые записи этой командой не отменяются.",
-        reply_markup=main_menu(),
+        "Незавершённый ввод очищен. Сохранённые записи не отменяются. Если ответ на запись был потерян, её результат остаётся неизвестным: сначала проверьте свои данные."
     )
+    if message.from_user is not None:
+        await check_profile(message, state, api, message.from_user.id)
 
 
 async def private_message(message: Message) -> None:
@@ -77,10 +74,8 @@ async def private_message(message: Message) -> None:
 
 
 async def unknown_message(message: Message) -> None:
-    # Do not echo arbitrary text: it may contain a code, password or token.
     await message.answer(
-        "Выберите действие в меню или используйте /help и /cancel.",
-        reply_markup=main_menu(),
+        "Выберите действие на текущем экране. /help — справка, /cancel — отмена ввода."
     )
 
 
@@ -97,30 +92,17 @@ async def callback_message(callback: CallbackQuery) -> Message | None:
     return message
 
 
-async def menu_action(callback: CallbackQuery, state: FSMContext) -> None:
-    message = await callback_message(callback)
-    if message is None:
-        return
-    if not await enter_menu(state):
-        await message.answer(ACTIVE)
-        return
-    # TODO(UQ-01/02/05/08): no profile/group/pending HTTP contracts in L-02.
-    await message.answer(UNAVAILABLE, reply_markup=main_menu())
-
-
 async def menu_help(callback: CallbackQuery) -> None:
     message = await callback_message(callback)
     if message is not None:
-        await message.answer(HELP, reply_markup=main_menu())
+        await help_command(message)
 
 
-async def check_health(
-    callback: CallbackQuery, state: FSMContext, api: HealthApi
-) -> None:
+async def check_health(callback: CallbackQuery, state: FSMContext, api: BotApi) -> None:
     message = await callback_message(callback)
     if message is None:
         return
-    if not await enter_menu(state):
+    if await state.get_state() not in (None, Navigation.menu.state):
         await message.answer(ACTIVE)
         return
     try:
@@ -128,8 +110,103 @@ async def check_health(
     except ApiError as error:
         text = str(error)
     else:
-        text = "Сервис доступен. Регистрация и работа с группами пока недоступны."
+        text = "Сервис доступен. Профиль и права проверяются отдельно."
     await message.answer(text, reply_markup=main_menu())
+
+
+async def menu_action(callback: CallbackQuery, state: FSMContext, api: BotApi) -> None:
+    message = await callback_message(callback)
+    if message is None:
+        return
+    if await state.get_state() not in (None, Navigation.menu.state):
+        await message.answer(ACTIVE)
+        return
+    actor = callback.from_user.id
+    try:
+        profile = await api.profile(actor)
+    except ApiError as error:
+        if (
+            error.error_code == "telegram_profile_not_found"
+            and error.status_code == 404
+        ):
+            await offer_onboarding(message, state)
+        else:
+            await message.answer(safe_error(error))
+        return
+    try:
+        action = (callback.data or "").removeprefix("menu:")
+        if action == "groups":
+            await show_groups(message, state, api, actor)
+        elif action == "create":
+            await begin_group(message, state)
+        elif action == "profile":
+            kind = "Telegram + API" if profile.email else "Telegram-only"
+            await message.answer(
+                f"Ваш профиль #{profile.id}\nТип: {kind}\nEmail: {profile.email or 'не указан'}\nСлияние/перепривязка аккаунтов не поддерживается.",
+                parse_mode=None,
+                reply_markup=main_menu(),
+            )
+        else:
+            await message.answer(UNAVAILABLE, reply_markup=main_menu())
+    except ApiError as error:
+        await message.answer(safe_error(error))
+
+
+async def current_action(
+    callback: CallbackQuery, state: FSMContext, api: BotApi, bot: Bot
+) -> None:
+    message = await callback_message(callback)
+    if message is None:
+        return
+    data = await state.get_data()
+    parts = (callback.data or "").split(":")
+    actions = data.get("actions", [])
+    if (
+        len(parts) != 3
+        or parts[1] != data.get("screen")
+        or not parts[2].isdigit()
+        or not 0 <= int(parts[2]) < len(actions)
+    ):
+        await message.answer(UNKNOWN)
+        return
+    action = str(actions[int(parts[2])])
+    # Invalidate before dispatch, including errors or Telegram delivery failures.
+    await state.update_data(screen=None, actions=[])
+    previous = await state.get_state()
+    actor = callback.from_user.id
+    try:
+        await dispatch_action(action, message, state, api, actor, bot, data, previous)
+    except ApiError as error:
+        await message.answer(
+            safe_error(error) + " Используйте /cancel или /start для восстановления."
+        )
+
+
+async def link_code(message: Message, state: FSMContext, api: BotApi) -> None:
+    raw = message.text or ""
+    if not valid_capability(raw):
+        await message.answer(
+            "Нужен только одноразовый код из API (43 URL-safe символа). Пароль и JWT сюда не отправляйте. /cancel — отмена."
+        )
+        return
+    if message.from_user is None:
+        return
+    # The link code is never put into FSM, including failure/timeout branches.
+    await state.set_state(GroupFlow.busy)
+    try:
+        await api.link(message.from_user.id, SecretStr(raw))
+    except ApiError as error:
+        if error.kind in UNCERTAIN_KINDS or error.kind == ApiFailure.CONFLICT:
+            await message.answer(
+                UNCERTAIN if error.kind in UNCERTAIN_KINDS else safe_error(error)
+            )
+            await recover_identity(message, state, api, message.from_user.id)
+        else:
+            await state.set_state(Onboarding.link_code)
+            await message.answer(safe_error(error) + " Пришлите новый код или /cancel.")
+    else:
+        await message.answer("API подтвердил привязку аккаунта.")
+        await ready(message, state)
 
 
 async def unknown_callback(callback: CallbackQuery) -> None:
@@ -139,7 +216,6 @@ async def unknown_callback(callback: CallbackQuery) -> None:
 
 
 async def on_error(event: ErrorEvent) -> bool:
-    # Never log event/update, exception text, raw URL, tokens or traceback.
     logger.warning("Bot action failed")
     try:
         if event.update.callback_query is not None:
@@ -160,6 +236,8 @@ def create_router() -> Router:
     router.message.register(start, CommandStart())
     router.message.register(help_command, Command("help"))
     router.message.register(cancel, Command("cancel"))
+    router.message.register(link_code, Onboarding.link_code, ~F.text.startswith("/"))
+    router.message.register(group_name, GroupFlow.name, ~F.text.startswith("/"))
     router.message.register(unknown_message)
     router.callback_query.register(menu_help, F.data == "menu:help")
     router.callback_query.register(check_health, F.data == "menu:health")
@@ -167,6 +245,7 @@ def create_router() -> Router:
         menu_action,
         F.data.in_({"menu:groups", "menu:create", "menu:pending", "menu:profile"}),
     )
+    router.callback_query.register(current_action, F.data.startswith("l3:"))
     router.callback_query.register(unknown_callback)
     router.errors.register(on_error)
     return router
