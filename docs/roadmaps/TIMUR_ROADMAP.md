@@ -37,6 +37,8 @@
 
 ## Текущая задача M4 — [T-08 #45](https://github.com/inte11ectua1/skinulis/issues/45)
 
+**Контрактная часть подготовлена в документационном PR:** [T-08 M4 balances/settlements](../contracts/T-08_M4_BALANCES_SETTLEMENTS.md), greedy Q-05, signed balance/plan DTO, UUID settlement replay без новой миграции, terminal transition 200/409, group-first locks. **Это решение Тимура, на независимом review Олега/Леры; Issue #45 НЕ закрывать до ревью их реализации O-06/O-07.**
+
 **Начать сейчас, параллельно O-06.** Согласовать с Олегом и Лерой контракты балансов/плана/settlements: список текущих member balances, deterministic greedy ordering, confirmed-only math, pending/rejected/cancelled, verified sender vs receiver, UUID replay, terminal transition semantics. Финальный security review locks/idempotency и конкуренции `confirm` **после** [O-06 #46](https://github.com/inte11ectua1/skinulis/issues/46) и [O-07 #47](https://github.com/inte11ectua1/skinulis/issues/47). Лера [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48) mock-first, real HTTP после accepted contracts и backend. Не делать O-06/O-07 за Олега и FSM за Леру. T-09 CD остаётся M5.
 
 **G1/T-01 ещё не verified. Live Telegram G2/G3 отложены по твоей команде**, Issue #38 закрыта как not_planned. В T-08 нужны обычные PostgreSQL/HTTP/unit/CI evidence, не живой Telegram.
