@@ -1,19 +1,8 @@
 # Фактическое состояние проекта
 
-**Срез:** 30 октября 2026 года, `origin/main` `6f0fdd6ab6ee6990b45835012990cb69b86ee6b2`.
-O-04 / [PR #41](https://github.com/inte11ectua1/skinulis/pull/41), O-05 /
-[PR #42](https://github.com/inte11ectua1/skinulis/pull/42), L-04 /
-[PR #43](https://github.com/inte11ectua1/skinulis/pull/43) **merged**.
-Финальный T-07 security audit и два минимальных исправления — в отдельном
-[PR #44](https://github.com/inte11ectua1/skinulis/pull/44);
-[отчёт и test evidence](reviews/T-07_M3_SECURITY_REVIEW.md).
-[CI кода/тестов](https://github.com/inte11ectua1/skinulis/actions/runs/41063450363)
-на `52079fc` — все пять jobs success, 857 unit +290 PostgreSQL integration,
-combined branch coverage95,46%; окончательный head проверять в checks PR.
-**Issue #35 остаётся открытой до приёмки Тимуром.** Источник истины — GitHub main,
-принятые контракты, CI и фактические проверки. M2 завершён по реализации,
-но G2/G3 **не verified**: live Telegram отложен решением Тимура, #38 закрыта
-как not_planned, production-изоляция /internal относится к T-09.
+**Срез:** 30 октября 2026 года, проверен GitHub `main` `34074adf95d65760b3ba773999f55689ded738e6` после [merged PR #44](https://github.com/inte11ectua1/skinulis/pull/44). **M3 Expenses завершён по реализации:** [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36), [O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39), [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37), [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) все **closed (completed)**, PR #41/#42/#43/#44 merged. Последний [GitHub CI PR #44](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033) на `124bbe5`: **5/5 success, 857 unit +290 PostgreSQL integration =1147 tests**, combined branch coverage **95,46%**. T-07 выявил и исправил Medium T07-01 (не заменять повреждённые простые snapshots) и Low T07-02 (error responses без `no-store`); [аудит](reviews/T-07_M3_SECURITY_REVIEW.md). **Независимого зарегистрированного APPROVED-review PR #44 нет**; это не отменяет merge/CI, но не следует приписывать его участникам.
+
+**Следующий этап M4 Balances назначен:** Тимур [T-08 #45](https://github.com/inte11ectua1/skinulis/issues/45), Олег [O-06 #46](https://github.com/inte11ectua1/skinulis/issues/46) → [O-07 #47](https://github.com/inte11ectua1/skinulis/issues/47), Лера [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48). **Новые M4 Issues — это план и задания, не готовый код.** Балансы read-only и автомат подтверждения компенсаций ещё не реализованы как продуктовый API. **G3 формально не verified:** настоящий Telegram E2E не проводился; G2 QA [#38](https://github.com/inte11ectua1/skinulis/issues/38) отложена и закрыта как `not_planned` по требованию Тимура. Никаких live Telegram тестов до отдельного сигнала. Production reverse-proxy изоляция `/internal` остаётся T-09/M5, G1/T-01 также не закрыты.
 
 **Этап M1 (Skeleton): завершён по объёму задач.** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12) и [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты, код находится в `main`. **G1 — не полностью подтверждён как формальный gate**: нужна доказательная проверка причины блокировки красного CI в интерфейсе и незавершённые защитные проверки T-01; у PR #19 не зарегистрировано независимого APPROVED-ревью. Это не отменяет успешную реализацию M1.
 
@@ -56,21 +45,29 @@ combined branch coverage95,46%; окончательный head проверят
 
 **Факт против gate:** публичная JWT-аутентификация, группы, Telegram bot-service endpoints и клиент бота реализованы и покрыты CI/PostgreSQL tests. **G2 пока not verified**: нет подтверждённого сквозного *live Telegram* сценария на реальном боте с отдельными пользователями, а production reverse proxy для защиты `/internal` относится к T-09 и не развёрнут/не проверен. Независимое `APPROVED` для PR #31 не зарегистрировано; администраторский merge не заменяет review. Не приписывать этапу M2 работающие расходы, балансы, выплаты либо полный продуктовый E2E.
 
-## M3 — Expenses (реализация merged, T-07 на технической приёмке)
+## M3 — Expenses (реализация завершена 30.10.2026; G3 pending)
 
-| Issue | Ответственный | Фактическое состояние |
+| Issue | Ответственный | Принятая реализация и ссылки |
 |---|---|---|
-| [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) | Тимур | **PR review, Issue open**: [PR #44](https://github.com/inte11ectua1/skinulis/pull/44), аудит всех expense routes/бота, исправления Medium/Low, 20 новых regression cases; [отчёт](reviews/T-07_M3_SECURITY_REVIEW.md). Локально и в GitHub CI857 unit +290 PostgreSQL integration, combined branch coverage95,46%; human review/приёмка отдельно. |
-| [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36) | Олег | **merged / Issue closed**, [PR #41](https://github.com/inte11ectua1/skinulis/pull/41): equal/custom CRUD, original replay, versions, preview и confirmed mutation balances. |
-| [O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39) | Олег | **merged / Issue closed**, [PR #42](https://github.com/inte11ectua1/skinulis/pull/42): by_items, snapshots/нули, все full-PUT mode transitions, ordered original intent. |
-| [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37) | Лера | **merged / Issue closed**, [PR #43](https://github.com/inte11ectua1/skinulis/pull/43): expense FSM/client, stable UUID/timeout recovery, unit/mock + real HTTP/PostgreSQL tests, без live Telegram. |
-**Тестирование G2 отложено по решению Тимура:** [Issue #38](https://github.com/inte11ectua1/skinulis/issues/38) снята с активных назначений и закрыта как `not_planned` (не `completed`). Live Telegram E2E ещё не проводилось; по отдельному сигналу Тимура задачу можно открыть заново. Обычные unit/integration тесты и CI для разработки M3 продолжаются. Production-изоляция `/internal` остаётся задачей T-09.
+| [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36) | Олег | **merged/closed** [PR #41](https://github.com/inte11ectua1/skinulis/pull/41): equal/custom CRUD, actor/member/author, group-first transactions, exact UUID replay, optimistic versions, preview, historical snapshots, mutation balances при confirmed |
+| [O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39) | Олег | **merged/closed** [PR #42](https://github.com/inte11ectua1/skinulis/pull/42): by_items 1..50, selected zero shares, исторические позиции, режимные full PUT, original replay, public/internal HTTP |
+| [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37) | Лера | **merged/closed** [PR #43](https://github.com/inte11ectua1/skinulis/pull/43): aiogram expense FSM, три режима, server preview, list/detail, stable UUID, timeout recovery, mock Telegram + real HTTP/PostgreSQL integration |
+| [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) | Тимур | **merged/closed** [PR #44](https://github.com/inte11ectua1/skinulis/pull/44): security review, T07-01/T07-02 fixed, 20 новых PostgreSQL tests; [отчёт](reviews/T-07_M3_SECURITY_REVIEW.md), [final CI](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033) **5/5 success**, 1147 tests / 95,46% coverage |
 
-**Контракты приняты tech lead:** [O-04 решение](https://github.com/inte11ectua1/skinulis/issues/36#issuecomment-6469818682)
-и [O-05 решение](https://github.com/inte11ectua1/skinulis/issues/39#issuecomment-6473059675),
-включая server preview. Это не личный APPROVED Леры; independent human review
-и формальные gates учитываются отдельно. Т-01/G1 не закрываются этим аудитом.
+Формальные **G2/G3 not verified**: серверные контрактные и PostgreSQL/HTTP проверки есть, но live Telegram delivery и реальный пользовательский E2E сознательно отложены по решению Тимура. Не заменять этой записью отдельную эксплуатационную приёмку. В M3 **не реализованы** отдельные GET balances/settlement-plan, POST settlements и terminal transitions — это M4; существующий internal mutation-balances O-04 только частичная переиспользуемая основа.
 
+## M4 — Balances и ручные компенсации (Issues созданы и назначены, реализация впереди)
+
+| Issue | Исполнитель | Когда можно начать | Зависимости и результат |
+|---|---|---|---|
+| [T-08 #45](https://github.com/inte11ectua1/skinulis/issues/45) | Тимур | **сейчас** | Согласование DTO/ролей/replay/greedy tie-break и review locking/UUID/конкурентного confirm. Финальное security review **после O-06/O-07** |
+| [O-06 #46](https://github.com/inte11ectua1/skinulis/issues/46) | Олег | **сейчас** | Точные balances всех членов + стабильный greedy settlement-plan, protected public/internal GET, reuse `expense_balances`; wire DTO после T-08 checkpoint |
+| [O-07 #47](https://github.com/inte11ectua1/skinulis/issues/47) | Олег | **дизайн сейчас; реализация после merged O-06** | Pending, confirm/reject/cancel, UUID original replay, group-first locks и debt recheck на confirm, два concurrent full-debt pending → максимум один confirmed |
+| [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48) | Лера | **mock/UI сейчас; real HTTP после contracts + merged O-06/O-07** | Telegram balances/plan, частичные выплаты, входящие pending, подтверждения/отмена, recovery и отсутствие bot-side math |
+
+**Главный порядок:** T-08 contract checkpoint и O-06 service стартуют параллельно; O-07 может готовить тест-матрицу заранее, но опирается на merged O-06; L-05 не ждёт для подготовки FSM/fixtures, но подключает реальные endpoints только после готового backend. M4 G4 требует доказательства частичного перевода, duplicate/concurrent confirm, recheck после expense edit/delete и сохранности confirmed; ни одна Issue не означает verified gate.
+
+**Live Telegram G2/G3/G4 не начинать до отдельного сигнала Тимура.** Обычные unit, mock, HTTP/PostgreSQL integration и GitHub CI при разработке M4 обязательны.
 
 ## Release gates
 
