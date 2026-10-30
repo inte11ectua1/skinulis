@@ -5,7 +5,7 @@ import logging
 from aiogram import Bot, F, Router
 from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramAPIError
-from aiogram.filters import Command, CommandObject, CommandStart
+from aiogram.filters import Command, CommandObject, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ErrorEvent, Message
 from pydantic import SecretStr
@@ -13,9 +13,11 @@ from pydantic import SecretStr
 from bot.actions import dispatch_action
 from bot.api_client import ApiError, ApiFailure, BotApi
 from bot.dto import valid_capability
+from bot.expense_actions import dispatch_expense
+from bot.expense_wizard import text_input
 from bot.group_views import begin_group, group_name, show_groups
 from bot.keyboards import main_menu
-from bot.states import GroupFlow, Navigation, Onboarding
+from bot.states import ExpenseFlow, GroupFlow, Navigation, Onboarding
 from bot.ui import ACTIVE as ACTIVE
 from bot.ui import FAILED as FAILED
 from bot.ui import HELP as HELP
@@ -175,7 +177,12 @@ async def current_action(
     previous = await state.get_state()
     actor = callback.from_user.id
     try:
-        await dispatch_action(action, message, state, api, actor, bot, data, previous)
+        if action.startswith("ex:"):
+            await dispatch_expense(action, message, state, api, actor, previous)
+        else:
+            await dispatch_action(
+                action, message, state, api, actor, bot, data, previous
+            )
     except ApiError as error:
         await message.answer(
             safe_error(error) + " Используйте /cancel или /start для восстановления."
@@ -238,6 +245,18 @@ def create_router() -> Router:
     router.message.register(cancel, Command("cancel"))
     router.message.register(link_code, Onboarding.link_code, ~F.text.startswith("/"))
     router.message.register(group_name, GroupFlow.name, ~F.text.startswith("/"))
+    router.message.register(
+        text_input,
+        F.text,
+        StateFilter(
+            ExpenseFlow.title,
+            ExpenseFlow.amount,
+            ExpenseFlow.share,
+            ExpenseFlow.item_title,
+            ExpenseFlow.item_amount,
+        ),
+        ~F.text.startswith("/"),
+    )
     router.message.register(unknown_message)
     router.callback_query.register(menu_help, F.data == "menu:help")
     router.callback_query.register(check_health, F.data == "menu:health")
