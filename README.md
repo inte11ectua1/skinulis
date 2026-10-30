@@ -2,7 +2,7 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
-> **L-04, база main на 30.10.2026:** PR #28/#41/#42 merged; auth/JWT, группы, Telegram onboarding, Expense API equal/custom/by_items и server preview доступны. Эта ветка добавляет Telegram-мастера расходов и безопасные повторы по принятым O-04/O-05. Публичные балансы/план и settlement state machine — следующие этапы. Live Telegram и production-изоляция /internal не подтверждены, G2/G3 не verified. [STATUS](docs/STATUS.md) содержит исторические срезы; актуальные приёмка/merge проверяются в GitHub.
+> **M3 завершён по реализации 30.10.2026:** auth/JWT, группы, Telegram onboarding, Expense API `equal/custom/by_items` и server preview, Telegram expense wizard и T-07 security fixes merged в `main` (PR #41–#44). [PR #44 CI](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033) **5/5 success; 1147 тестов, coverage 95,46%**. **M4 теперь назначен**: Т-08/O-06/O-07/L-05, но GET balances/plan и settlement state machine ещё не реализованы. Живой Telegram и production-изоляция `/internal` не подтверждены: G2/G3 не verified, тесты отложены по решению Тимура. [STATUS](docs/STATUS.md) — актуальные факты.
 
 ## Начало работы
 
@@ -25,9 +25,9 @@
 
 - **M1 Skeleton завершён по реализации:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12), [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты. [CI evidence](docs/operations/CI.md).
 - **M2 Identity завершён по коду:** [T-05 #21 / PR #26](https://github.com/inte11ectua1/skinulis/pull/26), [T-06 #22 / PR #27](https://github.com/inte11ectua1/skinulis/pull/27), [O-03 #23 / PR #31](https://github.com/inte11ectua1/skinulis/pull/31), [L-03 #24 / PR #28](https://github.com/inte11ectua1/skinulis/pull/28) merged, соответствующие Issues closed. Финансовая документация принята через PR #33, UTC API даты через PR #30. G2 требует отдельной проверки.
-- **M3 Expenses:** [O-04 / PR #41](https://github.com/inte11ectua1/skinulis/pull/41) и [O-05 / PR #42](https://github.com/inte11ectua1/skinulis/pull/42) merged: три режима CRUD, original replay, версии PUT/DELETE, preview и mutation balances при confirmed. [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37) подключает Telegram-мастера по принятым contracts/fixtures и настоящему API. Независимый security review остаётся за [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35). Live Telegram G2 #38 отложена до отдельного разрешения Тимура.
-- **Открытые контрольные пункты:** T-01 и формальная верификация G1/G2; независимое ревью M3 и последующие финансовые этапы. Expense Q-06–Q-09/UQ-03 утверждены для O-04, что не закрывает вопросы будущих balances/settlements.
-
+- **M3 Expenses завершён:** Олег [O-04 #36 / PR #41](https://github.com/inte11ectua1/skinulis/pull/41) и [O-05 #39 / PR #42](https://github.com/inte11ectua1/skinulis/pull/42) — expense CRUD и snapshots; Лера [L-04 #37 / PR #43](https://github.com/inte11ectua1/skinulis/pull/43) — Telegram expense UI; Тимур [T-07 #35 / PR #44](https://github.com/inte11ectua1/skinulis/pull/44) — audit и regression fixes. Issues закрыты, CI #44 зелёный. G3 не verified без отложенного live Telegram E2E.
+- **M4 Balances — задачи назначены:** Тимур [T-08 #45](https://github.com/inte11ectua1/skinulis/issues/45) — контракты, locks/UUID security; Олег [O-06 #46](https://github.com/inte11ectua1/skinulis/issues/46) → [O-07 #47](https://github.com/inte11ectua1/skinulis/issues/47) — балансы/план затем settlement state machine; Лера [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48) — Telegram balances/confirm UX. **T-08 + O-06 + mock L-05 могут идти параллельно; O-07 только после merged O-06, real L-05 integration после API.**
+- **Контрольные пункты:** T-01/G1 открыты; G2/G3 пока не verified. Live Telegram тесты [#38](https://github.com/inte11ectua1/skinulis/issues/38) отложены до команды Тимура; обычные API/PostgreSQL/CI проверки не отменяются. M4 pending/confirmed ручные записи не означают банковские переводы.
 Новые задачи: отдельная ветка → PR → проверки CI → согласование затронутых контрактов → merge. [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) и [STATUS](docs/STATUS.md) — актуальные этапы и доказательства.
 
 ## Telegram-бот: онбординг и группы (L-03)
@@ -434,7 +434,7 @@ branch protection; применённые настройки и доказате
 
 ## Изменение зависимостей
 
-Причина выбора uv описана в [принятом ADR 002](docs/adr/002-uv.md), одобренном через PR #7. T-03 добавляет FastAPI, Pydantic v2, pydantic-settings, sync SQLAlchemy, psycopg 3 (binary), Alembic и Uvicorn. L-02 добавляет aiogram 3.x и переносит существующий httpx из dev в runtime для клиента бота. Необходимое для aiogram согласование версии Pydantic и ограничения описаны в инструкции бота. Авторизация T-05/T-06, Telegram-клиент L-03 и финансовое хранилище O-03 уже реализованы; следующая продуктовая функциональность — M3 расходы.
+Причина выбора uv описана в [принятом ADR 002](docs/adr/002-uv.md), одобренном через PR #7. T-03 добавляет FastAPI, Pydantic v2, pydantic-settings, sync SQLAlchemy, psycopg 3 (binary), Alembic и Uvicorn. L-02 добавляет aiogram 3.x и переносит существующий httpx из dev в runtime для клиента бота. Необходимое для aiogram согласование версии Pydantic и ограничения описаны в инструкции бота. Авторизация T-05/T-06, Telegram-клиент L-03/L-04, финансовое хранилище O-03 и expense CRUD O-04/O-05 уже реализованы. Следующая продуктовая функциональность — M4 balances/settlement plan/ручные компенсации.
 
 Новую зависимость добавляйте командой `uv add <имя>` или `uv add --dev <имя>` для инструмента разработки. Просмотрите изменения `pyproject.toml` и `uv.lock`, запустите проверки и включите оба файла в один PR. Для целевого обновления используйте `uv lock --upgrade-package <имя>` и затем `uv sync --frozen`. Не редактируйте `uv.lock` вручную. Обновление Python или uv тоже оформляйте отдельным проверенным изменением закреплённых версий и инструкций.
 
