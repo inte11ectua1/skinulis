@@ -65,6 +65,8 @@
 | [O-07 #47](https://github.com/inte11ectua1/skinulis/issues/47) | Олег | **дизайн сейчас; реализация после merged O-06** | Pending, confirm/reject/cancel, UUID original replay, group-first locks и debt recheck на confirm, два concurrent full-debt pending → максимум один confirmed |
 | [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48) | Лера | **mock/UI сейчас; real HTTP после contracts + merged O-06/O-07** | Telegram balances/plan, частичные выплаты, входящие pending, подтверждения/отмена, recovery и отсутствие bot-side math |
 
+**T-08 контрактный checkpoint опубликован в docs-only PR (30.10.2026):** [docs/contracts/T-08_M4_BALANCES_SETTLEMENTS.md](contracts/T-08_M4_BALANCES_SETTLEMENTS.md). Технический выбор Тимура: точные DTO balances/plan, Q-05 greedy tie-break, `POST settlement` с безопасным original pending replay **без новой миграции**, роль sender/receiver и terminal 200/no-op vs 409. Это решение **на review Олегу и Лере**, не их персональный APPROVED; T-08 #45 ещё open и security review по фактическому O-06/O-07 коду впереди. Новые M4 HTTP эндпоинты пока не реализованы.
+
 **Главный порядок:** T-08 contract checkpoint и O-06 service стартуют параллельно; O-07 может готовить тест-матрицу заранее, но опирается на merged O-06; L-05 не ждёт для подготовки FSM/fixtures, но подключает реальные endpoints только после готового backend. M4 G4 требует доказательства частичного перевода, duplicate/concurrent confirm, recheck после expense edit/delete и сохранности confirmed; ни одна Issue не означает verified gate.
 
 **Live Telegram G2/G3/G4 не начинать до отдельного сигнала Тимура.** Обычные unit, mock, HTTP/PostgreSQL integration и GitHub CI при разработке M4 обязательны.
