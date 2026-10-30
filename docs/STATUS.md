@@ -75,7 +75,7 @@
 |---|---|---|
 | G1 — cold start / миграция / health / CI | **implementation complete; formal verification pending** | Cold start, миграции, /health 200/503 подтверждены в PR #15; CI зелёный и намеренно красный подтверждены в PR #19. Не завершена визуальная проверка failed-required-check причины блокировки; нет независимого approval PR #19; администраторский bypass требует отдельного решения об уровне защиты. |
 | G2 — auth и группы | **implementation complete; formal verification pending** | M2 код merged и CI зелёный; live Telegram E2E и production-изоляция `/internal` не подтверждены |
-| G3 — расходы | **not verified** | M3 код merged; T-07 test/security audit подготовлен, human acceptance и live Telegram отдельно. [Evidence](reviews/T-07_M3_SECURITY_REVIEW.md). |
+| G3 — расходы | **not verified** | M3 PR #41–#44 merged и Issues closed, T-07 принята/закрыта; CI 5/5 и ресторанный HTTP/PostgreSQL test evidence есть. **Живой Telegram E2E отложен**, поэтому gate не объявлен verified. [Evidence](reviews/T-07_M3_SECURITY_REVIEW.md). |
 | G4 — компенсации | **not verified** | M4 |
 | G5 — публикация и CD | **not verified** | M5 |
 | G6 — приёмка / демонстрация | **not verified** | M6 |
