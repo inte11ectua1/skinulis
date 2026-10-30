@@ -1,0 +1,34 @@
+{
+  "balances": {
+    "group_id": 10,
+    "balances": [
+      {
+        "user_id": 10,
+        "balance": "2200.00"
+      },
+      {
+        "user_id": 20,
+        "balance": "-1400.00"
+      },
+      {
+        "user_id": 30,
+        "balance": "-800.00"
+      }
+    ]
+  },
+  "plan": {
+    "group_id": 10,
+    "transfers": [
+      {
+        "sender_id": 20,
+        "receiver_id": 10,
+        "amount": "1400.00"
+      },
+      {
+        "sender_id": 30,
+        "receiver_id": 10,
+        "amount": "800.00"
+      }
+    ]
+  }
+}

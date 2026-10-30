@@ -226,3 +226,9 @@ PUT/DELETE и /internal mirrors реализованы в ветке feat/O-05-b
 PR42 merged 28.10.2026, Issue39 closed; это перепроверено при T-07 30.10.
 Финальный CI исходного head: [40728353389](https://github.com/inte11ectua1/skinulis/actions/runs/40728353389).
 Независимое человеческое review не подменяется решением tech lead; G2 отложено.
+
+## O-06 — in progress / PR review (30.10.2026)
+
+Точные GET balances/settlement-plan и internal mirrors реализуются по принятому T-08,
+общая агрегация M3 сохраняется. Evidence/CI нового head — в PR O-06. Не merged,
+не verified; O-07 реализация после merge O-06, live Telegram не запускался.
