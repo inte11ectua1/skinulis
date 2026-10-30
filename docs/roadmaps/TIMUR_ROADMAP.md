@@ -31,9 +31,15 @@
 
 **M2 закрыт по коду; gate G2 не verified:** live Telegram E2E и production reverse-proxy restriction `/internal` пока без доказательства. T-01/G1 — отдельные старые контрольные пункты.
 
-## Текущая задача — [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) (M3, назначена 28.10.2026)
+## Завершённый M3 — [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) (30.10.2026)
 
-Ревью безопасности и интеграции новых expense API [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36)/[O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39): actor (JWT/bot service), group membership, forbidden/hidden resources, validation/errors, pagination/OpenAPI, audit без раскрытия секретов. Совместно с Олегом и Лерой ([L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37)) согласовать границы DTO, idempotency и UQ-03; не реализовывать O-04/O-05 за Олега или L-04 за Леру. **Проверка G2 отложена по твоему решению:** [#38](https://github.com/inte11ectua1/skinulis/issues/38) закрыта как `not_planned`, никому не назначена; вернёмся к live Telegram E2E, когда ты отдельно инициируешь тестирование. Это не означает verified G2. T-09 deploy/CD остаётся M5, а не M3.
+[T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) / [PR #44](https://github.com/inte11ectua1/skinulis/pull/44) **merged/closed** после O-04 PR #41, O-05 PR #42 и L-04 PR #43. Аудит public/internal actor, locks, replay, versions, финансовых snapshots и mock Telegram HTTP integration. Исправлены corrupt equal/custom PUT без safe rejection и error responses без `Cache-Control:no-store`; 20 PG regression tests, [финальный CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033), всего 1147 tests и 95,46% coverage. [Подробный отчёт](../reviews/T-07_M3_SECURITY_REVIEW.md). PR #44 без зарегистрированного независимого APPROVED — не приписывать его команде.
+
+## Текущая задача M4 — [T-08 #45](https://github.com/inte11ectua1/skinulis/issues/45)
+
+**Начать сейчас, параллельно O-06.** Согласовать с Олегом и Лерой контракты балансов/плана/settlements: список текущих member balances, deterministic greedy ordering, confirmed-only math, pending/rejected/cancelled, verified sender vs receiver, UUID replay, terminal transition semantics. Финальный security review locks/idempotency и конкуренции `confirm` **после** [O-06 #46](https://github.com/inte11ectua1/skinulis/issues/46) и [O-07 #47](https://github.com/inte11ectua1/skinulis/issues/47). Лера [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48) mock-first, real HTTP после accepted contracts и backend. Не делать O-06/O-07 за Олега и FSM за Леру. T-09 CD остаётся M5.
+
+**G1/T-01 ещё не verified. Live Telegram G2/G3 отложены по твоей команде**, Issue #38 закрыта как not_planned. В T-08 нужны обычные PostgreSQL/HTTP/unit/CI evidence, не живой Telegram.
 
 ## Вопросы для своего ChatGPT-чата
 «Что мой следующий gate?», «Проверь угрозы Telegram actor», «Сформулируй PR description и тестовый план», «Какие доказательства CI/CD нужны для преподавателя?».

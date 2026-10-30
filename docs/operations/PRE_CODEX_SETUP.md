@@ -1,6 +1,6 @@
 # Подготовка к Codex
 
-> **Исторический чек-лист первоначальной настройки (M0)**, не команда на новые действия. На 28.10.2026 M1 и M2 завершены **по реализации**. M2: [T-05 #21](https://github.com/inte11ectua1/skinulis/issues/21), [T-06 #22](https://github.com/inte11ectua1/skinulis/issues/22), [O-03 #23](https://github.com/inte11ectua1/skinulis/issues/23), [L-03 #24](https://github.com/inte11ectua1/skinulis/issues/24) — merged/closed, follow-ups [#29](https://github.com/inte11ectua1/skinulis/issues/29)/[#32](https://github.com/inte11ectua1/skinulis/issues/32) закрыты. **G1/G2 ещё не verified, T-01 открыта; следующий план — M3 Expenses** (Issues ещё не назначены). Преподавателя пока не приглашать. Актуальные факты: [STATUS](../STATUS.md).
+> **Исторический чек-лист первоначальной настройки (M0)**, не новая команда. На 30.10.2026 M1–M3 **завершены по реализации** (M3 PR #41–#44 merged, Issues #35/#36/#37/#39 closed). **Текущий этап M4 назначен:** [T-08 #45](https://github.com/inte11ectua1/skinulis/issues/45) Тимуру, [O-06 #46](https://github.com/inte11ectua1/skinulis/issues/46) → [O-07 #47](https://github.com/inte11ectua1/skinulis/issues/47) Олегу, [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48) Лере. До merge O-06 full O-07 implementation blocked; Лера начинает с mock UI, HTTP — после согласованных contract/merged backend. G1/G2/G3 не verified, T-01 открыта, live Telegram отложен до отдельного сигнала Тимура. Преподавателя пока не приглашать. Актуальные факты: [STATUS](../STATUS.md).
 
 ## Ниже — исходные инструкции первоначальной настройки
 
@@ -22,4 +22,4 @@
 ## Особенности
 Тимур — администрирование репозитория, VPS и secrets; Олег — PostgreSQL для интеграционных тестов; Лера — тестовый Telegram-бот, токен только в окружении.
 
-**Актуально после M2:** задачи #21–#24 уже закрыты. Перед M3 (T-07, O-04/O-05, L-04) создать/назначить новые Issues, проверить Q/UQ, работать из свежей `main` через PR и независимое ревью; не переносить код из старых M2 Issues. Формальные доказательства G1/T-01 и live Telegram E2E/G2 остаются открытыми.
+**Актуально после M3:** задачи M3 #35/#36/#37/#39 уже closed. Новые M4 Issues #45–#48 **созданы и назначены**; начинать от свежей `main` в отдельных ветках и PR, утверждать новые Q/UQ до публичного API. O-07 реализация — после O-06, L-05 HTTP — после backend; не переиспользовать старые Issues. Формальные доказательства T-01/G1 и живой Telegram G2/G3 остаются открытыми/отложенными по решению Тимура.

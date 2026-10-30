@@ -4,6 +4,8 @@
 Аудит выполнен Codex по заданию Тимура. Это техническое ревью готовой реализации,
 а не человеческий APPROVED от Олега или Леры. Issue закрывает Тимур после приёмки.
 
+**Постфактум, 30.10.2026:** [PR #44](https://github.com/inte11ectua1/skinulis/pull/44) merged, [T-07 Issue #35](https://github.com/inte11ectua1/skinulis/issues/35) closed as completed. Последний [CI на PR head](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033) 5/5 success на `124bbe5`. Сведения ниже об ожидающих merge/review — исторический срез отчёта до приёмки. Независимого зарегистрированного `APPROVED` PR #44 нет; не объявлять human approval, G2/G3 или production security verified.
+
 ## Проверенный срез и основания
 
 База отдельной ветки аудита — актуальная `origin/main`
