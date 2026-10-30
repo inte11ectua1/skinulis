@@ -636,6 +636,122 @@ def test_actual_mid_update_constraint_failure_rolls_back_http_version_and_histor
     assert a.client.get(f"/expenses/{eid}", headers=a.headers()).json() == initial
 
 
+@pytest.mark.parametrize("internal", [False, True])
+@pytest.mark.parametrize("mode", ["equal", "custom"])
+@pytest.mark.parametrize("has_confirmed", [False, True])
+def test_put_rejects_corrupt_simple_snapshot_without_repair(
+    a: API,
+    internal: bool,
+    mode: str,
+    has_confirmed: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A full replacement must not erase evidence of an invalid saved snapshot."""
+    sid = confirmed(a) if has_confirmed else None
+    payload = equal()
+    if mode == "custom":
+        payload.pop("participants")
+        payload.update(split_mode="custom", shares=[dict(user_id=5, amount="100.00")])
+    created = a.create(payload, internal=internal)
+    assert created.status_code == 201
+    eid = created.json()["expense"]["id"]
+    with a.db.sessions() as session, session.begin():
+        session.execute(
+            update(ExpenseShare)
+            .where(ExpenseShare.expense_id == eid)
+            .values(amount_kopecks=0)
+        )
+        saved = session.get(Expense, eid)
+        assert saved is not None
+        before = (
+            saved.title,
+            saved.split_mode,
+            saved.amount_kopecks,
+            saved.version,
+            saved.initial_create_intent,
+            saved.initial_create_result,
+        )
+        shares = list(
+            session.execute(
+                select(ExpenseShare.user_id, ExpenseShare.amount_kopecks)
+                .where(ExpenseShare.expense_id == eid)
+                .order_by(ExpenseShare.user_id)
+            )
+        )
+    prefix = "/internal" if internal else ""
+    response = a.client.put(
+        f"{prefix}/expenses/{eid}",
+        json=put() | {"title": "PRIVATE-AUDIT-REPLACEMENT"},
+        headers=a.headers(internal=internal),
+    )
+    error(response, 500, "internal_error")
+    assert "PRIVATE-AUDIT-REPLACEMENT" not in response.text + caplog.text
+    with a.db.sessions() as session:
+        saved = session.get(Expense, eid)
+        assert saved is not None
+        assert (
+            saved.title,
+            saved.split_mode,
+            saved.amount_kopecks,
+            saved.version,
+            saved.initial_create_intent,
+            saved.initial_create_result,
+        ) == before
+        assert (
+            list(
+                session.execute(
+                    select(ExpenseShare.user_id, ExpenseShare.amount_kopecks)
+                    .where(ExpenseShare.expense_id == eid)
+                    .order_by(ExpenseShare.user_id)
+                )
+            )
+            == shares
+        )
+        if sid is not None:
+            settlement = session.get(Settlement, sid)
+            assert settlement is not None
+            assert (settlement.status, settlement.amount_kopecks) == ("confirmed", 5000)
+
+
+@pytest.mark.parametrize("internal", [False, True])
+@pytest.mark.parametrize("status", [400, 401, 403, 404, 409, 500])
+def test_expense_errors_are_not_cacheable(a: API, internal: bool, status: int) -> None:
+    """Error handlers must preserve O-04's no-store policy too (notably GET404)."""
+    eid = a.create().json()["expense"]["id"]
+    prefix = "/internal" if internal else ""
+    path = f"{prefix}/expenses/{eid}"
+    headers = a.headers(internal=internal)
+    if status == 400:
+        response = a.client.put(path, json=put() | {"payer_id": 1}, headers=headers)
+        code = "validation_error"
+    elif status == 401:
+        response = a.client.get(path)
+        code = "invalid_service_token" if internal else "invalid_token"
+        assert response.headers["WWW-Authenticate"] == (
+            "BotService" if internal else "Bearer"
+        )
+    elif status == 403:
+        response = a.client.put(path, json=put(), headers=a.headers(1, internal))
+        code = "expense_author_required"
+    elif status == 404:
+        response = a.client.get(path, headers=a.headers(10, internal))
+        code = "expense_not_found"
+    elif status == 409:
+        response = a.client.put(path, json=put(version=2), headers=headers)
+        code = "expense_version_conflict"
+    else:
+        with a.db.sessions() as session, session.begin():
+            session.execute(
+                update(ExpenseShare)
+                .where(ExpenseShare.expense_id == eid)
+                .values(amount_kopecks=0)
+            )
+        response = a.client.get(path, headers=headers)
+        code = "internal_error"
+    error(response, status, code)
+    assert response.headers.get("Cache-Control") == "no-store"
+
+
 def overlap(
     a: API, actions: list[Callable[[], httpx.Response]]
 ) -> list[httpx.Response]:

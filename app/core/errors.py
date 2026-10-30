@@ -30,7 +30,8 @@ def error_response(
     status: int, code: str, message: str, *, auth_scheme: str = "Bearer"
 ) -> JSONResponse:
     request_id = str(uuid4())
-    headers = {"X-Request-ID": request_id}
+    # Exception handlers build a new response, bypassing router response headers.
+    headers = {"X-Request-ID": request_id, "Cache-Control": "no-store"}
     if status == 401:
         headers["WWW-Authenticate"] = auth_scheme
     return JSONResponse(
