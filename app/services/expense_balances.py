@@ -1,4 +1,4 @@
-"""Read-only mutation-envelope aggregation, approved in #36; no O-06 endpoints."""
+"""Shared exact ledger for O-06 reads and O-04/O-05 mutation envelopes."""
 
 from sqlalchemy import Numeric, cast, func, select, union_all
 from sqlalchemy.orm import Session
@@ -9,16 +9,8 @@ from app.services.expenses import ExpenseSnapshotInvalid, validate_receipts
 from app.services.money import format_money
 
 
-def mutation_balances(session: Session, group_id: int) -> list[BalanceProfile] | None:
-    if (
-        session.scalar(
-            select(Settlement.id)
-            .where(Settlement.group_id == group_id, Settlement.status == "confirmed")
-            .limit(1)
-        )
-        is None
-    ):
-        return None
+def calculate_balances(session: Session, group_id: int) -> dict[int, int]:
+    """Authoritative exact ledger. Caller owns a coherent read or group-locked write."""
     # Ordinary SQL CHECK cannot guarantee the cross-row snapshot invariant.
     snapshots = session.execute(
         select(
@@ -66,7 +58,24 @@ def mutation_balances(session: Session, group_id: int) -> list[BalanceProfile] |
         balances[user_id] = int(total)
     if sum(balances.values()) != 0:
         raise ExpenseSnapshotInvalid("Unbalanced financial history")
+    return balances
+
+
+def profiles(balances: dict[int, int]) -> list[BalanceProfile]:
     return [
-        BalanceProfile(user_id=user_id, balance=format_money(amount))
-        for user_id, amount in balances.items()
+        BalanceProfile(user_id=uid, balance=format_money(amount))
+        for uid, amount in sorted(balances.items())
     ]
+
+
+def mutation_balances(session: Session, group_id: int) -> list[BalanceProfile] | None:
+    if (
+        session.scalar(
+            select(Settlement.id)
+            .where(Settlement.group_id == group_id, Settlement.status == "confirmed")
+            .limit(1)
+        )
+        is None
+    ):
+        return None
+    return profiles(calculate_balances(session, group_id))

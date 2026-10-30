@@ -492,3 +492,10 @@ DELETE повторяет прежний target/version. Бот не счита�
 [Инструкция L-04, FSM, ошибки, тесты и ограничения](docs/bot/L-04_EXPENSES.md).
 Настройки запуска остаются из L-03. Live Telegram и ручные проверки с настоящим
 ботом отложены до отдельного разрешения Тимура; G3 этим PR не объявляется verified.
+
+## O-06: read-only balances и settlement-plan
+
+GET /groups/{id}/balances возвращает signed RUB balances всех members, включая нули.
+GET /groups/{id}/settlement-plan возвращает deterministic greedy transfers, не создаёт
+settlements. Оба имеют /internal mirrors. [Реализация/MVCC](docs/finance/O-06_IMPLEMENTATION.md),
+[контракт T-08](docs/contracts/T-08_M4_BALANCES_SETTLEMENTS.md).
