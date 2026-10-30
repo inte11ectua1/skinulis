@@ -531,8 +531,10 @@ class _ExpenseEditor:
                 "Receipt replacement requires explicit caller opt-in"
             )
         prepared = prepare_expense(draft, _members(session, expense.group_id))
+        # Every saved mode must be valid before replacement can erase its evidence.
+        # Validate under the existing group/expense locks; failure rolls back version.
+        self.snapshot()
         if has_items:
-            self.snapshot()  # Do not repair a corrupted historical receipt silently.
             session.execute(
                 delete(ExpenseItemShare).where(
                     ExpenseItemShare.expense_id == expense.id
