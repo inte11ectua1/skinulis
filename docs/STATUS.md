@@ -4,8 +4,12 @@
 O-04 / [PR #41](https://github.com/inte11ectua1/skinulis/pull/41), O-05 /
 [PR #42](https://github.com/inte11ectua1/skinulis/pull/42), L-04 /
 [PR #43](https://github.com/inte11ectua1/skinulis/pull/43) **merged**.
-Финальный T-07 security audit и два минимальных исправления подготовлены в отдельной
-ветке; [отчёт и test evidence](reviews/T-07_M3_SECURITY_REVIEW.md).
+Финальный T-07 security audit и два минимальных исправления — в отдельном
+[PR #44](https://github.com/inte11ectua1/skinulis/pull/44);
+[отчёт и test evidence](reviews/T-07_M3_SECURITY_REVIEW.md).
+[CI кода/тестов](https://github.com/inte11ectua1/skinulis/actions/runs/41063450363)
+на `52079fc` — все пять jobs success, 857 unit +290 PostgreSQL integration,
+combined branch coverage95,46%; окончательный head проверять в checks PR.
 **Issue #35 остаётся открытой до приёмки Тимуром.** Источник истины — GitHub main,
 принятые контракты, CI и фактические проверки. M2 завершён по реализации,
 но G2/G3 **не verified**: live Telegram отложен решением Тимура, #38 закрыта
@@ -56,7 +60,7 @@ O-04 / [PR #41](https://github.com/inte11ectua1/skinulis/pull/41), O-05 /
 
 | Issue | Ответственный | Фактическое состояние |
 |---|---|---|
-| [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) | Тимур | **review pending, Issue open**: аудит всех expense routes/бота, исправления Medium/Low, 20 новых regression cases; [отчёт](reviews/T-07_M3_SECURITY_REVIEW.md). Локально857 unit +290 PostgreSQL integration, combined branch coverage95,46%; human review/приёмка отдельно. |
+| [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) | Тимур | **PR review, Issue open**: [PR #44](https://github.com/inte11ectua1/skinulis/pull/44), аудит всех expense routes/бота, исправления Medium/Low, 20 новых regression cases; [отчёт](reviews/T-07_M3_SECURITY_REVIEW.md). Локально и в GitHub CI857 unit +290 PostgreSQL integration, combined branch coverage95,46%; human review/приёмка отдельно. |
 | [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36) | Олег | **merged / Issue closed**, [PR #41](https://github.com/inte11ectua1/skinulis/pull/41): equal/custom CRUD, original replay, versions, preview и confirmed mutation balances. |
 | [O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39) | Олег | **merged / Issue closed**, [PR #42](https://github.com/inte11ectua1/skinulis/pull/42): by_items, snapshots/нули, все full-PUT mode transitions, ordered original intent. |
 | [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37) | Лера | **merged / Issue closed**, [PR #43](https://github.com/inte11ectua1/skinulis/pull/43): expense FSM/client, stable UUID/timeout recovery, unit/mock + real HTTP/PostgreSQL tests, без live Telegram. |

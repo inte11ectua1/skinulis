@@ -182,15 +182,20 @@ experimental status команды; зависимости не обновлял
 
 ## GitHub CI evidence
 
-Исторические CI принятых компонентов приведены выше. Новый CI ветки аудита должен
-подтвердить `lint`, `types`, `tests`, `docker-build`, `ci` на GitHub; ссылка и
-фактический результат будут добавлены после первого выполнения этого PR.
+Аудит опубликован в [PR #44](https://github.com/inte11ectua1/skinulis/pull/44).
+[GitHub Actions run 41063450363](https://github.com/inte11ectua1/skinulis/actions/runs/41063450363)
+на commit **`52079fcd9e0bca9ec8556bc96ae5236e799b5bfc`** завершён:
+**lint / types / tests / docker-build / ci — все success**.
+Логи Linux runner подтверждают **857 unit +290 PostgreSQL integration passed**,
+combined branch coverage **95,46%**, Docker build success. Этот run проверяет
+все изменения кода и тестов; последующий коммит добавляет только документационные
+evidence. Текущие результаты окончательного head видны в checks PR #44.
 CI-конфигурация и критерии не менялись, skip/xfail/continue-on-error не добавлялись.
 
 ## Ограничения и техническая приёмка
 
-После двух исправлений M3 Expense API **готов к технической приёмке при зелёном
-новом CI и независимом review этого PR**. Обнаруженных обходов actor/member/author,
+После двух исправлений и успешного нового CI M3 Expense API **готов к технической
+приёмке и независимому review этого PR**. Обнаруженных обходов actor/member/author,
 дубликатов или частичных финансовых записей в проверенных сценариях нет.
 Это вывод о конкретном срезе и тестах, не обещание отсутствия любых дефектов.
 
