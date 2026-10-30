@@ -2,7 +2,7 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
-> **Кодовая база 28.10.2026:** auth/JWT, группы, Telegram onboarding и финансовое хранилище дополнены Expense API equal/custom, preview и безопасными повторами O-04 ([PR #41](https://github.com/inte11ectua1/skinulis/pull/41)). Контракт [утверждён Тимуром](https://github.com/inte11ectua1/skinulis/issues/36#issuecomment-6469818682); факт merge/независимое review смотрите в GitHub. By_items, публичные балансы/план и settlement state machine остаются следующими этапами. Live Telegram E2E и production-изоляция /internal не подтверждены, G2 не verified. [STATUS](docs/STATUS.md) сохраняет факты merged этапов.
+> **L-04, база main на 30.10.2026:** PR #28/#41/#42 merged; auth/JWT, группы, Telegram onboarding, Expense API equal/custom/by_items и server preview доступны. Эта ветка добавляет Telegram-мастера расходов и безопасные повторы по принятым O-04/O-05. Публичные балансы/план и settlement state machine — следующие этапы. Live Telegram и production-изоляция /internal не подтверждены, G2/G3 не verified. [STATUS](docs/STATUS.md) содержит исторические срезы; актуальные приёмка/merge проверяются в GitHub.
 
 ## Начало работы
 
@@ -25,7 +25,7 @@
 
 - **M1 Skeleton завершён по реализации:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12), [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты. [CI evidence](docs/operations/CI.md).
 - **M2 Identity завершён по коду:** [T-05 #21 / PR #26](https://github.com/inte11ectua1/skinulis/pull/26), [T-06 #22 / PR #27](https://github.com/inte11ectua1/skinulis/pull/27), [O-03 #23 / PR #31](https://github.com/inte11ectua1/skinulis/pull/31), [L-03 #24 / PR #28](https://github.com/inte11ectua1/skinulis/pull/28) merged, соответствующие Issues closed. Финансовая документация принята через PR #33, UTC API даты через PR #30. G2 требует отдельной проверки.
-- **M3 Expenses:** Олег завершает [O-04 #36 / PR #41](https://github.com/inte11ectua1/skinulis/pull/41) по [контракту T-07](docs/contracts/O-04_EXPENSES.md): equal/custom CRUD, original replay, версии PUT/DELETE, preview и mutation balances при confirmed. [O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39) — только после merge O-04; [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37) готовит клиент по принятым mocks, HTTP-интеграция после merged API. Независимое review — [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35). Live Telegram G2 #38 отложена до отдельного сигнала Тимура.
+- **M3 Expenses:** [O-04 / PR #41](https://github.com/inte11ectua1/skinulis/pull/41) и [O-05 / PR #42](https://github.com/inte11ectua1/skinulis/pull/42) merged: три режима CRUD, original replay, версии PUT/DELETE, preview и mutation balances при confirmed. [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37) подключает Telegram-мастера по принятым contracts/fixtures и настоящему API. Независимый security review остаётся за [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35). Live Telegram G2 #38 отложена до отдельного разрешения Тимура.
 - **Открытые контрольные пункты:** T-01 и формальная верификация G1/G2; независимое ревью M3 и последующие финансовые этапы. Expense Q-06–Q-09/UQ-03 утверждены для O-04, что не закрывает вопросы будущих balances/settlements.
 
 Новые задачи: отдельная ветка → PR → проверки CI → согласование затронутых контрактов → merge. [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) и [STATUS](docs/STATUS.md) — актуальные этапы и доказательства.
@@ -35,7 +35,7 @@
 `/start` читает профиль через T-06. Новый пользователь явно выбирает создание
 Telegram-only профиля либо привязку API-аккаунта одноразовым кодом (10 минут).
 Работают профиль, список/создание групп, участники, приглашения владельца,
-отзыв и добровольное вступление по deep-link. Расходы/компенсации — следующие задачи.
+отзыв и добровольное вступление по deep-link. Расходы добавляет L-04; компенсации — L-05.
 Настройка `TELEGRAM_BOT_TOKEN`, отдельного `BOT_SERVICE_TOKEN`, адреса API,
 команды, FSM и восстановление после timeout: [инструкция L-03](docs/bot/L-03_SETUP.md).
 Запуск — `uv run python -m bot.main`, остановка — `Ctrl+C`, один polling-процесс.
@@ -166,8 +166,8 @@ docker compose up --build
 разрешает старт API. Создаются `users`, `groups/group_members`, `group_invites`, `telegram_link_codes`,
 а после `0004_financial_domain` также **`expenses`, `expense_items`,
 `expense_shares`, `expense_item_shares`, `settlements`**.
-Это только схема хранения — endpoints CRUD расходов/балансы/settlement transitions
-пока не реализованы.
+Расходные endpoints добавлены O-04/O-05, следующая миграция —
+`0005_expense_replay_version`. Балансы/settlement transitions — следующие задачи.
 
 ```sh
 docker compose ps -a
@@ -388,9 +388,9 @@ uv run python scripts/test_integration.py --cov --cov-append --cov-report=term-m
 Второй запуск дополняет отчёт первого проверками настоящей PostgreSQL.
 Unit-прогон включает pure money functions, тесты auth/groups и mock-тесты
 Telegram FSM/client; PostgreSQL integration отдельно тестирует уже реализованный
-backend и интеграцию L-03 с подменённой Telegram session. Ни один из этих прогонов
-**не является live Telegram E2E** и не доказывает финансовый CRUD или работу
-не реализованных O-04–O-07.
+backend и интеграцию L-03/L-04 с подменённой Telegram session. Проверяются реальные
+Expense API O-04/O-05 и Telegram FSM через HTTP/PostgreSQL. Эти прогоны
+**не являются live Telegram E2E** и не доказывают будущие O-06/O-07 или gate G3.
 Автоматизация этих проверок и статус защиты описаны ниже.
 Starlette выдаёт предупреждение о будущем переходе TestClient с httpx на httpx2;
 согласованный httpx пока работает, предупреждение не подавлено, новый стек не введён.
@@ -477,3 +477,19 @@ participants; сервер рассчитывает per-item и final shares с 
 содержат items, equal/custom сохраняют прежний JSON без items. Все full-PUT переходы
 разрешены с expected_version; original POST replay хранит исходные позиции/порядок.
 [Fixtures](docs/finance/fixtures/O-05_BY_ITEMS.json); решение Тимура в Issue39/6473059675.
+
+## Telegram-мастера расходов — L-04
+
+В личном чате: «Мои группы» → группа → «Добавить расход» → equal/custom/by_items.
+Бот собирает строки/состав/позиции, запрашивает серверный предпросмотр и сохраняет
+только после подтверждения. Custom допускает выбранные `0.00`, by_items — 1–50
+позиций без отдельного общего amount. Любая правка требует нового preview.
+«Расходы» открывает список/детали; автор может пройти полный мастер редактирования
+со сменой режима или подтвердить soft-delete с предупреждением о confirmed.
+
+POST retry сохраняет UUID/исходный body, PUT timeout сначала перечитывает версию,
+DELETE повторяет прежний target/version. Бот не считает деньги, не имеет DB и
+не запрашивает JWT/пароль. Все `/internal` mirrors используют принятый T-06 actor.
+[Инструкция L-04, FSM, ошибки, тесты и ограничения](docs/bot/L-04_EXPENSES.md).
+Настройки запуска остаются из L-03. Live Telegram и ручные проверки с настоящим
+ботом отложены до отдельного разрешения Тимура; G3 этим PR не объявляется verified.

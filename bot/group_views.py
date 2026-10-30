@@ -56,6 +56,10 @@ async def show_group(
         f"#{m.user_id}" + (" — владелец" if m.is_owner else "") for m in members.items
     )
     actions = [("Все участники", f"members:{group.id}:0"), ("К группам", "groups:0")]
+    actions = [
+        ("Расходы", f"ex:list:{group.id}:0"),
+        ("Добавить расход", f"ex:new:{group.id}"),
+    ] + actions
     if profile.id == group.owner_id:
         actions.insert(0, ("Приглашения", f"invites:{group.id}:0"))
     await state.set_state(Navigation.menu)

@@ -22,3 +22,21 @@ class GroupFlow(StatesGroup):
     join_confirm = State()
     join_uncertain = State()
     busy = State()
+
+
+class ExpenseFlow(StatesGroup):
+    mode = State()
+    draft = State()
+    title = State()
+    amount = State()
+    participants = State()
+    share = State()
+    item_title = State()
+    item_amount = State()
+    preview = State()
+    edit_confirm = State()
+    delete_confirm = State()
+    post_uncertain = State()
+    put_uncertain = State()
+    delete_uncertain = State()
+    busy = State()

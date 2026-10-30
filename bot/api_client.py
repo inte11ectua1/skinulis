@@ -7,7 +7,7 @@ from typing import Literal, Protocol, Self
 from uuid import UUID
 
 import httpx
-from pydantic import BaseModel, ConfigDict, SecretStr
+from pydantic import BaseModel, ConfigDict, SecretStr, TypeAdapter
 
 from bot.dto import (
     GroupDraft,
@@ -17,6 +17,14 @@ from bot.dto import (
     MemberProfile,
     Page,
     UserProfile,
+)
+from bot.expense_dto import (
+    EXPENSE,
+    PREVIEW,
+    ExpenseDraft,
+    ExpenseMutation,
+    ExpensePreview,
+    ExpenseProfile,
 )
 
 TOTAL_TIMEOUT = 10.0
@@ -92,6 +100,22 @@ class HealthApi(Protocol):
 
 
 class BotApi(HealthApi, Protocol):
+    async def preview_expense(
+        self, actor: int, group_id: int, draft: ExpenseDraft
+    ) -> ExpensePreview: ...
+    async def create_expense(
+        self, actor: int, group_id: int, draft: ExpenseDraft, key: UUID
+    ) -> ExpenseMutation: ...
+    async def expenses(
+        self, actor: int, group_id: int, *, offset: int = 0
+    ) -> Page[ExpenseProfile]: ...
+    async def expense(self, actor: int, expense_id: int) -> ExpenseProfile: ...
+    async def update_expense(
+        self, actor: int, expense_id: int, draft: ExpenseDraft, version: int
+    ) -> ExpenseMutation: ...
+    async def delete_expense(
+        self, actor: int, expense_id: int, version: int
+    ) -> ExpenseMutation: ...
     async def profile(self, actor: int) -> UserProfile: ...
     async def bootstrap(self, actor: int) -> UserProfile: ...
     async def link(self, actor: int, code: SecretStr) -> UserProfile: ...
@@ -152,16 +176,17 @@ class ApiClient:
         """GET /health without a body or auth; never creates a user or financial record."""
         return await self._request("GET", "/health", HealthResult)
 
-    async def _request[T: BaseModel](
+    async def _request[T](
         self,
         method: str,
         path: str,
-        response_type: type[T],
+        response_type: type[T] | TypeAdapter[T],
         *,
         actor: int | None = None,
         body: dict[str, object] | None = None,
         offset: int | None = None,
-        expected_status: int = 200,
+        expected_status: int | tuple[int, ...] = 200,
+        version: int | None = None,
     ) -> T:
         if self.is_closed:
             raise ApiError(ApiFailure.NETWORK)
@@ -176,6 +201,8 @@ class ApiClient:
                 "X-Telegram-ID": str(actor),
             }
         params = {"limit": 20, "offset": offset} if offset is not None else None
+        if version is not None:
+            params = {"expected_version": version}
         try:
             async with asyncio.timeout(TOTAL_TIMEOUT):
                 response = await self._http.request(
@@ -186,7 +213,10 @@ class ApiClient:
         except httpx.RequestError:
             raise ApiError(ApiFailure.NETWORK) from None
 
-        if response.status_code != expected_status:
+        statuses = (
+            (expected_status,) if isinstance(expected_status, int) else expected_status
+        )
+        if response.status_code not in statuses:
             kinds = {
                 400: ApiFailure.INPUT,
                 401: ApiFailure.AUTH,
@@ -203,7 +233,12 @@ class ApiClient:
                 detail = None
             raise ApiError(kind, status_code=response.status_code, detail=detail)
         try:
-            return response_type.model_validate_json(response.content)
+            adapter = (
+                response_type
+                if isinstance(response_type, TypeAdapter)
+                else TypeAdapter(response_type)
+            )
+            return adapter.validate_json(response.content)
         except ValueError:
             raise ApiError(
                 ApiFailure.UNEXPECTED, status_code=response.status_code
@@ -212,6 +247,67 @@ class ApiClient:
     async def profile(self, actor: int) -> UserProfile:
         return await self._request(
             "GET", "/internal/users/me", UserProfile, actor=actor
+        )
+
+    async def preview_expense(
+        self, actor: int, group_id: int, draft: ExpenseDraft
+    ) -> ExpensePreview:
+        return await self._request(
+            "POST",
+            f"/internal/groups/{group_id}/expenses/preview",
+            PREVIEW,
+            actor=actor,
+            body=draft.model_dump(mode="json"),
+        )
+
+    async def create_expense(
+        self, actor: int, group_id: int, draft: ExpenseDraft, key: UUID
+    ) -> ExpenseMutation:
+        return await self._request(
+            "POST",
+            f"/internal/groups/{group_id}/expenses",
+            ExpenseMutation,
+            actor=actor,
+            body=draft.model_dump(mode="json") | {"client_request_id": str(key)},
+            expected_status=(200, 201),
+        )
+
+    async def expenses(
+        self, actor: int, group_id: int, *, offset: int = 0
+    ) -> Page[ExpenseProfile]:
+        return await self._request(
+            "GET",
+            f"/internal/groups/{group_id}/expenses",
+            Page[ExpenseProfile],
+            actor=actor,
+            offset=offset,
+        )
+
+    async def expense(self, actor: int, expense_id: int) -> ExpenseProfile:
+        return await self._request(
+            "GET", f"/internal/expenses/{expense_id}", EXPENSE, actor=actor
+        )
+
+    async def update_expense(
+        self, actor: int, expense_id: int, draft: ExpenseDraft, version: int
+    ) -> ExpenseMutation:
+        return await self._request(
+            "PUT",
+            f"/internal/expenses/{expense_id}",
+            ExpenseMutation,
+            actor=actor,
+            body=draft.model_dump(mode="json") | {"expected_version": version},
+        )
+
+    async def delete_expense(
+        self, actor: int, expense_id: int, version: int
+    ) -> ExpenseMutation:
+        return await self._request(
+            "DELETE",
+            f"/internal/expenses/{expense_id}",
+            ExpenseMutation,
+            actor=actor,
+            version=version,
         )
 
     async def bootstrap(self, actor: int) -> UserProfile:
