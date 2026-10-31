@@ -29,9 +29,9 @@
 
 ## Назначенные M4 — [O-06 #46](https://github.com/inte11ectua1/skinulis/issues/46) → [O-07 #47](https://github.com/inte11ectua1/skinulis/issues/47)
 
-**O-06 — ready сейчас.** Переиспользовать существующую `expense_balances` агрегацию для полного group balance read API и точного deterministic greedy settlement-plan, включая нулевых членов, signed RUB strings, PostgreSQL NUMERIC, no float, reverse debt и confirmed-only transfers. T-08 [#45](https://github.com/inte11ectua1/skinulis/issues/45) уже опубликовал [техническое решение M4](../contracts/T-08_M4_BALANCES_SETTLEMENTS.md): balances/plan DTO, Q-05 greedy tie-break, UUID replay и settlement transitions без новой миграции; документ на независимом review Олега/Леры. Не считать это реализованным API или персональным APPROVED.
+**O-06 — merged/closed.** [Issue #46](https://github.com/inte11ectua1/skinulis/issues/46) / [PR #51](https://github.com/inte11ectua1/skinulis/pull/51): exact balances, deterministic Q-05 settlement-plan, JWT/internal GET, read-only REPEATABLE READ. [CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41096303217), 1181 тестов/95,58% coverage. В GitHub нет независимого submitted APPROVED; это отмечено как процессная оговорка, не дефект автоматических тестов. T-08 [#45](https://github.com/inte11ectua1/skinulis/issues/45) уже опубликовал [M4 контракт](../contracts/T-08_M4_BALANCES_SETTLEMENTS.md).
 
-**O-07 — design/test-planning сейчас, реализация после merged O-06.** Создание `pending` с UUID и verified sender, `confirm/reject/cancel` по actor rights, confirmed immutable, group-first lock/recheck текущих balances на confirm, 2 concurrent full-debt pending → максимум 1 confirm. Не реализовывать новую схему replay/миграцию без решения T-08, не делать bot L-05 за Леру.
+**O-07 — можно начинать полноценную реализацию сейчас, поскольку O-06 merged.** Создание `pending` с UUID и verified sender, `confirm/reject/cancel` по actor rights, confirmed immutable, group-first lock/recheck текущих balances на confirm, 2 concurrent full-debt pending → максимум 1 confirm. Не реализовывать новую схему replay/миграцию без решения T-08, не делать bot L-05 за Леру.
 
 **Полный порядок:** O-06 → O-07; параллельно T-08 contract/security и L-05 mock-first. Все unit/PostgreSQL17/CI проверки обязательны; live Telegram G2/G3 отложен до отдельной команды Тимура.
 
