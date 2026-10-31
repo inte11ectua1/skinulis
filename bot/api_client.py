@@ -26,6 +26,15 @@ from bot.expense_dto import (
     ExpensePreview,
     ExpenseProfile,
 )
+from bot.settlement_dto import (
+    Balances,
+    Direction,
+    Plan,
+    SettlementCreate,
+    SettlementMutation,
+    SettlementProfile,
+    SettlementStatus,
+)
 
 TOTAL_TIMEOUT = 10.0
 
@@ -100,6 +109,29 @@ class HealthApi(Protocol):
 
 
 class BotApi(HealthApi, Protocol):
+    async def balances(self, actor: int, group_id: int) -> Balances: ...
+    async def settlement_plan(self, actor: int, group_id: int) -> Plan: ...
+    async def create_settlement(
+        self, actor: int, group_id: int, draft: SettlementCreate
+    ) -> SettlementMutation: ...
+    async def settlements(
+        self,
+        actor: int,
+        group_id: int,
+        *,
+        offset: int = 0,
+        status: SettlementStatus | None = None,
+        direction: Direction = "all",
+    ) -> Page[SettlementProfile]: ...
+    async def confirm_settlement(
+        self, actor: int, settlement_id: int
+    ) -> SettlementMutation: ...
+    async def reject_settlement(
+        self, actor: int, settlement_id: int
+    ) -> SettlementMutation: ...
+    async def cancel_settlement(
+        self, actor: int, settlement_id: int
+    ) -> SettlementMutation: ...
     async def preview_expense(
         self, actor: int, group_id: int, draft: ExpenseDraft
     ) -> ExpensePreview: ...
@@ -187,6 +219,7 @@ class ApiClient:
         offset: int | None = None,
         expected_status: int | tuple[int, ...] = 200,
         version: int | None = None,
+        query: dict[str, str | int] | None = None,
     ) -> T:
         if self.is_closed:
             raise ApiError(ApiFailure.NETWORK)
@@ -200,9 +233,13 @@ class ApiClient:
                 "X-Bot-Service-Token": self._service_token.get_secret_value(),
                 "X-Telegram-ID": str(actor),
             }
-        params = {"limit": 20, "offset": offset} if offset is not None else None
+        params: dict[str, str | int] | None = (
+            {"limit": 20, "offset": offset} if offset is not None else None
+        )
         if version is not None:
             params = {"expected_version": version}
+        if query:
+            params = (params or {}) | query
         try:
             async with asyncio.timeout(TOTAL_TIMEOUT):
                 response = await self._http.request(
@@ -247,6 +284,82 @@ class ApiClient:
     async def profile(self, actor: int) -> UserProfile:
         return await self._request(
             "GET", "/internal/users/me", UserProfile, actor=actor
+        )
+
+    async def balances(self, actor: int, group_id: int) -> Balances:
+        return await self._request(
+            "GET", f"/internal/groups/{group_id}/balances", Balances, actor=actor
+        )
+
+    async def settlement_plan(self, actor: int, group_id: int) -> Plan:
+        return await self._request(
+            "GET", f"/internal/groups/{group_id}/settlement-plan", Plan, actor=actor
+        )
+
+    async def create_settlement(
+        self, actor: int, group_id: int, draft: SettlementCreate
+    ) -> SettlementMutation:
+        return await self._request(
+            "POST",
+            f"/internal/groups/{group_id}/settlements",
+            SettlementMutation,
+            actor=actor,
+            body=draft.model_dump(mode="json"),
+            expected_status=(200, 201),
+        )
+
+    async def settlements(
+        self,
+        actor: int,
+        group_id: int,
+        *,
+        offset: int = 0,
+        status: SettlementStatus | None = None,
+        direction: Direction = "all",
+    ) -> Page[SettlementProfile]:
+        query: dict[str, str | int] = {"direction": direction}
+        if status is not None:
+            query["status"] = status
+        return await self._request(
+            "GET",
+            f"/internal/groups/{group_id}/settlements",
+            Page[SettlementProfile],
+            actor=actor,
+            offset=offset,
+            query=query,
+        )
+
+    async def confirm_settlement(
+        self, actor: int, settlement_id: int
+    ) -> SettlementMutation:
+        return await self._request(
+            "POST",
+            f"/internal/settlements/{settlement_id}/confirm",
+            SettlementMutation,
+            actor=actor,
+            body={},
+        )
+
+    async def reject_settlement(
+        self, actor: int, settlement_id: int
+    ) -> SettlementMutation:
+        return await self._request(
+            "POST",
+            f"/internal/settlements/{settlement_id}/reject",
+            SettlementMutation,
+            actor=actor,
+            body={},
+        )
+
+    async def cancel_settlement(
+        self, actor: int, settlement_id: int
+    ) -> SettlementMutation:
+        return await self._request(
+            "POST",
+            f"/internal/settlements/{settlement_id}/cancel",
+            SettlementMutation,
+            actor=actor,
+            body={},
         )
 
     async def preview_expense(

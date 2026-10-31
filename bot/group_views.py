@@ -59,6 +59,12 @@ async def show_group(
     actions = [
         ("Расходы", f"ex:list:{group.id}:0"),
         ("Добавить расход", f"ex:new:{group.id}"),
+        ("Балансы", f"st:balances:{group.id}"),
+        ("План переводов", f"st:plan:{group.id}"),
+        ("Я перевёл деньги", f"st:new:{group.id}"),
+        ("Ожидают подтверждения", f"st:list:{group.id}:pending:incoming:0"),
+        ("Исходящие переводы", f"st:list:{group.id}:all:outgoing:0"),
+        ("История переводов", f"st:list:{group.id}:all:all:0"),
     ] + actions
     if profile.id == group.owner_id:
         actions.insert(0, ("Приглашения", f"invites:{group.id}:0"))
