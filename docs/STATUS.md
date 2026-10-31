@@ -63,6 +63,8 @@ T-08 security review и L-05 остаются отдельными задача�
 
 Формальные **G2/G3 not verified**: серверные контрактные и PostgreSQL/HTTP проверки есть, но live Telegram delivery и реальный пользовательский E2E сознательно отложены по решению Тимура. Не заменять этой записью отдельную эксплуатационную приёмку. В M3 **не реализованы** отдельные GET balances/settlement-plan, POST settlements и terminal transitions — это M4; существующий internal mutation-balances O-04 только частичная переиспользуемая основа.
 
+**M4 дополнительная зависимость, 31.10.2026:** [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48) / [PR #54](https://github.com/inte11ectua1/skinulis/pull/54) реализует основную Telegram-связку, но пока **не готов к merge** из-за обязательных best-effort pending notifications (PRODUCT_RULES §7), требует нового безопасного механизма. По решению tech lead [O-07N #55](https://github.com/inte11ectua1/skinulis/issues/55) назначена Олегу — **только /internal одноразовая claim с серверной Telegram-привязкой, Alembic 0006 и PG concurrency tests**; [контракт](contracts/T-08_PENDING_NOTIFICATION.md). После merge backend #55 Лера завершает PR #54 и повторно проверяет CI/review; никакие G2/G3/G4 не verified. Нет независимого APPROVED на текущий #54. Этот статус обновляет старые записи «M4 не реализован» по факту O-06/O-07 merged.
+
 ## M4 — Balances и ручные компенсации (Issues созданы и назначены, реализация впереди)
 
 | Issue | Исполнитель | Когда можно начать | Зависимости и результат |
