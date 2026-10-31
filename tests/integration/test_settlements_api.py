@@ -366,6 +366,14 @@ def test_invalid_pagination(h: Harness, client: TestClient, query: str) -> None:
     )
 
 
+def test_large_nonnegative_offset_returns_empty_page(
+    h: Harness, client: TestClient
+) -> None:
+    offset = 2**80
+    result = get(client, h, f"settlements?offset={offset}")
+    assert result == dict(items=[], limit=20, offset=offset)
+
+
 def test_filters_before_pagination_and_stable_created_id_order(
     h: Harness, client: TestClient
 ) -> None:
@@ -466,8 +474,8 @@ def test_max_bigint_settlement_and_aggregate_above_bigint(
         session.add_all(
             Settlement(
                 group_id=h.group,
-                sender_id=10,
-                receiver_id=20,
+                sender_id=20,
+                receiver_id=10,
                 amount_kopecks=maximum,
                 client_request_id=uuid4(),
                 status="confirmed",
@@ -476,6 +484,12 @@ def test_max_bigint_settlement_and_aggregate_above_bigint(
             )
             for _ in range(3)
         )
+    with h.db.sessions() as session:
+        assert calculate_balances(session, h.group) == {
+            10: -3 * maximum,
+            20: 3 * maximum,
+            30: 0,
+        }
     payload = body(format_money(maximum), receiver=20)
     first = create(client, h, payload, actor=10)
     assert first.status_code == 201, first.text
@@ -725,6 +739,57 @@ def test_concurrent_confirm_no_overpay_or_double_effect(
     assert statuses.count("confirmed") == 1
     assert statuses.count("pending") == (0 if same_row else 1)
     check(client, h, ["800.00", "0.00", "-800.00"], [(30, 10, "800.00")])
+
+
+@pytest.mark.parametrize("other_action,actor", [("reject", 10), ("cancel", 20)])
+def test_confirm_serializes_against_other_terminal_actions(
+    h: Harness, client: TestClient, other_action: str, actor: int
+) -> None:
+    h.create()
+    sid = create(client, h, body()).json()["settlement"]["id"]
+    first, second = contend(
+        client,
+        h,
+        lambda: resolve(client, h, sid, other_action, actor=actor),
+        lambda: resolve(client, h, sid),
+    )
+    assert first.status_code == 200
+    safe(second, 409, "settlement_state_conflict")
+    assert get(client, h, "settlements")["items"] == [first.json()["settlement"]]
+    check(
+        client,
+        h,
+        ["2200.00", "-1400.00", "-800.00"],
+        [(20, 10, "1400.00"), (30, 10, "800.00")],
+    )
+
+
+def test_sign_reversed_before_confirm_stays_pending(
+    h: Harness, client: TestClient
+) -> None:
+    h.create()
+    original = create(client, h, body()).json()["settlement"]
+    h.create(CustomExpense("Opposite", "5000.00", ((10, "5000.00"),)), actor=20)
+    safe(resolve(client, h, original["id"]), 409, "settlement_balance_conflict")
+    assert get(client, h, "settlements")["items"] == [original]
+    check(
+        client,
+        h,
+        ["-2800.00", "3600.00", "-800.00"],
+        [(10, 20, "2800.00"), (30, 20, "800.00")],
+    )
+
+
+def test_receiver_credit_can_limit_below_sender_debt(
+    h: Harness, client: TestClient
+) -> None:
+    h.create(CustomExpense("First", "600.00", ((20, "600.00"),)))
+    h.create(CustomExpense("Second", "400.00", ((20, "400.00"),)), actor=30)
+    safe(create(client, h, body("600.01")), 409, "settlement_balance_conflict")
+    created = create(client, h, body("600.00"))
+    assert created.status_code == 201
+    assert resolve(client, h, created.json()["settlement"]["id"]).status_code == 200
+    check(client, h, ["0.00", "-400.00", "400.00"], [(20, 30, "400.00")])
 
 
 @pytest.mark.parametrize("change", ["put", "delete"])

@@ -11,7 +11,7 @@ timeout повторяйте прежние UUID/body: replay возвращае
 [Реализация, права и гонки O-07](docs/finance/O-07_IMPLEMENTATION.md),
 [typed fixtures](docs/finance/fixtures/O-07_SETTLEMENTS.json); OpenAPI `/docs`.
 
-> **M3 завершён по реализации 30.10.2026:** auth/JWT, группы, Telegram onboarding, Expense API `equal/custom/by_items` и server preview, Telegram expense wizard и T-07 security fixes merged в `main` (PR #41–#44). [PR #44 CI](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033) **5/5 success; 1147 тестов, coverage 95,46%**. **M4 теперь назначен**: Т-08/O-06/O-07/L-05, но GET balances/plan и settlement state machine ещё не реализованы. Живой Telegram и production-изоляция `/internal` не подтверждены: G2/G3 не verified, тесты отложены по решению Тимура. [STATUS](docs/STATUS.md) — актуальные факты.
+> **M3 завершён по реализации 30.10.2026:** auth/JWT, группы, Telegram onboarding, Expense API `equal/custom/by_items` и server preview, Telegram expense wizard и T-07 security fixes merged в `main` (PR #41–#44). [PR #44 CI](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033) **5/5 success; 1147 тестов, coverage 95,46%**. **M4:** O-06 GET balances/plan merged через PR #51; O-07 settlement state machine — в PR review. T-08 security review и L-05 продолжаются отдельно. Живой Telegram и production-изоляция `/internal` не подтверждены: G2/G3 не verified, тесты отложены по решению Тимура. [STATUS](docs/STATUS.md) — актуальные факты.
 
 ## Начало работы
 
@@ -63,7 +63,7 @@ soft-delete не уничтожает историю. [Контракт и то�
 уточнены через [PR #33](https://github.com/inte11ectua1/skinulis/pull/33):
 Q-03 Unicode/NFC — **проверка на реализованной API-границе O-04/O-05**, Q-10 сохраняет
 явно выбранные нулевые доли, Q-04 использует точные SQL NUMERIC-агрегаты.
-Модель БД сама не гарантирует сумму shares и бизнес-правила. Их проверяют **реализованные сервисы O-04/O-05** (права, snapshots, UUID replay, версионирование и T-07 safety checks). Балансы/план и автомат компенсаций остаются **M4 (O-06/O-07), пока не реализованы**; не приписывать SQL ограничениям их поведение.
+Модель БД сама не гарантирует сумму shares и бизнес-правила. Их проверяют **реализованные сервисы O-04/O-05** (права, snapshots, UUID replay, версионирование и T-07 safety checks). Балансы/план O-06 уже merged; автомат компенсаций O-07 — в PR review. Финансовые правила обеспечивают сервисы, а не одни SQL constraints.
 
 ## Публичная аутентификация (T-05)
 
@@ -175,7 +175,7 @@ docker compose up --build
 а после `0004_financial_domain` также **`expenses`, `expense_items`,
 `expense_shares`, `expense_item_shares`, `settlements`**.
 Расходные endpoints добавлены O-04/O-05, следующая миграция —
-`0005_expense_replay_version`. Балансы/settlement transitions — следующие задачи.
+`0005_expense_replay_version` (текущий единственный head). Балансы O-06 merged; settlement transitions O-07 — PR review, без новой миграции.
 
 ```sh
 docker compose ps -a
@@ -398,7 +398,7 @@ Unit-прогон включает pure money functions, тесты auth/groups 
 Telegram FSM/client; PostgreSQL integration отдельно тестирует уже реализованный
 backend и интеграцию L-03/L-04 с подменённой Telegram session. Проверяются реальные
 Expense API O-04/O-05 и Telegram FSM через HTTP/PostgreSQL. Эти прогоны
-**не являются live Telegram E2E** и не доказывают будущие O-06/O-07 или gate G3.
+**не являются live Telegram E2E** и не доказывают gate G3/G4. Новые O-06/O-07 PostgreSQL-сценарии проверяют backend на фактическом PR head; доказательства приведены в соответствующем PR.
 Автоматизация этих проверок и статус защиты описаны ниже.
 Starlette выдаёт предупреждение о будущем переходе TestClient с httpx на httpx2;
 согласованный httpx пока работает, предупреждение не подавлено, новый стек не введён.

@@ -202,6 +202,10 @@ def page(
     direction: Direction = "all",
 ) -> list[SettlementProfile]:
     require_member(session, group_id, actor_id)
+    # Positive BIGINT IDs bound the maximum possible row count. The contract has
+    # no offset maximum; avoid sending an oversized integer to PostgreSQL OFFSET.
+    if offset > 2**63 - 1:
+        return []
     query = select(Settlement).where(Settlement.group_id == group_id)
     if status is not None:
         query = query.where(Settlement.status == status)

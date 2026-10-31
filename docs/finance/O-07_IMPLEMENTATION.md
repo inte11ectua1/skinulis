@@ -100,15 +100,15 @@ PostgreSQL17: настоящий API, независимые Sessions/connection
 
 - Restaurant, partial/full, terminal retries/replay, immutable UUID/timestamps,
   reverse debt, public/internal access, safe errors/no-store, filters/pagination.
-- BIGINT maximum compensation и агрегат3×BIGINT, snapshot corruption safe500.
+- BIGINT maximum compensation и агрегат3×BIGINT, snapshot corruption safe500, sign reversal и ограничение кредитом receiver.
 - AFTER INSERT/UPDATE PostgreSQL trigger вызывает настоящую ошибку БД; проверяются
   полный rollback, прежние status/history/balances.
-- В восьми writer race случаях первый HTTP writer остановлен после group lock.
+- В десяти writer race случаях первый HTTP writer остановлен после group lock.
   Второй HTTP request начинает транзакцию. Observer через pg_stat_activity и
   pg_blocking_pids доказывает ожидание именно PID первого writer; оба futures ещё
   не завершены. Затем первый отпускается; проверяются результат и весь вектор.
   Это same/different UUID, same/different confirm row, confirm vs PUT/DELETE в
-  обоих порядках. Последовательные вызовы не выдаются за overlap.
+  обоих порядках, confirm против reject/cancel. Последовательные вызовы не выдаются за overlap.
 - Два reader/confirm overlaps: RR reader приостановлен после первого financial
   SELECT, confirm commits на другом соединении; reader возвращает целый старый
   результат, следующий GET — новый. Старые O-06 overlaps остаются.
