@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Full main commit SHA with successful trusted CI
+        required: true
+        type: string
+      operation:
+        description: Publish only, or explicitly request protected VPS deployment
+        type: choice
+        options: [publish, deploy]
+        default: publish
+      enable_polling:
+        description: Separately authorize the single live Telegram polling process
+        type: boolean
+        default: false
+      rollback_compatible:
+        description: Operator reviewed compatibility of old code with new migrations
+        type: boolean
+        default: false
+
+permissions: {}
+
+# Serialize publications and approved deployments. Never cancel a running migration.
+concurrency:
+  group: skinulis-production-release
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  guard:
+    if: >-
+      github.repository == 'inte11ectua1/skinulis' &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      sha: ${{ steps.guard.outputs.sha }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify main ancestry, exact trusted CI and Environment policy
+        id: guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_SHA: ${{ inputs.sha }}
+          OPERATION: ${{ inputs.operation }}
+          ROLLOUT_ENABLED: ${{ vars.PRODUCTION_ROLLOUT_ENABLED }}
+        run: python3 scripts/release.py guard
+
+  publish:
+    needs: guard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.publish.outputs.image }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ needs.guard.outputs.sha }}
+          persist-credentials: false
+      - name: Registry login with ephemeral package credential
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Publish SHA once, validate provenance and return immutable digest
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ needs.guard.outputs.sha }}
+        run: python3 scripts/release.py publish --sha "$RELEASE_SHA"
+      - name: Registry logout
+        if: ${{ always() }}
+        run: docker logout ghcr.io
+
+  deploy:
+    needs: [guard, publish]
+    # Safe by default: ordinary main merges can publish, but NEVER SSH/deploy.
+    if: >-
+      github.event_name == 'workflow_dispatch' && inputs.operation == 'deploy' &&
+      github.ref == 'refs/heads/main' && vars.PRODUCTION_ROLLOUT_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ needs.guard.outputs.sha }}
+          persist-credentials: false
+      - name: Approved SSH deployment (pinned host key, no production env transfer)
+        env:
+          PRODUCTION_ROLLOUT_ENABLED: ${{ vars.PRODUCTION_ROLLOUT_ENABLED }}
+          RELEASE_SHA: ${{ needs.guard.outputs.sha }}
+          APP_IMAGE: ${{ needs.publish.outputs.image }}
+          ENABLE_POLLING: ${{ inputs.enable_polling }}
+          ROLLBACK_COMPATIBLE: ${{ inputs.rollback_compatible }}
+          SSH_HOST: ${{ vars.SSH_HOST }}
+          SSH_USER: ${{ vars.SSH_USER }}
+          SSH_PORT: ${{ vars.SSH_PORT }}
+          SSH_DEPLOY_DIR: ${{ vars.SSH_DEPLOY_DIR }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: python3 -m scripts.remote_deploy

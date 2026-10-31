@@ -7,6 +7,8 @@
 !alembic.ini
 !app/
 !app/**
+!bot/
+!bot/**
 !alembic/
 !alembic/**
 **/__pycache__/

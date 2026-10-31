@@ -205,7 +205,11 @@ curl http://localhost:8000/version
 образ. Пока это явный ввод разработчика, гарантий production provenance и CI нет.
 Dockerfile фиксирует Python 3.12.15 и uv 0.13.5 по версии и digest; runtime работает
 с UID 10001. БД PostgreSQL 17.11 приватна, порт API опубликован только на loopback.
-В штатном Compose пока нет отдельного сервиса `bot`: L-03 запускается отдельно через `uv run python -m bot.main` по [инструкции](docs/bot/L-03_SETUP.md). Для контейнера бота в той же Compose-сети адрес API — `http://api:8000`, но добавление контейнера/production proxy требует отдельного согласования. Не публиковать `/internal` наружу.
+Локальный Compose сохраняет API/DB без polling. Runtime-образ также содержит `bot/`;
+отдельный `deploy/compose.production.yaml` запускает его с `python -m bot.main`
+только в явно включённом профиле polling. [T-09 deployment runbook](docs/operations/DEPLOYMENT.md)
+описывает private networks, Caddy и безопасный release controller. Реальные
+SSH/VPS/Telegram действия требуют отдельного разрешения Тимура.
 
 ### Миграции, локальный процесс и остановка
 
@@ -410,7 +414,7 @@ Starlette выдаёт предупреждение о будущем перех
 ## GitHub Actions CI
 
 [ci.yml](.github/workflows/ci.yml) запускается для каждого PR в main (включая новые
-коммиты), а после появления workflow в main доступен и ручной `workflow_dispatch`.
+коммиты), push в main и ручного `workflow_dispatch`.
 Нет фильтра по путям: изменение документации тоже проходит проверки.
 
 | Job / check run | Проверка |
@@ -418,7 +422,7 @@ Starlette выдаёт предупреждение о будущем перех
 | `lint` | frozen sync, lock check, Ruff lint/format, совместимость пакетов, аудит зависимостей и detect-secrets |
 | `types` | frozen sync, lock check, строгий `mypy .`, включая app, bot, тесты, Alembic и скрипты |
 | `tests` | unit-тесты, затем явно `-m integration` с PostgreSQL 17.11, общее branch coverage app + bot >=60% |
-| `docker-build` | настоящая сборка текущего Dockerfile, без публикации |
+| `docker-build` | сборка общего API/bot образа, non-root imports, disposable PostgreSQL/Caddy TLS smoke и raw routing negatives; без публикации/SSH/Telegram |
 | `ci` | успех только если все четыре предыдущих job завершились `success`; fail/cancel/skip не принимаются |
 
 Первые четыре job независимы; `ci` ждёт их все. Runner — Ubuntu 24.04,
@@ -443,6 +447,33 @@ Branch/source/omit берутся из pyproject; тесты в процент �
 Точные required checks, настройки main, проверка красного CI и troubleshooting:
 [CI и защита main](docs/operations/CI.md). Успех workflow сам по себе не включает
 branch protection; применённые настройки и доказательства фиксируются отдельно.
+
+## T-09: production release и безопасный dry-run
+
+[Deployment runbook](docs/operations/DEPLOYMENT.md) описывает общий API/bot image,
+отдельный production Compose, Caddy HTTPS и публичный отказ `/internal`.
+Локальный compose.yaml сохранён. Реальный VPS/SSH/GHCR rollout **ещё не проверен**,
+Issue #59/G5 остаются открытыми.
+
+[deploy.yml](.github/workflows/deploy.yml) публикует SHA-tag только после trusted
+main CI, проверяет происхождение image и передаёт deploy **digest**. SSH выключен
+по умолчанию: нужен manual operation=deploy, repository flag и protected
+production Environment с независимым approval. Polling требует отдельного флага.
+PR pipeline не получает этих secrets/permissions.
+
+```sh
+actionlint
+uv run pytest tests/unit/test_release_policy.py tests/unit/test_deployment.py tests/unit/test_remote_deploy.py
+docker build --build-arg APP_COMMIT_SHA="$(git rev-parse HEAD)" -t skinulis-t09-test:local .
+T09_TEST_IMAGE=skinulis-t09-test:local uv run python scripts/test_delivery.py
+```
+
+Последняя команда использует свои UUID Docker networks/containers и PostgreSQL,
+тестовый TLS CA и mock boundaries; настоящий Telegram не запускается. Проверяет
+config, DB migration/restart, exact /version SHA, private service actor и26 raw
+negative routing cases. Тестовый named volume сохраняется, чужие volumes не трогаются.
+Серверный controller запускается только из установленного release bundle и по
+умолчанию делает dry-run; инструкция setup/rollback и имена secrets — в runbook.
 
 ## Изменение зависимостей
 
