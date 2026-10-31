@@ -11,16 +11,9 @@ timeout повторяйте прежние UUID/body: replay возвращае
 [Реализация, права и гонки O-07](docs/finance/O-07_IMPLEMENTATION.md),
 [typed fixtures](docs/finance/fixtures/O-07_SETTLEMENTS.json); OpenAPI `/docs`.
 
-**O-07N #55 (merged PR #57):** internal-only
-`POST /internal/settlements/{settlement_id}/notification-claim` выдаёт verified
-sender одно разрешение на попытку уведомить receiver: 200 с серверным Telegram ID
-либо пустой204. Доставка best effort; timeout не выдаёт повторного разрешения.
-Миграция0006 помечает старые rows против ретро-уведомлений. Public JWT POST сам
-сообщение не доставляет; Telegram-доставку подключает L-05 в этой ветке.
-[Контракт](docs/contracts/T-08_PENDING_NOTIFICATION.md),
-[реализация/миграция](docs/finance/O-07_IMPLEMENTATION.md#o-07n-одноразовое-разрешение-уведомления).
+**O-07N #55 merged PR #57 и L-05 #48 merged PR #54:** защищённый bot-service `POST /internal/settlements/{settlement_id}/notification-claim` выдаёт одноразовое разрешение уведомить получателя (200 server-bound Telegram ID, 204 после claim/terminal/no binding). Alembic 0006 хранит отметку, миграция помечает исторические записи. Бот отправляет одну best-effort private notification **только** после 200 claim, без гарантии доставки и без банковского перевода. [Контракт](docs/contracts/T-08_PENDING_NOTIFICATION.md), [L-05 документация](docs/bot/L-05_SETTLEMENTS.md).
 
-> **M3 завершён по реализации 30.10.2026:** auth/JWT, группы, Telegram onboarding, Expense API `equal/custom/by_items`, server preview, Telegram expense wizard и T-07 fixes merged (PR #41–#44). **M4, проверка main 31.10.2026:** T-08 contract/PR50, O-06/PR51 и O-07/PR53 merged. Эта ветка добавляет Telegram-клиент L-05 по принятому API; T-08 security review остаётся отдельной задачей. Живой Telegram и production-изоляция `/internal` не подтверждены; G2/G3/G4 не verified. Исторические отметки PR review в [STATUS](docs/STATUS.md) сверяйте с фактическим GitHub.
+> **M4 завершён по реализации 31.10.2026:** [O-06 #46/PR #51](https://github.com/inte11ectua1/skinulis/pull/51), [O-07 #47/PR #53](https://github.com/inte11ectua1/skinulis/pull/53), [O-07N #55/PR #57](https://github.com/inte11ectua1/skinulis/pull/57), [L-05 #48/PR #54](https://github.com/inte11ectua1/skinulis/pull/54), [T-08 #45/PR #58](https://github.com/inte11ectua1/skinulis/pull/58) merged, Issues closed. [T-08 финальный security review](docs/reviews/T-08_M4_FINAL_SECURITY_REVIEW.md), [CI #58 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41213175596). **Следующий этап M5 Delivery** — назначены T-09 #59, T-10 #60, O-08 #61, L-06 #62. [Handoff](docs/operations/M5_DELIVERY_HANDOFF.md). Live Telegram G2/G3/G4 и production /internal isolation не verified; T-01/G1 по-прежнему open.
 
 ## Начало работы
 
@@ -44,9 +37,10 @@ sender одно разрешение на попытку уведомить rece
 - **M1 Skeleton завершён по реализации:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12), [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты. [CI evidence](docs/operations/CI.md).
 - **M2 Identity завершён по коду:** [T-05 #21 / PR #26](https://github.com/inte11ectua1/skinulis/pull/26), [T-06 #22 / PR #27](https://github.com/inte11ectua1/skinulis/pull/27), [O-03 #23 / PR #31](https://github.com/inte11ectua1/skinulis/pull/31), [L-03 #24 / PR #28](https://github.com/inte11ectua1/skinulis/pull/28) merged, соответствующие Issues closed. Финансовая документация принята через PR #33, UTC API даты через PR #30. G2 требует отдельной проверки.
 - **M3 Expenses завершён:** Олег [O-04 #36 / PR #41](https://github.com/inte11ectua1/skinulis/pull/41) и [O-05 #39 / PR #42](https://github.com/inte11ectua1/skinulis/pull/42) — expense CRUD и snapshots; Лера [L-04 #37 / PR #43](https://github.com/inte11ectua1/skinulis/pull/43) — Telegram expense UI; Тимур [T-07 #35 / PR #44](https://github.com/inte11ectua1/skinulis/pull/44) — audit и regression fixes. Issues закрыты, CI #44 зелёный. G3 не verified без отложенного live Telegram E2E.
-- **M4 Balances:** T-08 contract/PR50, O-06/PR51 и O-07/PR53 merged; L-05 #48 подключает Telegram UI к настоящему API. Независимый security review T-08 #45 остаётся за Тимуром; клиентский PR проходит ревью Тимура и Олега.
-- **Контрольные пункты:** T-01/G1 открыты; G2/G3 пока не verified. Live Telegram тесты [#38](https://github.com/inte11ectua1/skinulis/issues/38) отложены до команды Тимура; обычные API/PostgreSQL/CI проверки не отменяются. M4 pending/confirmed ручные записи не означают банковские переводы.
-Новые задачи: отдельная ветка → PR → проверки CI → согласование затронутых контрактов → merge. [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) и [STATUS](docs/STATUS.md) — актуальные этапы и доказательства.
+- **M4 Balances/Settlements завершён:** O-06/PR #51, O-07/PR #53, O-07N/PR #57, L-05/PR #54 и T-08/PR #58 — merged/closed. Финансовая история, балансы, manual settlement и best-effort notifications через verified bot actor протестированы реальными HTTP/PostgreSQL и mock Telegram, не live polling.
+- **M5 Delivery назначен:** Тимур [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) (GHCR/CD/VPS/Caddy/network isolation) и [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) (JSON логи/runbook); Олег [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61) (PG races/load 100 clients/p95), Лера [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62) (mock Telegram → HTTP/PG UX regression). O-08/L-06 могут стартовать параллельно, T-10 после T-09 infrastructure.
+- **Границы:** T-01/G1 открыта, G2/G3/G4 formally not verified из-за отложенного live Telegram; G5 ещё не verified. Нет автоматического SSH/VPS/production actions без разрешения, PR jobs не получают secrets. Новые задачи: отдельная ветка → PR → CI 5/5 → independent human review → merge, полный PR body Closes #N. [Roadmap](docs/roadmaps/MASTER_ROADMAP.md), [STATUS](docs/STATUS.md).
+
 
 ## Telegram-бот: онбординг и группы (L-03)
 
@@ -184,7 +178,8 @@ docker compose up --build
 а после `0004_financial_domain` также **`expenses`, `expense_items`,
 `expense_shares`, `expense_item_shares`, `settlements`**.
 Расходные endpoints добавлены O-04/O-05, следующая миграция —
-`0005_expense_replay_version` (текущий единственный head). Балансы O-06 и settlement transitions O-07 merged, без новой миграции M4.
+`0005_expense_replay_version`, затем одноразовая нотификация
+`0006_settlement_notification_claim` (**актуальный единственный Alembic head**). Балансы O-06 и settlement transitions O-07 merged, без новой миграции M4.
 
 ```sh
 docker compose ps -a
