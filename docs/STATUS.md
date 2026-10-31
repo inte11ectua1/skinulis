@@ -1,5 +1,12 @@
 # Фактическое состояние проекта
 
+**O-07N #55 — in progress / PR review (31.10.2026):** accepted contract PR #56,
+internal-only notification claim, durable timestamp/backfill0006, group-first locks.
+[Реализация/ограничения](finance/O-07_IMPLEMENTATION.md#o-07n-одноразовое-разрешение-уведомления).
+Main на старте ad60f30: O-07 PR #53 merged, Issue47 closed; L-05 PR #54 открыт.
+Результаты нового CI и SHA — в PR O-07N; не merged/verified. После merge Лера
+подключает доставку в #54. T-08 #45 остаётся OPEN; live Telegram/O-08 не выполняются.
+
 **O-07 #47 — in progress / PR review (31.10.2026):** settlements public/internal
 create/list/confirm/reject/cancel по принятому T-08, original pending UUID replay,
 group-first locks и fresh confirm checks через O-06 calculate_balances.
