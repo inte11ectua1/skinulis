@@ -1,5 +1,34 @@
 # Фактическое состояние проекта
 
+## T-09 — инфраструктурный PR, production acceptance пока открыт (31.10.2026)
+
+От `origin/main` **38e9abf2ba07fe895835ef40b9120b67aa29abdd** подготовлена ветка
+`feat/T-09-ghcr-cd-vps`: общий non-root API/bot image, production Compose/Caddy,
+trusted-main release policy, digest pinning, отключённый по умолчанию SSH rollout,
+однократная миграция, health/SHA probes и image rollback без DB downgrade.
+[Runbook и ручной checklist](operations/DEPLOYMENT.md),
+[схема окружения](environment-schema.md#production-delivery--t-09).
+
+Локально прошли75 новых unit cases release/deploy/SSH boundaries и Docker smoke:
+реальные PostgreSQL17.11 + non-root Caddy, trusted local-CA TLS, DB restart с
+сохранением профиля в своём UUID volume, exact /version и26 negative raw routes;
+private service actor работает. Полный локальный набор: **1133 unit +402 настоящих
+PostgreSQL integration =1535 passed**, combined branch coverage app+bot **94,76%**.
+Frozen sync/lock, Ruff, strict mypy128 files, pre-commit/secrets, pip check,
+audit72 packages и native/container actionlint прошли. Docker API/bot image собран
+и проверен без polling. Единственный Alembic head0006 сохранён.
+Обычный CI сохраняет пять required job names, добавляет main push, actionlint и
+этот Docker smoke. Фактические GitHub CI evidence — в описании инфраструктурного PR.
+
+**Не выполнены реальные GHCR publication/SSH/VPS/ACME/live Telegram.** Read-only
+GitHub API при проверке не показал ни одного Environment: protected production
+Environment/secrets ещё нужно создать вручную, не считать их настроенными.
+Флаг rollout не включался, branch protection не менялась. Только `Refs #59`;
+Issue #59 и G5 остаются открытыми. O-08 #61/L-06 #62/T-10 #60 не реализуются этой веткой.
+
+Ниже сохранён исходный handoff и исторические срезы main; они не заменяют статус
+отдельной ветки T-09 и не означают, что её изменения уже merged.
+
 **Актуальный статус 31.10.2026 · GitHub main `eb3ae2880348b30df852ba653f0ac977d7ad007e` после merged [T-08 PR #58](https://github.com/inte11ectua1/skinulis/pull/58):** этапы **M1/M2/M3/M4 завершены по реализации**. M4: [O-06 #46/PR #51](https://github.com/inte11ectua1/skinulis/pull/51), [O-07 #47/PR #53](https://github.com/inte11ectua1/skinulis/pull/53), [O-07N #55/PR #57](https://github.com/inte11ectua1/skinulis/pull/57), [L-05 #48/PR #54](https://github.com/inte11ectua1/skinulis/pull/54), [T-08 #45/PR #58](https://github.com/inte11ectua1/skinulis/pull/58) — **все merged, все Issues closed completed**. [T-08 финальный audit](reviews/T-08_M4_FINAL_SECURITY_REVIEW.md), [его CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41213175596), финальная кодовая [L-05 CI 5/5, 1460 tests/94,76%](https://github.com/inte11ectua1/skinulis/actions/runs/41210779152). Тесты подтверждены на **PR head**, не отдельным новым запуском после merge.
 
 **M5 Delivery назначен, реализация впереди:** Тимур [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) (main-only GHCR/CD/VPS/Caddy/private /internal) → [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) (JSON logging/rotation/runbook), Олег [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61) (real PG load 100 clients/p95 и regressions), Лера [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62) (UX errors/retries, mocked Telegram + real HTTP/PG). [Полный handoff и зависимости](operations/M5_DELIVERY_HANDOFF.md). T-09 critical path; Олег и Лера могут начинать параллельно. **Ничего не деплоили и новую нагрузку 100 клиентов не измеряли**. Настоящие SSH/VPS/Telegram действия требуют отдельного разрешения Тимура.

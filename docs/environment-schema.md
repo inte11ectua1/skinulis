@@ -6,7 +6,13 @@
 полный вывод `docker compose config` к PR: после интерполяции он содержит пароль.
 Для проверки синтаксиса используйте `docker compose config --quiet`.
 
-**M5 handoff (31.10.2026):** текущая последняя миграция — `0006_settlement_notification_claim` после 0005 (O-07N/PR #57), статус M4 completed по коду. [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) должен создать отдельный **production deployment environment** с GHCR immutable SHA, Caddy HTTPS, приватной сетью API/bot/DB и публично закрытым `/internal`. Эта схема сейчас описывает **local/test** environment, не утверждает, что VPS/HTTPS/G5 уже реализованы. Продакшен-секреты должны быть в GitHub Environments/серверном secure store, **только имена и требования**, без значений в GitHub PR, документах, Docker build args, логах и выводе `docker compose config`. SSH и live Telegram доступны только после явной команды Тимура; [M5 handoff](operations/M5_DELIVERY_HANDOFF.md).
+**M5 / T-09 (31.10.2026):** подготовлены отдельный production Compose, Caddy policy,
+trusted-main release workflow и контроллер deploy/rollback; [runbook](operations/DEPLOYMENT.md).
+Последняя миграция — `0006_settlement_notification_claim`; новых миграций T-09 нет.
+Ниже local/test environment сохранён, а production-схема добавлена отдельно в конце.
+Реальные GHCR/VPS/public HTTPS/G5 не подтверждены. SSH/live Telegram требуют
+отдельного разрешения Тимура. Secrets только в protected Environment или private
+runtime store на сервере; значения не включать в PR/logs/build args/config output.
 
 ## Переменные
 
@@ -104,3 +110,36 @@ Telegram Bot API token. Compose передаёт service secret только api
 ошибки, no-merge и безопасные повторы. Следующая ревизия 0003_groups_identity
 добавляет groups, group_members, group_invites, telegram_link_codes после users;
 один head, group-first locks, deferred owner-membership FK, без CASCADE.
+
+## Production delivery — T-09
+
+Шаблон `deploy/production.env.example` заполняется **на VPS вне release bundles**
+как `/opt/skinulis/production.env` с mode0600, regular file. Неправильные или
+совпадающие secrets запрещают rollout; controller не печатает resolved config.
+Это отдельный файл: пользовательский локальный .env не перезаписывается.
+
+| Переменная | Где хранится / ограничения |
+|---|---|
+| COMPOSE_PROJECT_NAME | VPS file; фиксировано skinulis-production, не менять между релизами |
+| PUBLIC_DOMAIN | VPS file; public DNS name без scheme/path, реальная A/AAAA до ACME; .invalid не подходит |
+| POSTGRES_VOLUME | VPS file; имя заранее созданного external persistent volume. Не менять на новый пустой volume при обновлении |
+| POSTGRES_DB / POSTGRES_USER | VPS file; canonical SQL identifiers, lower-case, до63 символов |
+| POSTGRES_PASSWORD | VPS only; минимум32 bytes случайного значения; не менять без отдельной процедуры смены пароля существующей БД |
+| JWT_SECRET_KEY | VPS only; минимум32 случайных bytes; смена инвалидирует прежние JWT |
+| BOT_SERVICE_TOKEN | VPS only; одинаковый у api/bot,43–128 URL-safe, отдельный от DB/JWT/Telegram |
+| TELEGRAM_BOT_TOKEN | VPS only; нужен только для отдельно разрешённого enable_polling=true |
+| JWT_ACCESS_TOKEN_TTL_MINUTES | VPS file,15 по умолчанию,1..60 |
+| APP_IMAGE | Передаёт controller: только ghcr.io/inte11ectua1/skinulis@sha256:64hex, не latest/короткий SHA |
+| APP_COMMIT_SHA | Встроен в образ из verified main SHA, не переопределяется runtime config |
+| API_BASE_URL | Production bot: фиксировано http://api:8000, public proxy для bot-service не используется |
+| PRODUCTION_ROLLOUT_ENABLED | GitHub repository variable; отсутствует/false до отдельного разрешения |
+| SSH_HOST / SSH_USER / SSH_PORT / SSH_DEPLOY_DIR | GitHub production Environment variables; destination без shell syntax |
+| SSH_PRIVATE_KEY / SSH_KNOWN_HOSTS | Только GitHub protected production Environment secrets; required independent approval, prevent self-review |
+| GHCR read credential | VPS Docker credential store; read:packages, не build arg и не release bundle |
+
+Только caddy публикует80/443. DB/API без ports, named PostgreSQL volume external,
+api/bot non-root; мигратор получает только DB credentials. Bot polling по умолчанию
+выключен, profile polling/один container, только явное разрешение. Unit/dry-run и
+локальный trusted-CA TLS smoke не доказывают реальные Environment settings,
+публичный ACME certificate, GHCR permissions или G5. Setup/диагностика/ограничения
+image rollback без DB downgrade: [DEPLOYMENT](operations/DEPLOYMENT.md).

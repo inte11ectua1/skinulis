@@ -15,6 +15,7 @@ RUN groupadd --gid 10001 skinulis && \
     useradd --uid 10001 --gid skinulis --no-create-home skinulis
 COPY --from=builder /app/.venv /app/.venv
 COPY app/ ./app/
+COPY bot/ ./bot/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
 ENV PATH="/app/.venv/bin:$PATH" \
@@ -22,6 +23,8 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1
 ARG APP_COMMIT_SHA=""
 ENV APP_COMMIT_SHA=$APP_COMMIT_SHA
+LABEL org.opencontainers.image.revision=$APP_COMMIT_SHA \
+    org.opencontainers.image.source="https://github.com/inte11ectua1/skinulis"
 USER skinulis
 EXPOSE 8000
 CMD ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]

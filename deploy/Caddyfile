@@ -1,0 +1,22 @@
+{
+	admin off
+}
+
+{$PUBLIC_DOMAIN} {
+	# Reject ambiguous raw paths BEFORE the public allowlist. Query encoding is allowed.
+	route {
+		@ambiguous vars_regexp raw {http.request.orig_uri} `^[^?]*(%|\\|//|/\.{1,2}(/|\?|$))`
+		respond @ambiguous 404
+
+		# Deny by default: adding a new public route requires reviewing this allowlist.
+		@public path / /health /version /auth/register /auth/login /users/me /users/me/telegram-link-code /groups /groups/* /group-invites/join /expenses/* /settlements/* /docs /docs/* /redoc /openapi.json
+		handle @public {
+			reverse_proxy api:8000 {
+				header_up -X-Original-URL
+				header_up -X-Rewrite-URL
+			}
+		}
+		# Includes /internal itself, descendants and every unknown path.
+		respond 404
+	}
+}
