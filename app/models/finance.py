@@ -218,6 +218,9 @@ class Settlement(Base):
     receiver_id: Mapped[int] = mapped_column(BigInteger)
     amount_kopecks: Mapped[int] = mapped_column(BigInteger)
     status: Mapped[str] = mapped_column(String(9), server_default="pending")
+    notification_claimed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
     client_request_id: Mapped[UUID] = mapped_column(Uuid)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

@@ -48,6 +48,8 @@ class SettlementServer(ContractFixture):
         default_factory=lambda: copy.deepcopy(O06["plan"])
     )
     fail_after: str | None = None
+    notification_chat: int | None = None
+    claimed: set[int] = field(default_factory=set)
 
     def group(self, group_id: int = 10) -> dict[str, object]:
         return {
@@ -160,6 +162,20 @@ class SettlementServer(ContractFixture):
         if existing is None:
             return error(404, "settlement_not_found")
         record = existing
+        if operation == "notification-claim":
+            assert not request.content
+            if record["sender_id"] != self.owner:
+                return error(404, "settlement_not_found")
+            if record["status"] != "pending" or record["id"] in self.claimed:
+                return httpx.Response(204)
+            self.claimed.add(record["id"])
+            return (
+                httpx.Response(
+                    200, json={"recipient_telegram_id": self.notification_chat}
+                )
+                if self.notification_chat is not None
+                else httpx.Response(204)
+            )
         assert body == {}
         if (
             record["sender_id"] if operation == "cancel" else record["receiver_id"]

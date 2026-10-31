@@ -27,6 +27,10 @@ class SettlementWire(WireModel):
     model_config = ConfigDict(strict=True, extra="forbid", hide_input_in_errors=True)
 
 
+class NotificationClaim(SettlementWire):
+    recipient_telegram_id: EntityId = Field(repr=False)
+
+
 class Balances(SettlementWire):
     group_id: EntityId
     balances: list[Balance]

@@ -1,5 +1,12 @@
 # Фактическое состояние проекта
 
+**O-07N #55 — in progress / PR review (31.10.2026):** accepted contract PR #56,
+internal-only notification claim, durable timestamp/backfill0006, group-first locks.
+[Реализация/ограничения](finance/O-07_IMPLEMENTATION.md#o-07n-одноразовое-разрешение-уведомления).
+Main на старте ad60f30: O-07 PR #53 merged, Issue47 closed; L-05 PR #54 открыт.
+Результаты нового CI и SHA — в PR O-07N; не merged/verified. После merge Лера
+подключает доставку в #54. T-08 #45 остаётся OPEN; live Telegram/O-08 не выполняются.
+
 **O-07 #47 — in progress / PR review (31.10.2026):** settlements public/internal
 create/list/confirm/reject/cancel по принятому T-08, original pending UUID replay,
 group-first locks и fresh confirm checks через O-06 calculate_balances.
@@ -62,6 +69,8 @@ T-08 security review и L-05 остаются отдельными задача�
 | [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) | Тимур | **merged/closed** [PR #44](https://github.com/inte11ectua1/skinulis/pull/44): security review, T07-01/T07-02 fixed, 20 новых PostgreSQL tests; [отчёт](reviews/T-07_M3_SECURITY_REVIEW.md), [final CI](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033) **5/5 success**, 1147 tests / 95,46% coverage |
 
 Формальные **G2/G3 not verified**: серверные контрактные и PostgreSQL/HTTP проверки есть, но live Telegram delivery и реальный пользовательский E2E сознательно отложены по решению Тимура. Не заменять этой записью отдельную эксплуатационную приёмку. В M3 **не реализованы** отдельные GET balances/settlement-plan, POST settlements и terminal transitions — это M4; существующий internal mutation-balances O-04 только частичная переиспользуемая основа.
+
+**M4 дополнительная зависимость, 31.10.2026:** [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48) / [PR #54](https://github.com/inte11ectua1/skinulis/pull/54) реализует основную Telegram-связку, но пока **не готов к merge** из-за обязательных best-effort pending notifications (PRODUCT_RULES §7), требует нового безопасного механизма. По решению tech lead [O-07N #55](https://github.com/inte11ectua1/skinulis/issues/55) назначена Олегу — **только /internal одноразовая claim с серверной Telegram-привязкой, Alembic 0006 и PG concurrency tests**; [контракт](contracts/T-08_PENDING_NOTIFICATION.md). После merge backend #55 Лера завершает PR #54 и повторно проверяет CI/review; никакие G2/G3/G4 не verified. Нет независимого APPROVED на текущий #54. Этот статус обновляет старые записи «M4 не реализован» по факту O-06/O-07 merged.
 
 ## M4 — Balances и ручные компенсации (Issues созданы и назначены, реализация впереди)
 

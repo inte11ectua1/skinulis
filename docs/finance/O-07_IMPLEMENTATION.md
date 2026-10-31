@@ -1,5 +1,74 @@
 # O-07 — ручные компенсации
 
+**O-07N #55 — in progress / PR review (31.10.2026).** Основная O-07 merged через
+PR #53. Новый follow-up реализует [утверждённый T-08 notification contract](../contracts/T-08_PENDING_NOTIFICATION.md)
+из PR #56; личные human approvals не подразумеваются.
+
+## O-07N: одноразовое разрешение уведомления
+
+`POST /internal/settlements/{settlement_id}/notification-claim` — только прежний
+get_bot_user (проверенный service token и trusted Telegram sender Update), без
+JWT mirror и без request body. Client-supplied actor/recipient запрещены.
+
+| Ответ | Семантика |
+|---|---|
+| 200 {recipient_telegram_id} | Одна попытка доставки разрешена verified sender для current pending |
+| 204, пустое тело | Terminal, уже claimed или нет Telegram-привязки; не отправлять |
+| 404 settlement_not_found | Unknown, wrong sender или недоступная группа, без раскрытия |
+| 401/400/500 | Прежний safe error envelope; не отправлять |
+
+Все ответы, включая204/error, имеют no-store и X-Request-ID; 401 сохраняет
+WWW-Authenticate. Strict positive BIGINT path/recipient ID, OpenAPI internal-only,
+[typed200 fixture](fixtures/O-07N_NOTIFICATION_CLAIM.json). Обычные SettlementProfile,
+members, balances и plan не содержат Telegram ID или notification timestamp.
+
+users.id — внутренний ID, не chat_id. Сервис читает users.telegram_id исключительно
+по серверному receiver_id, проверяет текущие memberships обеих сторон. После
+неразрешающего lookup group_id: group FOR UPDATE первым, settlement FOR UPDATE с
+populate_existing вторым, повторная проверка sender/status/claimed. Используется
+штатный write_transaction с одним commit/rollback, включая auth autobegin.
+
+Для pending с NULL notification_claimed_at атомарно записывается UTC timestamp.
+Он сохраняется даже без Telegram-привязки: последующее связывание аккаунта не
+должно запускать старое уведомление. Claimed/terminal →204 без сброса/обновления
+отметки. Никаких финансовых полей, UUID replay, balances или state machine сервис
+не меняет. Внешних запросов под транзакцией нет.
+
+200 означает разрешение, не гарантированную доставку. При двойном нажатии только
+один запрос может получить ID; другой ждёт group lock и получает204. Потеря ответа
+после commit расходует разрешение: повтор204, Telegram timeout не очищает stamp.
+Если confirm раньше claim —204; если claim раньше —200 допустим, но сообщение
+лишь предлагает проверить актуальное меню. Статус к доставке может измениться.
+
+Миграция0006_settlement_notification_claim от0005 добавляет nullable TIMESTAMPTZ
+и для всех старых rows ставит stamp=created_at. Это предотвращает ретро-уведомления
+старых pending и historical replay. Новые rows получают NULL. Старые migration
+files, финансовые поля/status/UUID/timestamps не меняются.
+
+Техническая совместимость: утверждённый revision ID длиной34 превышает стандартный
+Alembic VARCHAR(32). В этой же0006 служебный alembic_version.version_num расширяется
+до64. При downgrade ширина64 остаётся: Alembic записывает предыдущий revision
+после возврата downgrade(), когда текущий ID ещё34-символьный. Domain column
+удаляется корректно; fresh/repeat/downgrade/base/re-upgrade/check покрыты PG.
+
+PG-тесты проверяют разные DB/Telegram IDs, no-binding с поздней привязкой,
+terminal/replay/lost-response, sender/group privacy, auth/body/headers, rollback
+при настоящей DB trigger error, отсутствие финансовых изменений. Три HTTP races
+используют независимые PostgreSQL connections: claim/claim и claim/confirm в обоих
+порядках. Первый writer удерживает group lock; observer через pg_stat_activity и
+pg_blocking_pids доказывает ожидание конкретного PID вторым writer до release.
+Миграционный backfill проверен для всех четырёх статусов с сохранением всех
+исходных финансовых полей. Final counts/coverage/CI/SHA публикуются в PR.
+
+После merge Лера обновляет свой PR #54: typed claim после201 create либо200
+original replay в recovery с тем же trusted sender. Только при200 claim — одна
+private SendMessage попытка по выданному ID с нейтральным текстом. При204/error/
+timeout не отправлять; не искать адресата в публичных DTO, не создавать новую
+компенсацию и не менять pending из-за доставки. Incoming menu остаётся доступным.
+MVP инициирует уведомления из потока бота; public JWT POST сам по себе не
+обеспечивает универсальную доставку. Backend ничего не отправляет в Telegram.
+L-05 integration, independent reviews и live Telegram остаются отдельными.
+
 Issue #47: реализация для независимого PR review, **не merged**. База — main после
 PR #51 (O-06) и #52 (правила PR). Используется принятый
 [T-08 контракт](../contracts/T-08_M4_BALANCES_SETTLEMENTS.md), без новых финансовых

@@ -29,6 +29,7 @@ from bot.expense_dto import (
 from bot.settlement_dto import (
     Balances,
     Direction,
+    NotificationClaim,
     Plan,
     SettlementCreate,
     SettlementMutation,
@@ -109,6 +110,10 @@ class HealthApi(Protocol):
 
 
 class BotApi(HealthApi, Protocol):
+    async def claim_settlement_notification(
+        self, actor: int, settlement_id: int
+    ) -> NotificationClaim | None: ...
+
     async def balances(self, actor: int, group_id: int) -> Balances: ...
     async def settlement_plan(self, actor: int, group_id: int) -> Plan: ...
     async def create_settlement(
@@ -275,7 +280,14 @@ class ApiClient:
                 if isinstance(response_type, TypeAdapter)
                 else TypeAdapter(response_type)
             )
-            return adapter.validate_json(response.content)
+            if response.status_code == 204:
+                if response.content:
+                    raise ValueError("Expected empty response")
+                return adapter.validate_python(None)
+            result = adapter.validate_json(response.content)
+            if result is None:
+                raise ValueError("Unexpected null response")
+            return result
         except ValueError:
             raise ApiError(
                 ApiFailure.UNEXPECTED, status_code=response.status_code
@@ -289,6 +301,17 @@ class ApiClient:
     async def balances(self, actor: int, group_id: int) -> Balances:
         return await self._request(
             "GET", f"/internal/groups/{group_id}/balances", Balances, actor=actor
+        )
+
+    async def claim_settlement_notification(
+        self, actor: int, settlement_id: int
+    ) -> NotificationClaim | None:
+        return await self._request(
+            "POST",
+            f"/internal/settlements/{settlement_id}/notification-claim",
+            TypeAdapter(NotificationClaim | None),
+            actor=actor,
+            expected_status=(200, 204),
         )
 
     async def settlement_plan(self, actor: int, group_id: int) -> Plan:

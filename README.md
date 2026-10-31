@@ -11,6 +11,15 @@ timeout повторяйте прежние UUID/body: replay возвращае
 [Реализация, права и гонки O-07](docs/finance/O-07_IMPLEMENTATION.md),
 [typed fixtures](docs/finance/fixtures/O-07_SETTLEMENTS.json); OpenAPI `/docs`.
 
+**O-07N #55 (merged PR #57):** internal-only
+`POST /internal/settlements/{settlement_id}/notification-claim` выдаёт verified
+sender одно разрешение на попытку уведомить receiver: 200 с серверным Telegram ID
+либо пустой204. Доставка best effort; timeout не выдаёт повторного разрешения.
+Миграция0006 помечает старые rows против ретро-уведомлений. Public JWT POST сам
+сообщение не доставляет; Telegram-доставку подключает L-05 в этой ветке.
+[Контракт](docs/contracts/T-08_PENDING_NOTIFICATION.md),
+[реализация/миграция](docs/finance/O-07_IMPLEMENTATION.md#o-07n-одноразовое-разрешение-уведомления).
+
 > **M3 завершён по реализации 30.10.2026:** auth/JWT, группы, Telegram onboarding, Expense API `equal/custom/by_items`, server preview, Telegram expense wizard и T-07 fixes merged (PR #41–#44). **M4, проверка main 31.10.2026:** T-08 contract/PR50, O-06/PR51 и O-07/PR53 merged. Эта ветка добавляет Telegram-клиент L-05 по принятому API; T-08 security review остаётся отдельной задачей. Живой Telegram и production-изоляция `/internal` не подтверждены; G2/G3/G4 не verified. Исторические отметки PR review в [STATUS](docs/STATUS.md) сверяйте с фактическим GitHub.
 
 ## Начало работы
@@ -524,9 +533,11 @@ Confirmed учитывается один раз, rejected/cancelled не вли
 сначала читается список; разрешён только явный повтор того же действия.
 
 [Инструкция L-05, роли, FSM, ошибки и тесты](docs/bot/L-05_SETTLEMENTS.md).
-Обязательное best-effort уведомление получателю ещё не реализовано: требуется
-[согласование защищённого API с Тимуром и Олегом](docs/bot/L-05_NOTIFICATION_DEPENDENCY.md).
-До выполнения этого пункта PR #54 не готов к merge и полного завершения L-05 нет.
+После create/recovery бот запрашивает одноразовый notification-claim из merged
+O-07N #57. Только200 разрешает одну приватную попытку уведомить получателя;
+на204/error/timeout отправки нет. Сбой доставки не меняет pending/балансы и не
+повторяет финансовый POST. Доставка не гарантируется; входящие доступны через меню.
+[Контракт, проверки и ограничения уведомлений](docs/bot/L-05_NOTIFICATION_DEPENDENCY.md).
 Настройки запуска прежние, финансовая математика остаётся на API. Бот не переводит
 деньги. Live Telegram и ручное тестирование реальных пользователей запрещены
 до отдельного разрешения Тимура. G4 не объявляется verified.

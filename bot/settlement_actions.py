@@ -16,6 +16,7 @@ from bot.settlement_dto import (
     Transition,
     amount_input,
 )
+from bot.settlement_notifications import notify_receiver
 from bot.settlement_state import SettlementSession, keep, load
 from bot.settlement_views import (
     REAL_MONEY,
@@ -316,6 +317,10 @@ async def create(
         None,
         False,
     )
+    await keep(state, session)
+    bot = message.bot
+    if bot is not None:
+        await notify_receiver(bot, api, actor, result.settlement.id)
     await message.answer(
         "API подтвердил исходное создание заявки. Ответ мог содержать исторический pending; актуальный статус проверяю через список."
     )

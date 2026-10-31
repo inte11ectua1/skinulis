@@ -1,19 +1,17 @@
 # L-05 — балансы и ручные переводы
 
-Issue [#48](https://github.com/inte11ectua1/skinulis/issues/48), база `main` `b055b7e`.
+Issue [#48](https://github.com/inte11ectua1/skinulis/issues/48), актуальная база `main` `572f875`.
 Проверка GitHub 31.10.2026: PR43 (L-04), PR50 (T-08 contract), PR51 (O-06),
-PR53 (O-07) merged. Исторические отметки PR review в STATUS не используются как
+PR53 (O-07), PR56 (контракт уведомлений), PR57 (O-07N) merged. Исторические отметки PR review в STATUS не используются как
 блокер. Источники: [T-08](../contracts/T-08_M4_BALANCES_SETTLEMENTS.md),
 [O-07](../finance/O-07_IMPLEMENTATION.md), принятые
 [O-06 fixtures](../finance/fixtures/O-06_BALANCES.json),
 [O-07 fixtures](../finance/fixtures/O-07_SETTLEMENTS.json), фактический OpenAPI.
 Security review T-08 #45 остаётся отдельной задачей.
 
-**Дополнение после review PR #54:** Тимур потребовал best-effort уведомления
-в текущей L-05; этот пункт ещё не реализован. Нужен согласованный защищённый
-API получения Telegram-адресата и разрешения на однократную попытку доставки.
-[Блокер, вопросы к Тимуру/Олегу и checklist](L-05_NOTIFICATION_DEPENDENCY.md).
-До выполнения дополнения весь scope L-05 не считается готовым к merge.
+После review PR #54 подключена доставка best-effort уведомлений по принятому
+[T-08](../contracts/T-08_PENDING_NOTIFICATION.md) и merged O-07N.
+[Разрешённый контракт, реализация и ограничения](L-05_NOTIFICATION_DEPENDENCY.md).
 
 ## Пользовательский путь
 
@@ -128,10 +126,30 @@ API message/payload/SQL/traceback/credentials не выводятся. Отве�
 после рестарта черновик/ключ может потеряться, сначала проверяют историю.
 Автоматического восстановления/нового POST нет. Один polling-процесс.
 
-Сейчас уведомления другим пользователям ещё не отправляются. Это незакрытое
-обязательное требование, а не согласованное исключение. Получатель открывает
-pending через меню независимо от доставки; меню не заменяет попытку уведомления.
-Доработка зависит от [согласования API](L-05_NOTIFICATION_DEPENDENCY.md).
+## Best-effort уведомление получателю
+
+После успешного create201 или original replay200 в восстановлении бот вызывает
+`POST /internal/settlements/{id}/notification-claim` без body, от того же trusted
+sender. Только200 с проверенным сервером `recipient_telegram_id` разрешает одну
+попытку приватного SendMessage. ID не берётся из user_id, callback или списка members.
+На204/error/timeout claim отправки нет. Операция не повторяется автоматически.
+
+Нейтральный текст предлагает `/start → Ожидают подтверждения`, проверку актуального
+статуса и подтверждение только реально полученных денег. Сумма, имена, Telegram ID
+и кнопки/nonce отправителя в уведомление не помещаются. Confirm мог завершиться
+между claim и доставкой, поэтому уведомление не обещает текущий pending.
+
+Backend атомарно расходует claim до отправки, даже без привязки. Повтор после
+потери ответа, terminal replay, двойные callbacks и рестарт не выдают новую попытку.
+Telegram403/network/timeout обрабатываются отдельно от финансового POST; лимит
+попытки доставки5s, затем чтение текущего статуса продолжается. В логах только
+безопасная категория сбоя без exception payload/identity/суммы. Pending и баланс
+не меняются, новый UUID/POST не создаётся. Просмотры и transitions не вызывают claim.
+
+Получатель открывает pending через меню независимо от уведомления. Доставка не
+гарантируется; потеря claim/send допускает пропуск сообщения. Это канал создания
+через Telegram, а не универсальная рассылка из public JWT API. Нет очереди/outbox
+или обещания восстановления после рестарта. [Подробности](L-05_NOTIFICATION_DEPENDENCY.md).
 
 ## API и тесты
 
@@ -143,8 +161,10 @@ pending через меню независимо от доставки; меню
 | POST | /internal/settlements/{id}/confirm |
 | POST | /internal/settlements/{id}/reject |
 | POST | /internal/settlements/{id}/cancel |
+| POST | /internal/settlements/{id}/notification-claim |
 
-Create — только `{receiver_id,amount,client_request_id}`, transitions — `{}`.
+Create — только `{receiver_id,amount,client_request_id}`, transitions — `{}`;
+notification-claim — без body,200 typed DTO или204 без тела.
 Типизированный httpx сохраняет конечные timeout, закрытие клиента и T-06 заголовки
 `X-Bot-Service-Token`, `X-Telegram-ID` из доверенного Update.from_user.id. Никаких
 JWT/password в Telegram, DB/ORM или финансовых алгоритмов в боте.
@@ -168,6 +188,11 @@ MockTransport/mocked Telegram, знаки/нули/план, поля/роли/�
 ошибки/секреты, совместимость DTO/fixtures с фактическим OpenAPI. L-03/L-04
 regression сохранена, включая AST-проверку отсутствия money algorithms/DB imports.
 
+`tests/unit/test_bot_settlement_notifications.py`: правильный приватный адресат,
+strict200/empty204, no binding,403/network/timeout/deadline, безопасные логи,
+recovery/terminal replay/stale callback/update/restart, отсутствие финансового POST
+после сбоя доставки. HTTP и Telegram — MockTransport/mocked session.
+
 `tests/integration/test_bot_settlements.py`: настоящий Uvicorn/loopback HTTP,
 PostgreSQL17 в отдельной UUID-БД с миграциями; только Telegram session mocked.
 Ресторан3200 →2200/-1400/-800, pending500 без эффекта, confirm →1700/-900/-800,
@@ -176,6 +201,12 @@ soft-delete после confirmed →-500/500/0. Transport теряет наст�
 commit для всех четырёх POST; проверяется исторический pending replay. Также
 actor/foreign404,21 записи, поиск по страницам, компенсация2000000.00.
 
+`tests/integration/test_bot_settlement_notifications.py`: настоящие HTTP/Uvicorn
+и PostgreSQL17, только Telegram mocked. Проверяет серверный Telegram ID вместо
+DB ID, persistent stamp, однократность, no binding/late binding, blocked/network,
+lost-create recovery, каждый terminal replay, потерю claim-ответа после commit,
+неизменный pending/ledger и доступ к incoming меню без уведомления.
+
 Существующий runner использует свой Docker project/tmpfs. Без Docker допустим
 документированный TEST_DATABASE_URL к отдельному PostgreSQL17, bootstrap `_test`,
 роль CREATEDB, случайный пароль через окружение. Затем
@@ -183,7 +214,8 @@ actor/foreign404,21 записи, поиск по страницам, компе
 собственные UUID-БД; пользовательские БД/чужие volumes не используются.
 Точные результаты полного набора и CI итогового head фиксируются в PR.
 
-Новых API-контрактов/миграций не требуется. L-06, банковские операции, deployment,
+Используются принятый T-08 и миграция0006 из merged O-07N; backend этой веткой
+не меняется. L-06, банковские операции, deployment,
 production isolation — вне scope. Ревью Тимура/Олега ожидается отдельно; G4 не
 объявляется verified. Live Telegram запрещён до разрешения Тимура. STATUS
 обновляется человеком после merge.
