@@ -17,7 +17,9 @@ from bot.expense_actions import dispatch_expense
 from bot.expense_wizard import text_input
 from bot.group_views import begin_group, group_name, show_groups
 from bot.keyboards import main_menu
-from bot.states import ExpenseFlow, GroupFlow, Navigation, Onboarding
+from bot.settlement_actions import amount_message, dispatch_settlement
+from bot.settlement_views import pending_groups
+from bot.states import ExpenseFlow, GroupFlow, Navigation, Onboarding, SettlementFlow
 from bot.ui import ACTIVE as ACTIVE
 from bot.ui import FAILED as FAILED
 from bot.ui import HELP as HELP
@@ -141,6 +143,8 @@ async def menu_action(callback: CallbackQuery, state: FSMContext, api: BotApi) -
             await show_groups(message, state, api, actor)
         elif action == "create":
             await begin_group(message, state)
+        elif action == "pending":
+            await pending_groups(message, state, api, actor)
         elif action == "profile":
             kind = "Telegram + API" if profile.email else "Telegram-only"
             await message.answer(
@@ -179,6 +183,8 @@ async def current_action(
     try:
         if action.startswith("ex:"):
             await dispatch_expense(action, message, state, api, actor, previous)
+        elif action.startswith("st:"):
+            await dispatch_settlement(action, message, state, api, actor, previous)
         else:
             await dispatch_action(
                 action, message, state, api, actor, bot, data, previous
@@ -245,6 +251,9 @@ def create_router() -> Router:
     router.message.register(cancel, Command("cancel"))
     router.message.register(link_code, Onboarding.link_code, ~F.text.startswith("/"))
     router.message.register(group_name, GroupFlow.name, ~F.text.startswith("/"))
+    router.message.register(
+        amount_message, SettlementFlow.amount, F.text, ~F.text.startswith("/")
+    )
     router.message.register(
         text_input,
         F.text,

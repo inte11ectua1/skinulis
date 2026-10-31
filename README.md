@@ -2,7 +2,7 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
-**O-07 (merged PR #53):** ручные компенсации: POST/GET `/groups/{group_id}/settlements`,
+**O-07 merged (PR #53, проверено 31.10.2026):** ручные компенсации: POST/GET `/groups/{group_id}/settlements`,
 POST `/settlements/{settlement_id}/{confirm,reject,cancel}` и `/internal` mirrors.
 Создаёт verified sender, подтверждает/отклоняет receiver, отменяет sender.
 Pending не меняет баланс; confirm проверяет свежий долг под group lock. После
@@ -11,16 +11,16 @@ timeout повторяйте прежние UUID/body: replay возвращае
 [Реализация, права и гонки O-07](docs/finance/O-07_IMPLEMENTATION.md),
 [typed fixtures](docs/finance/fixtures/O-07_SETTLEMENTS.json); OpenAPI `/docs`.
 
-**O-07N #55 (PR review):** internal-only
+**O-07N #55 (merged PR #57):** internal-only
 `POST /internal/settlements/{settlement_id}/notification-claim` выдаёт verified
 sender одно разрешение на попытку уведомить receiver: 200 с серверным Telegram ID
 либо пустой204. Доставка best effort; timeout не выдаёт повторного разрешения.
 Миграция0006 помечает старые rows против ретро-уведомлений. Public JWT POST сам
-сообщение не доставляет; подключение Telegram — L-05 после merge backend.
+сообщение не доставляет; Telegram-доставку подключает L-05 в этой ветке.
 [Контракт](docs/contracts/T-08_PENDING_NOTIFICATION.md),
 [реализация/миграция](docs/finance/O-07_IMPLEMENTATION.md#o-07n-одноразовое-разрешение-уведомления).
 
-> **M3 завершён по реализации 30.10.2026:** auth/JWT, группы, Telegram onboarding, Expense API `equal/custom/by_items` и server preview, Telegram expense wizard и T-07 security fixes merged в `main` (PR #41–#44). [PR #44 CI](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033) **5/5 success; 1147 тестов, coverage 95,46%**. **M4:** O-06 GET balances/plan merged через PR #51; O-07 settlement state machine — в PR review. T-08 security review и L-05 продолжаются отдельно. Живой Telegram и production-изоляция `/internal` не подтверждены: G2/G3 не verified, тесты отложены по решению Тимура. [STATUS](docs/STATUS.md) — актуальные факты.
+> **M3 завершён по реализации 30.10.2026:** auth/JWT, группы, Telegram onboarding, Expense API `equal/custom/by_items`, server preview, Telegram expense wizard и T-07 fixes merged (PR #41–#44). **M4, проверка main 31.10.2026:** T-08 contract/PR50, O-06/PR51 и O-07/PR53 merged. Эта ветка добавляет Telegram-клиент L-05 по принятому API; T-08 security review остаётся отдельной задачей. Живой Telegram и production-изоляция `/internal` не подтверждены; G2/G3/G4 не verified. Исторические отметки PR review в [STATUS](docs/STATUS.md) сверяйте с фактическим GitHub.
 
 ## Начало работы
 
@@ -44,7 +44,7 @@ sender одно разрешение на попытку уведомить rece
 - **M1 Skeleton завершён по реализации:** [T-03 #10](https://github.com/inte11ectua1/skinulis/issues/10), [O-02 #11](https://github.com/inte11ectua1/skinulis/issues/11), [L-02 #12](https://github.com/inte11ectua1/skinulis/issues/12), [T-04 #13](https://github.com/inte11ectua1/skinulis/issues/13) закрыты. [CI evidence](docs/operations/CI.md).
 - **M2 Identity завершён по коду:** [T-05 #21 / PR #26](https://github.com/inte11ectua1/skinulis/pull/26), [T-06 #22 / PR #27](https://github.com/inte11ectua1/skinulis/pull/27), [O-03 #23 / PR #31](https://github.com/inte11ectua1/skinulis/pull/31), [L-03 #24 / PR #28](https://github.com/inte11ectua1/skinulis/pull/28) merged, соответствующие Issues closed. Финансовая документация принята через PR #33, UTC API даты через PR #30. G2 требует отдельной проверки.
 - **M3 Expenses завершён:** Олег [O-04 #36 / PR #41](https://github.com/inte11ectua1/skinulis/pull/41) и [O-05 #39 / PR #42](https://github.com/inte11ectua1/skinulis/pull/42) — expense CRUD и snapshots; Лера [L-04 #37 / PR #43](https://github.com/inte11ectua1/skinulis/pull/43) — Telegram expense UI; Тимур [T-07 #35 / PR #44](https://github.com/inte11ectua1/skinulis/pull/44) — audit и regression fixes. Issues закрыты, CI #44 зелёный. G3 не verified без отложенного live Telegram E2E.
-- **M4 Balances — задачи назначены:** Тимур [T-08 #45](https://github.com/inte11ectua1/skinulis/issues/45) — контракты, locks/UUID security; Олег [O-06 #46](https://github.com/inte11ectua1/skinulis/issues/46) → [O-07 #47](https://github.com/inte11ectua1/skinulis/issues/47) — балансы/план затем settlement state machine; Лера [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48) — Telegram balances/confirm UX. **T-08 + O-06 + mock L-05 могут идти параллельно; O-07 только после merged O-06, real L-05 integration после API.**
+- **M4 Balances:** T-08 contract/PR50, O-06/PR51 и O-07/PR53 merged; L-05 #48 подключает Telegram UI к настоящему API. Независимый security review T-08 #45 остаётся за Тимуром; клиентский PR проходит ревью Тимура и Олега.
 - **Контрольные пункты:** T-01/G1 открыты; G2/G3 пока не verified. Live Telegram тесты [#38](https://github.com/inte11ectua1/skinulis/issues/38) отложены до команды Тимура; обычные API/PostgreSQL/CI проверки не отменяются. M4 pending/confirmed ручные записи не означают банковские переводы.
 Новые задачи: отдельная ветка → PR → проверки CI → согласование затронутых контрактов → merge. [MASTER_ROADMAP](docs/roadmaps/MASTER_ROADMAP.md) и [STATUS](docs/STATUS.md) — актуальные этапы и доказательства.
 
@@ -72,7 +72,7 @@ soft-delete не уничтожает историю. [Контракт и то�
 уточнены через [PR #33](https://github.com/inte11ectua1/skinulis/pull/33):
 Q-03 Unicode/NFC — **проверка на реализованной API-границе O-04/O-05**, Q-10 сохраняет
 явно выбранные нулевые доли, Q-04 использует точные SQL NUMERIC-агрегаты.
-Модель БД сама не гарантирует сумму shares и бизнес-правила. Их проверяют **реализованные сервисы O-04/O-05** (права, snapshots, UUID replay, версионирование и T-07 safety checks). Балансы/план O-06 уже merged; автомат компенсаций O-07 — в PR review. Финансовые правила обеспечивают сервисы, а не одни SQL constraints.
+Модель БД сама не гарантирует сумму shares и бизнес-правила. Их проверяют **реализованные сервисы O-04/O-05** (права, snapshots, UUID replay, версионирование и T-07 safety checks). Балансы/план O-06 и автомат компенсаций O-07 merged. Финансовые правила обеспечивают сервисы, а не одни SQL constraints.
 
 ## Публичная аутентификация (T-05)
 
@@ -184,7 +184,7 @@ docker compose up --build
 а после `0004_financial_domain` также **`expenses`, `expense_items`,
 `expense_shares`, `expense_item_shares`, `settlements`**.
 Расходные endpoints добавлены O-04/O-05, следующая миграция —
-`0005_expense_replay_version` (текущий единственный head). Балансы O-06 merged; settlement transitions O-07 — PR review, без новой миграции.
+`0005_expense_replay_version` (текущий единственный head). Балансы O-06 и settlement transitions O-07 merged, без новой миграции M4.
 
 ```sh
 docker compose ps -a
@@ -451,7 +451,7 @@ branch protection; применённые настройки и доказате
 
 ## Изменение зависимостей
 
-Причина выбора uv описана в [принятом ADR 002](docs/adr/002-uv.md), одобренном через PR #7. T-03 добавляет FastAPI, Pydantic v2, pydantic-settings, sync SQLAlchemy, psycopg 3 (binary), Alembic и Uvicorn. L-02 добавляет aiogram 3.x и переносит существующий httpx из dev в runtime для клиента бота. Необходимое для aiogram согласование версии Pydantic и ограничения описаны в инструкции бота. Авторизация T-05/T-06, Telegram-клиент L-03/L-04, финансовое хранилище O-03 и expense CRUD O-04/O-05 уже реализованы. Следующая продуктовая функциональность — M4 balances/settlement plan/ручные компенсации.
+Причина выбора uv описана в [принятом ADR 002](docs/adr/002-uv.md), одобренном через PR #7. T-03 добавляет FastAPI, Pydantic v2, pydantic-settings, sync SQLAlchemy, psycopg 3 (binary), Alembic и Uvicorn. L-02 добавляет aiogram 3.x и переносит существующий httpx из dev в runtime для клиента бота. Необходимое для aiogram согласование версии Pydantic и ограничения описаны в инструкции бота. Авторизация T-05/T-06, Telegram-клиент L-03/L-04, финансовое хранилище O-03 и expense CRUD O-04/O-05 уже реализованы. Backend M4 O-06/O-07 уже merged; Telegram-клиент добавляет L-05.
 
 Новую зависимость добавляйте командой `uv add <имя>` или `uv add --dev <имя>` для инструмента разработки. Просмотрите изменения `pyproject.toml` и `uv.lock`, запустите проверки и включите оба файла в один PR. Для целевого обновления используйте `uv lock --upgrade-package <имя>` и затем `uv sync --frozen`. Не редактируйте `uv.lock` вручную. Обновление Python или uv тоже оформляйте отдельным проверенным изменением закреплённых версий и инструкций.
 
@@ -517,3 +517,27 @@ GET /groups/{id}/balances возвращает signed RUB balances всех memb
 GET /groups/{id}/settlement-plan возвращает deterministic greedy transfers, не создаёт
 settlements. Оба имеют /internal mirrors. [Реализация/MVCC](docs/finance/O-06_IMPLEMENTATION.md),
 [контракт T-08](docs/contracts/T-08_M4_BALANCES_SETTLEMENTS.md).
+
+
+## Telegram-балансы и ручные переводы — L-05
+
+Группа → «Балансы» → «План переводов» → «Я перевёл деньги»: выберите другого
+участника, введите фактически отправленную сумму и подтвердите внешний перевод.
+API создаёт pending без изменения баланса. Получатель подтверждает только реально
+полученные деньги или отклоняет; отправитель отменяет свою pending-заявку.
+Confirmed учитывается один раз, rejected/cancelled не влияют на баланс.
+
+История поддерживает серверные фильтры/пагинацию20. После confirm бот перечитывает
+балансы и план. Повтор POST сохраняет UUID/body, затем читает текущий статус:
+исторический pending replay не выдаётся за актуальный. После timeout перехода
+сначала читается список; разрешён только явный повтор того же действия.
+
+[Инструкция L-05, роли, FSM, ошибки и тесты](docs/bot/L-05_SETTLEMENTS.md).
+После create/recovery бот запрашивает одноразовый notification-claim из merged
+O-07N #57. Только200 разрешает одну приватную попытку уведомить получателя;
+на204/error/timeout отправки нет. Сбой доставки не меняет pending/балансы и не
+повторяет финансовый POST. Доставка не гарантируется; входящие доступны через меню.
+[Контракт, проверки и ограничения уведомлений](docs/bot/L-05_NOTIFICATION_DEPENDENCY.md).
+Настройки запуска прежние, финансовая математика остаётся на API. Бот не переводит
+деньги. Live Telegram и ручное тестирование реальных пользователей запрещены
+до отдельного разрешения Тимура. G4 не объявляется verified.

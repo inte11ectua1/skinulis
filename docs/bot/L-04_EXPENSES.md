@@ -1,5 +1,8 @@
 # L-04 — расходы в Telegram
 
+> Срез L-04. Балансы, план и ручные компенсации добавляет
+> [L-05](L-05_SETTLEMENTS.md) по merged O-06/O-07. Live Telegram остаётся отложенным.
+
 Issue [#37](https://github.com/inte11ectua1/skinulis/issues/37), база `main` `440031d`.
 L-03 / PR28, O-04 / PR41 и O-05 / PR42 проверены как merged 30.10.2026.
 Контракты: [O-04](../contracts/O-04_EXPENSES.md), [O-05](../contracts/O-05_BY_ITEMS.md),

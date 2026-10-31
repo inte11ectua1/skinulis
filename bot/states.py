@@ -40,3 +40,14 @@ class ExpenseFlow(StatesGroup):
     put_uncertain = State()
     delete_uncertain = State()
     busy = State()
+
+
+class SettlementFlow(StatesGroup):
+    receiver = State()
+    amount = State()
+    review = State()
+    busy = State()
+    search = State()
+    create_unknown = State()
+    transition_confirm = State()
+    transition_unknown = State()

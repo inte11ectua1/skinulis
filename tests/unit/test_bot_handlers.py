@@ -22,7 +22,7 @@ from aiogram.types import (
 )
 
 from bot.api_client import ApiClient
-from bot.handlers import ACTIVE, FAILED, HELP, PRIVATE, UNAVAILABLE, UNKNOWN
+from bot.handlers import ACTIVE, FAILED, HELP, PRIVATE, UNKNOWN
 from bot.keyboards import main_menu
 from bot.main import create_dispatcher
 from bot.states import Navigation
@@ -215,7 +215,7 @@ async def test_menu_and_repeated_buttons_are_honest(
 ) -> None:
     await harness.click(action)
     if action == "menu:pending":
-        assert harness.sent[-1].text == UNAVAILABLE
+        assert "На этой странице групп нет" in harness.sent[-1].text
     elif action == "menu:create":
         assert "Как назовём" in harness.sent[-1].text
         await harness.click(action)
