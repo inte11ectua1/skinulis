@@ -25,11 +25,15 @@
 
 [PR #43](https://github.com/inte11ectua1/skinulis/pull/43) **merged, Issue closed 30.10.2026**: Telegram equal/custom/by_items expense FSM, server preview, list/details, full PUT/soft-delete, verified bot-service actor, original POST UUID и timeout recovery. Реальные mock Telegram → HTTP → PostgreSQL tests, **не** live Telegram. Финальный T-07 аудит в [PR #44](https://github.com/inte11ectua1/skinulis/pull/44) merged; error no-store и snapshot validation исправлены.
 
-## Назначенная M4 — [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48)
+## M4 — завершён (31.10.2026)
 
-**Mock/UI можно делать сейчас**: экраны group balances, greedy plan, входящие/outgoing pending, history, sender mark external transfer, receiver confirm/reject, sender cancel. Показывать только серверные суммы, partial/zero/negative, сообщения при changed debt409, stable UUID для repeated POST, best-effort notifications без заявлений о реальном платеже. Использовать [T-08 M4 контракт](../contracts/T-08_M4_BALANCES_SETTLEMENTS.md) для mock fixtures, передать client review замечания Тимуру по [T-08 #45](https://github.com/inte11ectua1/skinulis/issues/45); не изобретать URL и не выдавать чужое APPROVED. **Реальный HTTP подключать после merged [O-06 #46](https://github.com/inte11ectua1/skinulis/issues/46) и [O-07 #47](https://github.com/inte11ectua1/skinulis/issues/47).** Один mock-only PR не закрывает L-05; full HTTP+PostgreSQL integration тестируется отдельно без настоящего Telegram.
+[L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48) / [PR #54](https://github.com/inte11ectua1/skinulis/pull/54) **merged/closed**. Балансы/план, pending/confirm/reject/cancel, original UUID replay, bot-service auth и best-effort приватные уведомления через O-07N [#55](https://github.com/inte11ectua1/skinulis/issues/55)/[PR #57](https://github.com/inte11ectua1/skinulis/pull/57) реализованы. [Последний CI](https://github.com/inte11ectua1/skinulis/actions/runs/41210779152) 5/5, 1460 unit+PG tests/94,76%. T-08 [#45](https://github.com/inte11ectua1/skinulis/issues/45) audit закрыт PR #58. Никакого live Telegram polling в этих тестах не было.
 
-**G2/G3 live QA не начинать:** [Issue #38](https://github.com/inte11ectua1/skinulis/issues/38) закрыта как not_planned до отдельного сигнала Тимура. Unit/mock/PostgreSQL/CI тесты разработки обязательны; production `/internal` isolation — T-09.
+## Текущая задача M5 — [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62)
+
+**Начинать сейчас с fresh main:** полноформатный mocked Telegram FSM → реальный локальный FastAPI HTTP/PostgreSQL17, UI 400/401/403/404/409/429/5xx, timeout/lost-response, stable UUID original replay vs актуальный статус, duplicate callback/restart, partial/terminal/reverse balances, no spam notifications и отсутствие финансовой математики в боте. README troubleshooting и `docs/bot/L-06_UX_REGRESSION.md` с тестовым чек-листом и безопасными mock screenshots. [Handoff](../operations/M5_DELIVERY_HANDOFF.md).
+
+**Никакого живого Telegram E2E или настоящих участников/токенов** до отдельного разрешения Тимура: G2/G3/G4 не verified. O-08 #61 и T-09 #59 выполняются параллельно; при изменениях production auth/proxy получить ревью Тимура. Финальный `Closes #62` лишь после готовых mock/HTTP/PG acceptance, промежуточный `Refs #62`.
 
 ## Для своего чата
 «Разбей создание by_items на последовательные кнопки», «Проверь возможные ошибки мастера», «Дай промпт Codex для L-04 без изменения backend», «Составь E2E чек-лист».

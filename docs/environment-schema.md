@@ -6,6 +6,8 @@
 полный вывод `docker compose config` к PR: после интерполяции он содержит пароль.
 Для проверки синтаксиса используйте `docker compose config --quiet`.
 
+**M5 handoff (31.10.2026):** текущая последняя миграция — `0006_settlement_notification_claim` после 0005 (O-07N/PR #57), статус M4 completed по коду. [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) должен создать отдельный **production deployment environment** с GHCR immutable SHA, Caddy HTTPS, приватной сетью API/bot/DB и публично закрытым `/internal`. Эта схема сейчас описывает **local/test** environment, не утверждает, что VPS/HTTPS/G5 уже реализованы. Продакшен-секреты должны быть в GitHub Environments/серверном secure store, **только имена и требования**, без значений в GitHub PR, документах, Docker build args, логах и выводе `docker compose config`. SSH и live Telegram доступны только после явной команды Тимура; [M5 handoff](operations/M5_DELIVERY_HANDOFF.md).
+
 ## Переменные
 
 | Переменная | Назначение | Обязательность / default | Безопасный пример |
