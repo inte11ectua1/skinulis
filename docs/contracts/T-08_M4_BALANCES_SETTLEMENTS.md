@@ -112,6 +112,10 @@ GET list:
 
 Ошибочные и неавторизованные попытки не изменяют ledger/settlement status и не выдают private JSON/status, даже на replay. Если у sender пропало членство, replay скрыт (в MVP удаление участника пока недоступно). Не добавлять 422, клиентские значения в error envelope, 401 без WWW-Authenticate или no-store.
 
+## Дополнение T-08 от 31.10.2026 — best-effort Telegram pending notifications
+
+**Согласованный tech lead контракт [T-08_PENDING_NOTIFICATION](T-08_PENDING_NOTIFICATION.md)**: только защищённый `POST /internal/settlements/{settlement_id}/notification-claim` с проверенным bot-service sender, однократная durable claim на `settlements.notification_claimed_at`, отдельная Alembic `0006_settlement_notification_claim`, `200 {recipient_telegram_id}` либо `204` без повторной выдачи. Backend [#55](https://github.com/inte11ectua1/skinulis/issues/55) → Telegram-L-05 [#48](https://github.com/inte11ectua1/skinulis/issues/48) / [PR #54](https://github.com/inte11ectua1/skinulis/pull/54); M4 T-08 security review #45 остаётся открытым. Этот новый служебный endpoint **не публичный settlement API**, не изменяет исторический UUID replay, pending, confirmed, балансы или права sender/receiver. Live Telegram QA отложено.
+
 ## 7. QA matrix для O-06/O-07/T-08/L-05
 
 | Сценарий | Ожидание |
