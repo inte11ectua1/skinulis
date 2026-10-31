@@ -9,6 +9,7 @@ from app.api.auth import router as auth_router
 from app.api.balances import build_router as build_balance_router
 from app.api.expenses import build_router as build_expense_router
 from app.api.groups import build_router
+from app.api.settlements import build_router as build_settlement_router
 from app.api.system import router
 from app.api.telegram_identity import router as telegram_router
 from app.config import Settings
@@ -42,5 +43,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(build_expense_router(internal=True))
     application.include_router(build_balance_router())
     application.include_router(build_balance_router(internal=True))
+    application.include_router(build_settlement_router())
+    application.include_router(build_settlement_router(internal=True))
     application.include_router(telegram_router)
     return application

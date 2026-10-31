@@ -1,0 +1,71 @@
+{
+  "create": {
+    "settlement": {
+      "id": 123,
+      "group_id": 10,
+      "sender_id": 20,
+      "receiver_id": 10,
+      "amount": "500.00",
+      "status": "pending",
+      "client_request_id": "00000000-0000-4000-8000-000000000001",
+      "created_at": "2026-10-30T12:00:00Z",
+      "resolved_at": null
+    }
+  },
+  "confirmed": {
+    "settlement": {
+      "id": 123,
+      "group_id": 10,
+      "sender_id": 20,
+      "receiver_id": 10,
+      "amount": "500.00",
+      "status": "confirmed",
+      "client_request_id": "00000000-0000-4000-8000-000000000001",
+      "created_at": "2026-10-30T12:00:00Z",
+      "resolved_at": "2026-10-30T12:01:00Z"
+    }
+  },
+  "rejected": {
+    "settlement": {
+      "id": 123,
+      "group_id": 10,
+      "sender_id": 20,
+      "receiver_id": 10,
+      "amount": "500.00",
+      "status": "rejected",
+      "client_request_id": "00000000-0000-4000-8000-000000000001",
+      "created_at": "2026-10-30T12:00:00Z",
+      "resolved_at": "2026-10-30T12:01:00Z"
+    }
+  },
+  "cancelled": {
+    "settlement": {
+      "id": 123,
+      "group_id": 10,
+      "sender_id": 20,
+      "receiver_id": 10,
+      "amount": "500.00",
+      "status": "cancelled",
+      "client_request_id": "00000000-0000-4000-8000-000000000001",
+      "created_at": "2026-10-30T12:00:00Z",
+      "resolved_at": "2026-10-30T12:01:00Z"
+    }
+  },
+  "page": {
+    "items": [
+      {
+        "id": 123,
+        "group_id": 10,
+        "sender_id": 20,
+        "receiver_id": 10,
+        "amount": "500.00",
+        "status": "confirmed",
+        "client_request_id": "00000000-0000-4000-8000-000000000001",
+        "created_at": "2026-10-30T12:00:00Z",
+        "resolved_at": "2026-10-30T12:01:00Z"
+      }
+    ],
+    "limit": 20,
+    "offset": 0
+  }
+}

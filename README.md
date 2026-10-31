@@ -2,6 +2,15 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
+**O-07 (PR review):** ручные компенсации: POST/GET `/groups/{group_id}/settlements`,
+POST `/settlements/{settlement_id}/{confirm,reject,cancel}` и `/internal` mirrors.
+Создаёт verified sender, подтверждает/отклоняет receiver, отменяет sender.
+Pending не меняет баланс; confirm проверяет свежий долг под group lock. После
+timeout повторяйте прежние UUID/body: replay возвращает исходное pending-создание,
+актуальный status читайте через GET списка. Банковский перевод происходит вне API.
+[Реализация, права и гонки O-07](docs/finance/O-07_IMPLEMENTATION.md),
+[typed fixtures](docs/finance/fixtures/O-07_SETTLEMENTS.json); OpenAPI `/docs`.
+
 > **M3 завершён по реализации 30.10.2026:** auth/JWT, группы, Telegram onboarding, Expense API `equal/custom/by_items` и server preview, Telegram expense wizard и T-07 security fixes merged в `main` (PR #41–#44). [PR #44 CI](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033) **5/5 success; 1147 тестов, coverage 95,46%**. **M4 теперь назначен**: Т-08/O-06/O-07/L-05, но GET balances/plan и settlement state machine ещё не реализованы. Живой Telegram и production-изоляция `/internal` не подтверждены: G2/G3 не verified, тесты отложены по решению Тимура. [STATUS](docs/STATUS.md) — актуальные факты.
 
 ## Начало работы
