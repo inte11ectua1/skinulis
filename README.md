@@ -2,7 +2,7 @@
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
-**O-07 (PR review):** ручные компенсации: POST/GET `/groups/{group_id}/settlements`,
+**O-07 (merged PR #53):** ручные компенсации: POST/GET `/groups/{group_id}/settlements`,
 POST `/settlements/{settlement_id}/{confirm,reject,cancel}` и `/internal` mirrors.
 Создаёт verified sender, подтверждает/отклоняет receiver, отменяет sender.
 Pending не меняет баланс; confirm проверяет свежий долг под group lock. После
@@ -10,6 +10,15 @@ timeout повторяйте прежние UUID/body: replay возвращае
 актуальный status читайте через GET списка. Банковский перевод происходит вне API.
 [Реализация, права и гонки O-07](docs/finance/O-07_IMPLEMENTATION.md),
 [typed fixtures](docs/finance/fixtures/O-07_SETTLEMENTS.json); OpenAPI `/docs`.
+
+**O-07N #55 (PR review):** internal-only
+`POST /internal/settlements/{settlement_id}/notification-claim` выдаёт verified
+sender одно разрешение на попытку уведомить receiver: 200 с серверным Telegram ID
+либо пустой204. Доставка best effort; timeout не выдаёт повторного разрешения.
+Миграция0006 помечает старые rows против ретро-уведомлений. Public JWT POST сам
+сообщение не доставляет; подключение Telegram — L-05 после merge backend.
+[Контракт](docs/contracts/T-08_PENDING_NOTIFICATION.md),
+[реализация/миграция](docs/finance/O-07_IMPLEMENTATION.md#o-07n-одноразовое-разрешение-уведомления).
 
 > **M3 завершён по реализации 30.10.2026:** auth/JWT, группы, Telegram onboarding, Expense API `equal/custom/by_items` и server preview, Telegram expense wizard и T-07 security fixes merged в `main` (PR #41–#44). [PR #44 CI](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033) **5/5 success; 1147 тестов, coverage 95,46%**. **M4:** O-06 GET balances/plan merged через PR #51; O-07 settlement state machine — в PR review. T-08 security review и L-05 продолжаются отдельно. Живой Telegram и production-изоляция `/internal` не подтверждены: G2/G3 не verified, тесты отложены по решению Тимура. [STATUS](docs/STATUS.md) — актуальные факты.
 

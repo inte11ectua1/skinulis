@@ -57,7 +57,7 @@ def test_upgrade_legacy_financial_data_repeat_check_and_downgrade(
         command.upgrade(config, "head")
         command.upgrade(config, "head")
         assert ScriptDirectory.from_config(config).get_heads() == [
-            "0005_expense_replay_version"
+            "0006_settlement_notification_claim"
         ]
         command.check(config)
         with engine.connect() as conn:

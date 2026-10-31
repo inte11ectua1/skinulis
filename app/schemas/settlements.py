@@ -12,6 +12,18 @@ from app.services.money import parse_money
 
 SettlementStatus = Literal["pending", "confirmed", "rejected", "cancelled"]
 Direction = Literal["incoming", "outgoing", "all"]
+
+
+class NotificationClaim(BaseModel):
+    """Internal-only permission; never embed in a financial/member profile."""
+
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={"examples": [{"recipient_telegram_id": 123456789}]},
+    )
+    recipient_telegram_id: UserId
+
+
 SettlementAmount = Annotated[
     str, Field(strict=True, max_length=20, pattern=r"^(0|[1-9][0-9]*)\.[0-9]{2}$")
 ]
