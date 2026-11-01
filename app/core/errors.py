@@ -1,7 +1,7 @@
 """Safe HTTP errors: no validation input, exception arguments or traceback in logs."""
 
 import logging
-from uuid import uuid4
+from time import perf_counter
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -11,8 +11,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
 from app.schemas.system import ErrorDetail, ErrorResponse
-
-logger = logging.getLogger(__name__)
+from skinulis_logging import Event, Fields, current_request_id, emit, request_context
 
 
 class ApiError(Exception):
@@ -29,7 +28,7 @@ class ApiError(Exception):
 def error_response(
     status: int, code: str, message: str, *, auth_scheme: str = "Bearer"
 ) -> JSONResponse:
-    request_id = str(uuid4())
+    request_id = current_request_id()
     # Exception handlers build a new response, bypassing router response headers.
     headers = {"X-Request-ID": request_id, "Cache-Control": "no-store"}
     if status == 401:
@@ -64,12 +63,31 @@ def install_error_handlers(application: FastAPI) -> None:
     async def safe_server_errors(
         request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
-        try:
-            return await call_next(request)
-        except Exception:
-            response = error_response(500, "internal_error", "Internal server error")
-            logger.error(
-                "Request failed; request_id=%s", response.headers["X-Request-ID"]
+        with request_context() as request_id:
+            started = perf_counter()
+            try:
+                response = await call_next(request)
+            except Exception:
+                # Catch before ServerErrorMiddleware can re-raise raw exception args.
+                response = error_response(
+                    500, "internal_error", "Internal server error"
+                )
+                emit(Event.HTTP_FAILED, level=logging.ERROR)
+            response.headers["X-Request-ID"] = request_id
+            route = getattr(request.scope.get("route"), "path", None)
+            status = response.status_code
+            emit(
+                Event.HTTP_COMPLETED,
+                level=logging.ERROR
+                if status >= 500
+                else logging.WARNING
+                if status >= 400
+                else logging.INFO,
+                fields=Fields(
+                    status=status,
+                    method=request.method,
+                    route=route,
+                    duration_ms=int((perf_counter() - started) * 1000),
+                ),
             )
-            # Catch before ServerErrorMiddleware can re-raise and log secret-bearing args.
             return response

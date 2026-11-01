@@ -14,6 +14,7 @@ WORKDIR /app
 RUN groupadd --gid 10001 skinulis && \
     useradd --uid 10001 --gid skinulis --no-create-home skinulis
 COPY --from=builder /app/.venv /app/.venv
+COPY skinulis_logging.py ./
 COPY app/ ./app/
 COPY bot/ ./bot/
 COPY alembic/ ./alembic/
@@ -27,4 +28,4 @@ LABEL org.opencontainers.image.revision=$APP_COMMIT_SHA \
     org.opencontainers.image.source="https://github.com/inte11ectua1/skinulis"
 USER skinulis
 EXPOSE 8000
-CMD ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "app.core.serve"]

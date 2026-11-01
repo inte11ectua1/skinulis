@@ -6,7 +6,7 @@ from app.db import Database
 from app.models import Base
 
 config = context.config
-if config.config_file_name is not None:
+if config.config_file_name is not None and not config.attributes.get("safe_logging"):
     fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 settings = Settings()

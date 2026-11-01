@@ -580,3 +580,40 @@ O-07N #57. Только200 разрешает одну приватную поп
 Настройки запуска прежние, финансовая математика остаётся на API. Бот не переводит
 деньги. Live Telegram и ручное тестирование реальных пользователей запрещены
 до отдельного разрешения Тимура. G4 не объявляется verified.
+
+## T-10: безопасные JSON-логи и инциденты
+
+API, мигратор и бот используют стандартный logging через общий независимый
+`skinulis_logging.py`: JSON stdout, UTC/Z, level/service/event/request_id и только
+явно разрешённые диагностические поля. HTTP X-Request-ID создаётся сервером;
+ошибка и журнал запроса имеют одинаковый ID. Входной ID не считается доверенным.
+Сырые сообщения/exception traceback/SQL parameters, headers, URL/query, payload,
+финансовые значения и Telegram ID не сериализуются. Uvicorn access log выключен.
+Бот сохраняет текущие правила timeout/idempotency, live polling для тестов не нужен.
+
+Production Compose ограничивает json-file логи всех пяти services: 5m ×3,
+compress=true, около75MB на текущие контейнеры. Это не лимит всей DB/images/backups.
+Caddy runtime filter удаляет request/error fields; PostgreSQL не пишет обычные
+SQL ошибки/параметры. Изменения действуют после разрешённого release с этим SHA;
+на EC2 в рамках T-10 ничего не пересоздавалось.
+
+[Incident/rollback runbook и чеклист первого rollout](docs/operations/INCIDENTS_AND_ROLLBACK.md)
+содержит поиск по request_id, диагностику HTTP/DB/OIDC/SSM/SSH/Caddy, безопасный
+immutable image rollback без DB downgrade и отдельную проверку restore.
+T-09 public HTTPS/deployment и T-10 production validation остаются незавершёнными.
+Новое AWS preparation evidence — в [PR #70](https://github.com/inte11ectua1/skinulis/pull/70).
+
+```sh
+uv run pytest tests/unit/test_logging.py tests/unit/test_bot_runtime.py
+uv run python scripts/test_integration.py tests/integration/test_logging.py
+uv run coverage run -m pytest
+uv run python scripts/test_integration.py --cov --cov-append --cov-report=
+uv run coverage report --precision=2 --fail-under=60
+docker build --build-arg APP_COMMIT_SHA="$(git rev-parse HEAD)" -t skinulis-t09-test:local .
+T09_TEST_IMAGE=skinulis-t09-test:local uv run python scripts/test_delivery.py
+```
+
+Coverage измеряет branch coverage app/, bot/ и нового общего logging-модуля;
+тестовые файлы в процент не входят. Docker smoke использует только UUID test
+resources, проверяет JSON/privacy/correlation, daemon log options, PG/Caddy ошибки,
+TLS и существующую сетевую границу. Тестовый named volume остаётся для оператора.

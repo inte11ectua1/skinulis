@@ -1,4 +1,3 @@
-import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -16,22 +15,26 @@ from app.api.telegram_identity import router as telegram_router
 from app.config import Settings
 from app.core.errors import install_error_handlers
 from app.db import Database
+from skinulis_logging import Event, configure_logging, emit, register_routes
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
+    configure_logging("api")
     configuration = settings if settings is not None else Settings()
     configuration.require_jwt_secret()
     configuration.require_bot_service_token()
-    logging.getLogger("app").setLevel(configuration.log_level)
+    configure_logging("api", configuration.log_level)
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         database = Database(configuration)
         application.state.database = database
+        emit(Event.API_STARTED)
         try:
             yield
         finally:
             database.close()
+            emit(Event.API_STOPPED)
 
     application = FastAPI(title="Скинулись", version=__version__, lifespan=lifespan)
     application.state.settings = configuration
@@ -48,4 +51,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(build_settlement_router(internal=True))
     application.include_router(notification_router)
     application.include_router(telegram_router)
+    register_routes(
+        [*application.openapi()["paths"], "/docs", "/redoc", "/openapi.json"]
+    )
     return application

@@ -108,7 +108,7 @@ async def test_delivery_failure_keeps_pending_and_never_reposts_or_leaks(
     assert "Актуальный статус API: pending" in j.text
     for private in [secret, "987654321"]:
         assert private not in caplog.text + j.text
-    assert "Pending notification delivery unavailable" in caplog.text
+    assert "notification_delivery_failed" in caplog.text
     await j.choose("История переводов")
     assert len(notices(j)) == 1
 
