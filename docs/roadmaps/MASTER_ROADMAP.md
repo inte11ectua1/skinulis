@@ -9,7 +9,7 @@
 | M2 Identity | T-05 Auth/JWT, T-06 группы/invites и bot actor | O-03 модели финансов и миграции | L-03 /start, bootstrap/link и группы на mocked API | E2E профиль -> группа |
 | M3 Expenses | T-07 review безопасности, интеграция API | O-04 CRUD equal/custom, O-05 by_items | L-04 мастера расходов по контракту | Ресторанный тест и bot flow |
 | M4 Balances | T-08 audit locking/idempotency | O-06 балансы и settlement plan; O-07 компенсации | L-05 баланс, переводы, подтверждения | Частичный перевод обновляет баланс только после confirm |
-| M5 Delivery | T-09 GHCR/CD/VPS/Caddy, T-10 логи | O-08 integration/concurrency/load tests | L-06 E2E, UX errors, README | Merge -> image -> HTTPS /health /version |
+| M5 Delivery | T-09 GHCR/CI + ноутбук/Compose (ADR003), T-10 локальные логи | O-08 integration/concurrency/load tests | L-06 E2E, UX errors, README | CI -> проверенная main -> локальный API+bot/DB, /health /version |
 | M6 Acceptance | T-11 DoD audit, reset/test clean environment | O-09 bugfix, invariants, PR audit | L-07 user guide, demo script, smoke bots | CI green, coverage >=60%, p95/100 concurrent documented |
 | M7 Defense | T-12 rehearsal PR to deploy | O-10 defense calculations/Q&A | L-08 Telegram live demonstration | 7m presentation, 5m live-demo, 8m Q&A |
 
@@ -46,17 +46,19 @@
 
 ## Текущий M5 Delivery — assigned (31.10.2026)
 
-- **Тимур:** [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) — GHCR SHA + trusted-main CD, VPS/Compose, Caddy HTTPS, сеть/публичный отказ /internal, миграции, rollback. **Критический путь**; код/конфиг можно начинать, реальный VPS/SSH/deploy только с отдельного разрешения. Затем [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) — JSON logging/rotation/request_id и operational runbook; проектирование допускается параллельно, финальная интеграция после T-09.
+- **Тимур:** [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) — GHCR SHA CI/publish и **локальный ноутбук как хост**: Compose db/migrate/api/opt-in bot, API loopback, no public ports, persistence/recovery. SSH/VPS/Caddy больше не являются текущим workstream (ADR003). **Критический путь**; код/конфиг можно начинать, запуск реального Telegram polling только после явного разрешения оператора, ноутбук/доступы и реальные проверки — на стороне Тимура. Затем [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) — JSON logging/rotation/request_id и **локальный** operational runbook; проектирование допускается параллельно, финальная интеграция после T-09.
 - **Олег:** [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61) — PG financial/security/concurrency regression, независимые соединения, контролируемая нагрузка 100 simultaneous clients, задокументированные p95/условия. **Может стартовать параллельно T-09**, без production тестов.
 - **Лера:** [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62) — UX errors/timeout/replay, mocked Telegram → реальный локальный HTTP/PostgreSQL E2E; **параллельно T-09**, никакого настоящего Telegram polling/live QA.
-- **G5:** только после фактического GHCR SHA, HTTPS /health с DB и /version=SHA, закрытого снаружи /internal и private DB. Ничего из этого ещё не подтверждено. [M5 handoff/зависимости](../operations/M5_DELIVERY_HANDOFF.md).
+- **M5-L:** после реального запуска на ноутбуке, /health (DB), /version SHA, приватных портов, устойчивого volume/backup и отдельно разрешённого Telegram polling. **Оригинальный G5** (VPS/SSH/HTTPS) заменён по решению Тимура, **не считается verified** без согласования преподавателя. [ADR003](../adr/003-laptop-as-demo-host.md). [M5 handoff/зависимости](../operations/M5_DELIVERY_HANDOFF.md).
+
+**Решение по размещению 01.11.2026:** VPS не покупаем, ноутбук Тимура работает как временный host. Без публичного HTTPS, без SSH CD и без 24/7 SLA. Это изменение *командного* критерия готовности M5, а не изменение требований курса задним числом. См. [ADR 003](../adr/003-laptop-as-demo-host.md), [LAPTOP_HOSTING](../operations/LAPTOP_HOSTING.md) и пересогласованную [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59).
 
 ## Release gates
 - **G1 (после M1):** cold start, migration, /health 200, one real reviewed PR with green CI.
 - **G2 (после M2):** auth, group permissions; no impersonation; setup works by README.
 - **G3 (после M3):** three modes, CRUD, pagination, rounding; restaurant scenario tested.
 - **G4 (после M4):** settlement transition, partial/duplicate/concurrent tests, no changes to confirmed.
-- **G5 (после M5):** GHCR build publish tagged SHA, SSH deploy, HTTPS, migration, /version matches commit; secrets limited.
+- **G5-original (после M5):** GHCR SHA + SSH/VPS/HTTPS — по первоначальным требованиям, **не verified**, требует согласования замены. **M5-L:** GitHub CI/GHCR + ноутбук Compose, /health DB, /version SHA, локальная безопасность и восстановление.
 - **G6 (после M6):** DoD, ADR, contribution history, review proofs, runbook, load evidence and stable demo.
 
 ## Critical path
