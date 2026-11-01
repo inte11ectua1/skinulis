@@ -7,7 +7,7 @@
 
 ## Историческая VPS-конфигурация — больше не текущая цель
 
-**01.11.2026 решение Тимура:** вместо VPS/домена используем ноутбук + Docker Compose и Telegram long polling; **новый актуальный runbook** [LAPTOP_HOSTING.md](LAPTOP_HOSTING.md), [ADR003](../adr/003-laptop-as-demo-host.md). Все последующие инструкции SSH/Caddy/production Environment/rollback здесь — **архив подготовленной инфраструктуры PR #64**, не выполнять их для laptop-сценария, не включать rollout flag и не вводить production SSH credentials. CI/GHCR публикация сохраняются, но GitHub runner не подключается к ноутбуку и не заменяет реальную локальную проверку. Исходный G5 с VPS/HTTPS остаётся непроверенным и требует согласования замены, если курс его требует.
+**01.11.2026 решение Тимура:** вместо VPS/домена используем ноутбук + Docker Compose и Telegram long polling; **новый актуальный runbook** [LAPTOP_HOSTING.md](LAPTOP_HOSTING.md), [ADR003](../adr/003-laptop-as-demo-host.md). Все последующие инструкции SSH/Caddy/production Environment/rollback здесь — **архив подготовленной инфраструктуры PR #64**, не выполнять их для laptop-сценария, SSH job в `deploy.yml` дополнительно принудительно отключён (`if: false`) в laptop PR; не включать rollout flag и не вводить production SSH credentials. CI/GHCR публикация сохраняются, но GitHub runner не подключается к ноутбуку и не заменяет реальную локальную проверку. Исходный G5 с VPS/HTTPS остаётся непроверенным и требует согласования замены, если курс его требует.
 
 ## Архитектура и образы
 
