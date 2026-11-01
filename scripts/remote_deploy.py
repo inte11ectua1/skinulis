@@ -43,6 +43,7 @@ def main() -> int:
                 "scripts/__init__.py",
                 "scripts/release.py",
                 "scripts/deployment.py",
+                "scripts/backup_postgres.py",
             ):
                 path = Path(file)
                 if path.is_symlink() or not path.is_file():
