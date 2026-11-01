@@ -60,7 +60,8 @@ def trusted_run(run: dict[str, Any], target: str) -> bool:
 def protected_environment(value: dict[str, Any]) -> bool:
     policy = value.get("deployment_branch_policy") or {}
     return (
-        policy.get("protected_branches") is True
+        value.get("can_admins_bypass") is False
+        and policy.get("protected_branches") is True
         and policy.get("custom_branch_policies") is False
         and any(
             rule.get("type") == "required_reviewers"
@@ -103,10 +104,13 @@ def guard() -> None:
         j["name"] for j in jobs if j["conclusion"] == "success"
     }:
         raise ValueError("Required CI jobs did not all succeed")
-    if os.environ.get("OPERATION") == "deploy":
+    if os.environ.get("OPERATION") in {"deploy", "check-transport"}:
         if (
             kind != "workflow_dispatch"
-            or os.environ.get("ROLLOUT_ENABLED") != "true"
+            or (
+                os.environ.get("OPERATION") == "deploy"
+                and os.environ.get("ROLLOUT_ENABLED") != "true"
+            )
             or not protected_environment(github("environments/production"))
         ):
             raise ValueError("Production rollout is disabled or unprotected")
