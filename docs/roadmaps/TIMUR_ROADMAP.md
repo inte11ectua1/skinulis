@@ -12,8 +12,8 @@
 | T-06 | M2 | Groups, memberships, invites, Telegram actor/link; finalize API contracts | T-05 | invite once 24h, group authorization tests |
 | T-07 | M3 | Security and API review, uniform error handler/pagination/docs | O-03/04 | OpenAPI consistent, no actor spoofing |
 | T-08 | M4 | Audit locks + idempotency with Oleg; threat scenarios | O-06/07 | race tests documented, no duplicate effects |
-| T-09 | M5 | GHCR publish and VPS Docker Compose SSH CD, Caddy HTTPS, deploy job | T-04 | after merge SHA-tag image and /version matching |
-| T-10 | M5 | JSON logs, request_id, rotation, health, rollback runbook | T-09 | failure visible, logs no secrets |
+| T-09 | M5 | GitHub CI/GHCR и laptop Docker Compose, локальный бот/DB, /health /version | T-04 | локальный cold-start+bot opt-in+DB persistence, /health и /version SHA |
+| T-10 | M5 | JSON logs, request_id, rotation, health, rollback runbook | T-09 | локальные ошибки видны, логи без секретов |
 | T-11 | M6 | DoD audit, cold-start other machine, release smoke, evidence | all owners | evidence linked in STATUS |
 | T-12 | M7 | PR->CI->approval->merge->CD demonstration | T-09/11 | live rehearsed and backup successful run linked |
 
@@ -39,13 +39,15 @@
 
 **Merged/closed:** T-08 contracts #50/#56, backend O-06 #51, O-07 #53, notification claim #57, L-05 #54, [финальный отчёт](../reviews/T-08_M4_FINAL_SECURITY_REVIEW.md) #58. GitHub `main` на момент handoff `eb3ae28`; [CI PR #58 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41213175596). Нет independent human APPROVED на некоторых PR; не приписывать их задним числом. **Live Telegram gates G2/G3/G4 не verified**, T-01/G1 отдельно.
 
-## Текущий M5 — [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) → [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60)
+## Текущий M5 — [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) / локальный ноутбук → [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60)
 
-**T-09 — начать с него:** trusted-main GitHub Actions CD, GHCR immutable SHA, one-time migration, Compose api/bot/db + HTTPS Caddy, публичная network isolation /internal и private PostgreSQL, безопасный rollback образа. Начать с анализа CI/Dockerfile/compose и архитектуры; **настоящие SSH/VPS/deploy, секреты и запуск polling запрещены до отдельного разрешения**. Без нужных доступов отправить документацию/проверяемый код в частичном PR `Refs #59`, оставив live acceptance open; не выдумывать успешный G5.
+**Решение Тимура (01.11.2026):** VPS и домен не покупать. Ноутбук выполняет роль хоста с Docker Compose, FastAPI+PostgreSQL17+миграциями и **одним** aiogram polling контейнером. Никаких публичных API/DB портов, удалённого SSH, Caddy/HTTPS и self-hosted Actions runner. [ADR003](../adr/003-laptop-as-demo-host.md), [инструкция ноутбука](../operations/LAPTOP_HOSTING.md).
 
-**T-10 — после согласованной инфраструктуры T-09:** JSON structured logs, request_id, Docker log rotation, diagnostics/incident/rollback runbook и redaction tests. Проектирование в параллельной ветке возможно, финальную Compose-интеграцию делать после T-09. Номера Issues: [#59](https://github.com/inte11ectua1/skinulis/issues/59), [#60](https://github.com/inte11ectua1/skinulis/issues/60).
+**T-09 #59 — актуальная приёмка M5-L:** PR #64 уже подготовил GHCR SHA, non-root app/bot image, production/VPS код и CI; новые действия — opt-in laptop compose, настоящий cold-start и локальный `/health`/ `/version`, сохранность данных между перезапусками, безопасное обновление/backup, проверка доступа только через localhost и отдельный реальный Telegram smoke **только после явной команды**. Отложенные server-side smoke не считать успешными; Issue #59 остаётся open до фактического laptop evidence и согласования пересмотра требований курса. Промежуточные PR используют `Refs #59`.
 
-**Параллельно:** Олег [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61) делает controlled real PG concurrency/load (100 clients/p95), Лера [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62) — bot UX mock/HTTP/PG regression. Тесты не запускать на production. [Полный handoff](../operations/M5_DELIVERY_HANDOFF.md). T-01 #2 остаётся открытой, преподавателя пока не приглашать.
+**T-10 #60:** JSON logging, request_id, Docker log rotation и инструкция по сбоям/восстановлению на **том же ноутбуке**, без SSH/production registry remote actions. Можно готовить параллельно после понятной конфигурации локального хоста.
+
+**Олег O-08 #61** — PG concurrency/load в отдельной одноразовой тестовой БД, **Лера L-06 #62** — mocked Telegram + HTTP/PG UX regression. Их задачи не зависят от VPS. **G5-original не verified** (VPS/HTTPS остались в исходной версии требования); laptop M5-L — отдельная проверка, не эквивалент без согласования преподавателя.
 
 ## Вопросы для своего ChatGPT-чата
 «Что мой следующий gate?», «Проверь угрозы Telegram actor», «Сформулируй PR description и тестовый план», «Какие доказательства CI/CD нужны для преподавателя?».
