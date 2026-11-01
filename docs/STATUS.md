@@ -1,9 +1,11 @@
 # Фактическое состояние проекта
 
-## T-09 — инфраструктурный PR, production acceptance пока открыт (31.10.2026)
+## M5 — серверный scope восстановлен, production acceptance открыт (01.11.2026)
 
-От `origin/main` **38e9abf2ba07fe895835ef40b9120b67aa29abdd** подготовлена ветка
-`feat/T-09-ghcr-cd-vps`: общий non-root API/bot image, production Compose/Caddy,
+**Текущее решение (01.11.2026):** [PR #64](https://github.com/inte11ectua1/skinulis/pull/64) с инфраструктурой GHCR/CD/VPS/Caddy **merged в `main` 31.10.2026** (merge SHA `3f67828c40be6e14786816ffbfbcb867fcc79a7f`). [PR #65](https://github.com/inte11ectua1/skinulis/pull/65) с заменой VPS на ноутбук **closed without merge** 01.11.2026; `compose.laptop.yaml`, laptop ADR003, отключение SSH rollout и связанные правки не попали в `main`. Возвращаем [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) и [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) к исходным требованиям: VPS/cloud, публичный URL, Caddy HTTPS, trusted-main SHA GHCR/SSH deployment, серверные JSON-логи/ротация/rollback runbook. Это соответствует [DoD преподавателя](https://github.com/andrey-limasov/app-conf/blob/main/definition-of-done.md); исключение для отсутствующего сервера возможно только по предварительному согласованию. Оба issue **open**, G5 **not verified**: реальный деплой/HTTPS не проводился; SSH/secrets/live Telegram — исключительно по отдельному разрешению Тимура.
+
+
+В принятом [PR #64](https://github.com/inte11ectua1/skinulis/pull/64) из ветки `feat/T-09-ghcr-cd-vps` реализованы: общий non-root API/bot image, production Compose/Caddy,
 trusted-main release policy, digest pinning, отключённый по умолчанию SSH rollout,
 однократная миграция, health/SHA probes и image rollback без DB downgrade.
 [Runbook и ручной checklist](operations/DEPLOYMENT.md),
@@ -26,8 +28,7 @@ Environment/secrets ещё нужно создать вручную, не счи
 Флаг rollout не включался, branch protection не менялась. Только `Refs #59`;
 Issue #59 и G5 остаются открытыми. O-08 #61/L-06 #62/T-10 #60 не реализуются этой веткой.
 
-Ниже сохранён исходный handoff и исторические срезы main; они не заменяют статус
-отдельной ветки T-09 и не означают, что её изменения уже merged.
+Ниже сохранены исходный handoff и исторические срезы `main`; они относятся к более ранним датам и не отменяют текущий статус merged PR #64 / открытого T-09 #59.
 
 **Актуальный статус 31.10.2026 · GitHub main `eb3ae2880348b30df852ba653f0ac977d7ad007e` после merged [T-08 PR #58](https://github.com/inte11ectua1/skinulis/pull/58):** этапы **M1/M2/M3/M4 завершены по реализации**. M4: [O-06 #46/PR #51](https://github.com/inte11ectua1/skinulis/pull/51), [O-07 #47/PR #53](https://github.com/inte11ectua1/skinulis/pull/53), [O-07N #55/PR #57](https://github.com/inte11ectua1/skinulis/pull/57), [L-05 #48/PR #54](https://github.com/inte11ectua1/skinulis/pull/54), [T-08 #45/PR #58](https://github.com/inte11ectua1/skinulis/pull/58) — **все merged, все Issues closed completed**. [T-08 финальный audit](reviews/T-08_M4_FINAL_SECURITY_REVIEW.md), [его CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41213175596), финальная кодовая [L-05 CI 5/5, 1460 tests/94,76%](https://github.com/inte11ectua1/skinulis/actions/runs/41210779152). Тесты подтверждены на **PR head**, не отдельным новым запуском после merge.
 
