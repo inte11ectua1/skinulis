@@ -83,6 +83,7 @@ def main(*, check_only: bool = False) -> int:
                     "scripts/__init__.py",
                     "scripts/release.py",
                     "scripts/deployment.py",
+                    "scripts/backup_postgres.py",
                 )
             ):
                 path = Path(os.environ.get("RELEASE_BUNDLE_DIR", ".")) / file

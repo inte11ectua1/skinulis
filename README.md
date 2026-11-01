@@ -452,8 +452,10 @@ branch protection; применённые настройки и доказате
 
 [Deployment runbook](docs/operations/DEPLOYMENT.md) описывает общий API/bot image,
 отдельный production Compose, Caddy HTTPS и публичный отказ `/internal`.
-Локальный compose.yaml сохранён. Реальный VPS/SSH/GHCR rollout **ещё не проверен**,
-Issue #59/G5 остаются открытыми.
+Локальный compose.yaml сохранён. На 01.11.2026 EC2 подготовлен, main image скачан
+из GHCR по digest, изолированный серверный smoke и backup/restore прошли.
+Публичный production rollout/ACME **ещё не выполнен**; Issue #59/G5 открыты.
+[Фактические результаты и блокеры](docs/operations/T-09_EC2_PREFLIGHT.md).
 
 [deploy.yml](.github/workflows/deploy.yml) публикует SHA-tag только после trusted
 main CI, проверяет происхождение image и передаёт deploy **digest**. SSH выключен
@@ -470,7 +472,7 @@ Production rollout/HTTPS и live Telegram остаются отдельной п
 
 ```sh
 actionlint
-uv run pytest tests/unit/test_release_policy.py tests/unit/test_deployment.py tests/unit/test_remote_deploy.py tests/unit/test_ssm_transport.py
+uv run pytest tests/unit/test_release_policy.py tests/unit/test_deployment.py tests/unit/test_remote_deploy.py tests/unit/test_backup_postgres.py tests/unit/test_ssm_transport.py
 docker build --build-arg APP_COMMIT_SHA="$(git rev-parse HEAD)" -t skinulis-t09-test:local .
 T09_TEST_IMAGE=skinulis-t09-test:local uv run python scripts/test_delivery.py
 ```
@@ -481,6 +483,10 @@ config, DB migration/restart, exact /version SHA, private service actor и26 raw
 negative routing cases. Тестовый named volume сохраняется, чужие volumes не трогаются.
 Серверный controller запускается только из установленного release bundle и по
 умолчанию делает dry-run; инструкция setup/rollback и имена secrets — в runbook.
+В release bundle также входит ручной `scripts.backup_postgres`: приватный custom
+dump вне DB volume, проверка архива без restore и без удаления старых копий.
+Автоматический график/retention не добавлены; восстановление проверять только
+на отдельной тестовой БД, production restore требует отдельного разрешения.
 
 ## Изменение зависимостей
 

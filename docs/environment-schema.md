@@ -10,8 +10,10 @@
 trusted-main release workflow и контроллер deploy/rollback; [runbook](operations/DEPLOYMENT.md).
 Последняя миграция — `0006_settlement_notification_claim`; новых миграций T-09 нет.
 Ниже local/test environment сохранён, а production-схема добавлена отдельно в конце.
-Реальные GHCR/VPS/public HTTPS/G5 не подтверждены. SSH/live Telegram требуют
-отдельного разрешения Тимура. Secrets только в protected Environment или private
+На 01.11.2026 SSH/EC2 preparation и pull опубликованного main digest проверены;
+публичный HTTPS/production rollout/G5 ещё не подтверждены.
+[Точные границы evidence](operations/T-09_EC2_PREFLIGHT.md).
+Rollout и live Telegram требуют отдельного разрешения Тимура. Secrets только в protected Environment или private
 runtime store на сервере; значения не включать в PR/logs/build args/config output.
 
 ## Переменные
@@ -136,7 +138,7 @@ Telegram Bot API token. Compose передаёт service secret только api
 | SSH_HOST / SSH_USER / SSH_PORT / SSH_DEPLOY_DIR | GitHub production Environment variables; pinned host-key alias / skinulis-deploy / 22 / deploy root; TCP destination заменён SSM instance ID |
 | AWS_ACCOUNT_ID / AWS_ROLE_ARN / AWS_INSTANCE_ID | GitHub production Environment variables, не secrets; отдельная OIDC role skinulis-github-production и одна EC2, region ap-southeast-2 закреплён workflow |
 | SSH_PRIVATE_KEY / SSH_KNOWN_HOSTS | Только GitHub protected production Environment secrets; required independent approval, prevent self-review |
-| GHCR read credential | VPS Docker credential store; read:packages, не build arg и не release bundle |
+| GHCR read credential | Только для private package: VPS Docker credential store, read:packages. Проверенный текущий package доступен для anonymous pull; широкий личный GitHub token на сервер не копировался |
 
 Только caddy публикует80/443. DB/API без ports, named PostgreSQL volume external,
 api/bot non-root; мигратор получает только DB credentials. Bot polling по умолчанию
@@ -144,6 +146,16 @@ api/bot non-root; мигратор получает только DB credentials.
 локальный trusted-CA TLS smoke не доказывают реальные Environment settings,
 публичный ACME certificate, GHCR permissions или G5. Setup/диагностика/ограничения
 image rollback без DB downgrade: [DEPLOYMENT](operations/DEPLOYMENT.md).
+
+**Фактически настроено 01.11.2026:** Environment `production`, required reviewers
+Олег/Лера, prevent_self_review=true, can_admins_bypass=false, protected branches
+only. SSH_PRIVATE_KEY — отдельный deployment key, не AWS bootstrap key;
+SSH_KNOWN_HOSTS проверен по доверенному fingerprint. Четыре SSH destination
+variables заданы; значения и access addresses в документацию не копируются.
+PRODUCTION_ROLLOUT_ENABLED=false. Runtime secrets сгенерированы на EC2 в0600-файле,
+PUBLIC_DOMAIN ожидает выбора владельца, TELEGRAM_BOT_TOKEN пустой. Токен бота
+может предоставить только владелец безопасным способом; polling не запускался.
+
 
 Для AWS нет статических access-key secrets: deploy job после independent approval
 получает временные credentials через OIDC. Trust использует exact immutable repo

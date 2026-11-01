@@ -26,6 +26,7 @@ def ssh_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         "scripts/__init__.py",
         "scripts/release.py",
         "scripts/deployment.py",
+        "scripts/backup_postgres.py",
     ):
         path = tmp_path / file
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -82,7 +83,8 @@ def test_pinned_ssh_bundle_contains_no_env_or_credentials(
     )
     assert "--enable-polling" not in calls[-1][-1]
     with tarfile.open(fileobj=io.BytesIO(bundles[0])) as archive:
-        assert len(archive.getnames()) == 5
+        assert len(archive.getnames()) == 6
+        assert "scripts/backup_postgres.py" in archive.getnames()
         assert not any(".env" in name or "key" in name for name in archive.getnames())
 
 
@@ -235,6 +237,7 @@ def test_transport_uses_guarded_bundle_not_current_workflow_files(
         "scripts/__init__.py",
         "scripts/release.py",
         "scripts/deployment.py",
+        "scripts/backup_postgres.py",
     ):
         path = release / file
         path.parent.mkdir(parents=True, exist_ok=True)

@@ -1,15 +1,17 @@
 # T-09 — выпуск и production deployment
 
-31.10.2026 · [Issue #59](https://github.com/inte11ectua1/skinulis/issues/59).
-Это подготовленная инфраструктура, **не доказательство работы VPS/GHCR/G5**.
-Реальный SSH, production DB и live Telegram запрещены до отдельного разрешения
-Тимура. PR использует `Refs #59`; Issue остаётся открытой до server acceptance.
+Актуализация 01.11.2026 · [Issue #59](https://github.com/inte11ectua1/skinulis/issues/59).
+PR #64 merged. EC2 preparation/SSH, GHCR digest pull, isolated TLS smoke и
+backup/restore реально проверены; [evidence и ограничения](T-09_EC2_PREFLIGHT.md).
+**Публичный production rollout/ACME и G5 ещё не проверены.** Подготовительные
+изменения EC2 разрешены Тимуром; rollout и live polling требуют отдельных
+подтверждений. Частичный follow-up использует `Refs #59`, Issue остаётся открытой.
 
 **Дополнение 01.11.2026:** подготовлен [AWS OIDC + SSH-over-SSM transport](AWS_SSM_CD.md).
 Владелец подтвердил encrypted EBS и работающий EC2 SSM agent/profile/session.
 Новая runner IAM role ещё не создана/не проверена этим заданием. Создание provider/
 role по JSON — отдельное действие владельца; rollout остаётся false. Подготовка
-EC2/backup из [PR #67](https://github.com/inte11ectua1/skinulis/pull/67) ожидает review.
+EC2/backup из [PR #67](https://github.com/inte11ectua1/skinulis/pull/67) уже merged.
 
 ## Архитектура и образы
 
@@ -72,7 +74,11 @@ Workflow не загружает PR artifacts/caches в привилегиров
 
 ## GitHub Environment: настроить вручную после review
 
-Ничего из перечисленного здесь не включено автоматически.
+Следующая процедура остаётся инструкцией воспроизведения. На 01.11 Environment
+уже создан через API: independent reviewers Олег/Лера, prevent_self_review=true,
+protected branches only, **can_admins_bypass=false** (повторный GET подтвердил).
+SSH secrets и destination variables заданы; rollout явно false. Это не означает,
+что approval/deployment уже выполнялись или runner имеет сетевой доступ к SSH.
 
 1. Settings → Environments → **production**.
 2. Required reviewers: Олег и/или Лера, минимум один независимый reviewer.
@@ -144,6 +150,8 @@ lint, types, tests, docker-build, ci. PR CI не получает package write/
    отдельный осознанный план переноса/backup. Новые Caddy data/config volume roots
    должны принадлежать UID/GID10001; PostgreSQL инициализирует свой volume штатно.
    Ничего не удалять через down -v/prune.
+   Несекретный bind-mounted Caddyfile должен читаться UID10001 (обычно0644);
+   production.env при этом остаётся0600. Не применять права env-файла к Caddyfile.
 4. Вне releases скопировать `deploy/production.env.example` в
    `/opt/skinulis/production.env`, установить0600. Заполнить PUBLIC_DOMAIN,
    POSTGRES_VOLUME, DB identifiers и runtime secrets. Пароль DB/JWT минимум32
@@ -172,6 +180,46 @@ AWS CLI + Session Manager plugin открывают AWS-StartSSHSession к insta
 без отправки bundle/вызова controller. Для `operation=deploy` нужен flag=true и
 отдельное разрешение. Полные IAM policies, инструкции и evidence boundary — в
 [SSM runbook](AWS_SSM_CD.md).
+
+### Сетевой доступ GitHub runner
+
+IP административного ноутбука и исходящий IP GitHub-hosted runner различаются.
+Не открывать22 для0.0.0.0/0 и не добавлять все широкие Actions ranges.
+Существующий transport использует прямой SSH: пока безопасный runner path не
+настроен, deploy остаётся выключенным даже при готовом Environment.
+
+Предложение на согласование: SSH поверх AWS SSM + OIDC, с trust только production
+Environment, минимальной StartSession policy и pin того же SSH host key. SSM Agent и EC2 instance profile уже настроены; реальная Session Manager сессия проверена. Нужны разрешение Тимура на IAM/transport
+изменения, отдельный PR и human review. Session Manager для EC2 не имеет отдельной
+платы согласно [AWS pricing](https://aws.amazon.com/systems-manager/pricing/);
+новые платные endpoints/runners не заказывались. Альтернатива — временный /32
+SSH ingress на IP job, но роль получает права SG и требуется надёжная очистка.
+SSH-over-SSM transport подготовлен в PR #68, но AWS OIDC role ещё не настроена, GitHub → SSM не проверен. Текущий Mac SSH не меняли.
+
+### Ручной backup перед релизом
+
+После review/merge helper входит в allowlisted release bundle. Из установленного
+доверенного bundle под deployment user:
+
+```sh
+python3 -m scripts.backup_postgres --directory /opt/skinulis/backups
+```
+
+Каталог принадлежит этому пользователю,0700. Helper выбирает ровно один running
+container по **обоим** Compose labels project=skinulis-production/service=db,
+потоково сохраняет pg_dump custom format0600, проверяет pg_restore --list и
+атомарно добавляет новую копию без замены старой. Lock запрещает параллельный dump.
+Значения env/данные/DB diagnostics не печатаются. Никаких restore/drop/retention
+операций helper не выполняет; удаляется только собственный незавершённый partial.
+
+Перед миграцией проверить восстановление в **новом изолированном** PostgreSQL17
+container/volume, сравнить контрольные данные и сохранить копию вне DB volume.
+Резервная копия на том же EC2 не защищает от потери EC2/EBS: нужен согласованный
+защищённый off-host target. Проверка 01.11 использовала только synthetic test DB,
+два UUID volumes и private network; restore сохранился после restart. Тестовый dump
+также скопирован на Mac с0600 и совпадающим SHA256. Production backup/restore ещё
+не выполнялись, production DB не инициализирована. Автоматизация расписания,
+retention и эксплуатационные задачи T-10 в этот follow-up не входят.
 
 ## Что делает controller
 
