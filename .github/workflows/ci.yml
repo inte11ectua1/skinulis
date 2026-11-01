@@ -140,7 +140,7 @@ jobs:
       - name: Validate laptop Compose networking and opt-in bot (no Telegram)
         run: |
           export POSTGRES_PASSWORD
-          POSTGRES_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+          POSTGRES_PASSWORD="$(python3 -c 'from secrets import token_urlsafe; print(token_urlsafe(32))')"
           docker compose -f compose.yaml -f compose.laptop.yaml --profile polling config --quiet
           docker compose -f compose.yaml -f compose.laptop.yaml --profile polling config --format json |
             python3 -c '
