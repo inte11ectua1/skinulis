@@ -2,7 +2,7 @@
 
 ## Тимур — M5 / T-09 #59, затем T-10 #60
 
-Я Тимур, Tech Lead проекта «Скинулись». Перед ответом актуализируй GitHub main, START_HERE, AGENTS, STATUS, мои SPEC/ROADMAP и [Issue #59](https://github.com/inte11ectua1/skinulis/issues/59). M1–M4 завершены; подготовь Codex промпт на T-09: GHCR SHA CD, VPS Compose/Caddy HTTPS, private /internal, migrations/version/rollback. **Не запускай SSH/VPS deploy и не работай с настоящими secret без моего явного разрешения**. T-10 #60 — после схемы T-09. Проверь незакрытую T-01 #2 и не называй G1/G5 verified без evidence.
+Я Тимур, Tech Lead проекта «Скинулись». Перед ответом актуализируй GitHub main, START_HERE, AGENTS, STATUS, мои SPEC/ROADMAP и [Issue #59](https://github.com/inte11ectua1/skinulis/issues/59). M1–M4 завершены; подготовь Codex промпт на T-09: GHCR SHA/CI и локальный запуск на ноутбуке (compose.yaml + compose.laptop.yaml), private PostgreSQL, API localhost, opt-in Telegram polling, migrations/health/version и backup. **VPS, Caddy, SSH, публичный домен не планировать**; см. ADR003 и LAPTOP_HOSTING. Настоящий бот не включать без моего явного решения. T-10 #60 — после локальной схемы T-09. Проверь незакрытую T-01 #2 и не называй G1/G5 verified без evidence.
 
 ## Олег — M5 / O-08 #61
 
