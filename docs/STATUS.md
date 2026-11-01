@@ -1,5 +1,30 @@
 # Фактическое состояние проекта
 
+## T-09 — EC2 preflight выполнен, публичный rollout заблокирован (01.11.2026)
+
+[PR #64](https://github.com/inte11ectua1/skinulis/pull/64) merged, текущая main
+`3f67828c40be6e14786816ffbfbcb867fcc79a7f`; PR #65 closed без merge, PR #66 open
+и не является принятой main. [Полное evidence](operations/T-09_EC2_PREFLIGHT.md).
+На EC2 установлены официальный Docker29.9.2/containerd2.4.2/Compose5.6.1/Buildx0.38.1,
+systemd enabled/active; daemon без TCP, production services не запускались.
+Созданы deployment user/key, private runtime env и внешние volumes. Main image
+из GHCR скачан по digest, linux/amd64/non-root/SHA проверены. Environment production
+настроен с independent reviewers, prevent self-review и без admin bypass;
+rollout=false. Отдельный deployment key не является AWS bootstrap key.
+
+На EC2 прошли isolated real PostgreSQL17/TLS/private actor/26 routing negatives/
+persistence smoke; manual backup helper проверен настоящим dump/restore в двух
+тестовых БД, restore restart и off-host synthetic copy с SHA256. Production DB
+не трогалась. Новые12 unit cases проверяют backup privacy/failure boundaries;
+helper требует отдельного review/merge перед production использованием.
+
+**Блокеры:** AWS Console authentication для реальных SG/EBS/IAM проверок; выбор
+домена/DNS; одобрение безопасного GitHub runner SSH path (SSM+OIDC предложен,
+не внедрён); review follow-up и отдельное подтверждение rollout. PUBLIC_DOMAIN
+не заполнен, Telegram token пустой, polling выключен. Swap не создавался без
+проверки EBS encryption. Публичный HTTPS/ACME и полный G5 **не verified**.
+Ниже сохранены исторические срезы; они не отменяют эту более позднюю запись.
+
 ## T-09 — инфраструктурный PR, production acceptance пока открыт (31.10.2026)
 
 От `origin/main` **38e9abf2ba07fe895835ef40b9120b67aa29abdd** подготовлена ветка
