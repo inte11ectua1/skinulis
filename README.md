@@ -448,32 +448,35 @@ Branch/source/omit берутся из pyproject; тесты в процент �
 [CI и защита main](docs/operations/CI.md). Успех workflow сам по себе не включает
 branch protection; применённые настройки и доказательства фиксируются отдельно.
 
-## T-09: production release и безопасный dry-run
+## T-09 / M5-L — ноутбук вместо VPS (решение 01.11.2026)
 
-[Deployment runbook](docs/operations/DEPLOYMENT.md) описывает общий API/bot image,
-отдельный production Compose, Caddy HTTPS и публичный отказ `/internal`.
-Локальный compose.yaml сохранён. Реальный VPS/SSH/GHCR rollout **ещё не проверен**,
-Issue #59/G5 остаются открытыми.
+**Текущий вариант без платежей:** один ноутбук с Docker Compose запускает PostgreSQL 17, одноразовые миграции, FastAPI и, **только по явному желанию владельца токена**, один Telegram-бот long polling. Никакого публичного сервера/домена/порта 80/443/SSH не требуется. Удалённые Telegram-пользователи могут писать боту, пока ноутбук включён, Docker и бот работают, интернет доступен. Данные хранятся в именованном volume (нужна резервная копия).
 
-[deploy.yml](.github/workflows/deploy.yml) публикует SHA-tag только после trusted
-main CI, проверяет происхождение image и передаёт deploy **digest**. SSH выключен
-по умолчанию: нужен manual operation=deploy, repository flag и protected
-production Environment с независимым approval. Polling требует отдельного флага.
-PR pipeline не получает этих secrets/permissions.
+[ADR 003](docs/adr/003-laptop-as-demo-host.md) · [Полная инструкция и приёмка](docs/operations/LAPTOP_HOSTING.md). Это **изменение первоначальной VPS/HTTPS схемы**, а не подтверждение старого G5.
+
+**Внимание:** уже добавленный в PR #64 `deploy.yml` содержит старый, **неиспользуемый** ручной режим VPS/SSH. Не выставлять `PRODUCTION_ROLLOUT_ENABLED=true`, не запускать `operation=deploy`. GitHub Actions CI и SHA-tag GHCR можно использовать для выпуска образов. Локальный ноутбук обновляется вручную от проверенной `main` через Docker Compose, без GitHub self-hosted runner. Уже созданные production Compose/Caddy/runbook сохранены как архивный вариант.
+
+**Проверка API без запуска настоящего Telegram:**
 
 ```sh
-actionlint
-uv run pytest tests/unit/test_release_policy.py tests/unit/test_deployment.py tests/unit/test_remote_deploy.py
-docker build --build-arg APP_COMMIT_SHA="$(git rev-parse HEAD)" -t skinulis-t09-test:local .
-T09_TEST_IMAGE=skinulis-t09-test:local uv run python scripts/test_delivery.py
+git switch main && git pull --ff-only
+# .env подготовить локально с отдельными случайными secrets (значения не выводить)
+export APP_COMMIT_SHA="$(git rev-parse HEAD)"
+docker compose -f compose.yaml -f compose.laptop.yaml config --quiet
+docker compose -f compose.yaml -f compose.laptop.yaml up -d --build db migrate api
+curl --fail http://127.0.0.1:8000/health
+curl --fail http://127.0.0.1:8000/version
 ```
 
-Последняя команда использует свои UUID Docker networks/containers и PostgreSQL,
-тестовый TLS CA и mock boundaries; настоящий Telegram не запускается. Проверяет
-config, DB migration/restart, exact /version SHA, private service actor и26 raw
-negative routing cases. Тестовый named volume сохраняется, чужие volumes не трогаются.
-Серверный controller запускается только из установленного release bundle и по
-умолчанию делает dry-run; инструкция setup/rollback и имена secrets — в runbook.
+**Только после личного разрешения и настройки `TELEGRAM_BOT_TOKEN`:**
+
+```sh
+docker compose -f compose.yaml -f compose.laptop.yaml --profile polling up --build -d
+# Остановить бот, не удаляя БД:
+docker compose -f compose.yaml -f compose.laptop.yaml --profile polling stop bot
+```
+
+Не запускать второй polling-инстанс с тем же токеном. **Не использовать** `down -v` или очистку Docker volumes. Сообщения из Telegram не гарантируются во время сна/выключенного ноутбука. Для оригинального G5 курс может потребовать отдельного согласования с преподавателем.
 
 ## Изменение зависимостей
 
