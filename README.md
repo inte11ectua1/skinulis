@@ -454,7 +454,7 @@ branch protection; применённые настройки и доказате
 
 [ADR 003](docs/adr/003-laptop-as-demo-host.md) · [Полная инструкция и приёмка](docs/operations/LAPTOP_HOSTING.md). Это **изменение первоначальной VPS/HTTPS схемы**, а не подтверждение старого G5.
 
-**Внимание:** уже добавленный в PR #64 `deploy.yml` содержит старый, **неиспользуемый** ручной режим VPS/SSH. Не выставлять `PRODUCTION_ROLLOUT_ENABLED=true`, не запускать `operation=deploy`. GitHub Actions CI и SHA-tag GHCR можно использовать для выпуска образов. Локальный ноутбук обновляется вручную от проверенной `main` через Docker Compose, без GitHub self-hosted runner. Уже созданные production Compose/Caddy/runbook сохранены как архивный вариант.
+**Внимание:** уже добавленный в PR #64 `deploy.yml` содержит исторический ручной режим VPS/SSH, который в M5-L **принудительно отключён** (`if: false`). Не выставлять `PRODUCTION_ROLLOUT_ENABLED=true`, не запускать `operation=deploy`. GitHub Actions CI и SHA-tag GHCR можно использовать для выпуска образов. Локальный ноутбук обновляется вручную от проверенной `main` через Docker Compose, без GitHub self-hosted runner. Уже созданные production Compose/Caddy/runbook сохранены как архивный вариант.
 
 **Проверка API без запуска настоящего Telegram:**
 
