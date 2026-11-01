@@ -5,6 +5,12 @@
 Реальный SSH, production DB и live Telegram запрещены до отдельного разрешения
 Тимура. PR использует `Refs #59`; Issue остаётся открытой до server acceptance.
 
+**Дополнение 01.11.2026:** подготовлен [AWS OIDC + SSH-over-SSM transport](AWS_SSM_CD.md).
+Владелец подтвердил encrypted EBS и работающий EC2 SSM agent/profile/session.
+Новая runner IAM role ещё не создана/не проверена этим заданием. Создание provider/
+role по JSON — отдельное действие владельца; rollout остаётся false. Подготовка
+EC2/backup из [PR #67](https://github.com/inte11ectua1/skinulis/pull/67) ожидает review.
+
 ## Архитектура и образы
 
 Один runtime image `ghcr.io/inte11ectua1/skinulis:<full-40-char-SHA>` содержит
@@ -74,7 +80,7 @@ Workflow не загружает PR artifacts/caches в привилегиров
 3. Deployment branches: **Protected branches only**. Workflow дополнительно
    требует именно main. Не добавлять PR/fork refs. Guard через API проверяет
    required reviewers/prevent_self_review/branch policy;403/отсутствие правил — отказ.
-   Возможность admin bypass в UI проверяется оператором отдельно.
+   Guard также требует `can_admins_bypass=false`; неизвестное значение — отказ.
 4. Только в этом Environment создать secrets из таблицы. Не создавать их
    repository/organization-level копии. Runtime DB/JWT/Telegram secrets на runner
    вообще не нужны — они остаются в private file на VPS.
@@ -85,12 +91,13 @@ Workflow не загружает PR artifacts/caches в привилегиров
 |---|---|---|
 | production secret | SSH_PRIVATE_KEY | Отдельный deployment key OpenSSH, без вывода в лог; доступ только к выделенному deployment user |
 | production secret | SSH_KNOWN_HOSTS | Pinned server host key; fingerprint проверить через console/out-of-band. Не использовать blind ssh-keyscan/accept-new |
-| production variables | SSH_HOST | DNS/IPv4 без scheme, user, shell syntax |
+| production variables | SSH_HOST | DNS/IPv4 alias проверенного known_hosts; при SSM не TCP target |
 | production variables | SSH_USER | Например skinulis; отдельный OS user. Docker group фактически даёт root-equivalent права |
 | production variables | SSH_PORT | 1..65535, обычно22 |
 | production variables | SSH_DEPLOY_DIR | Абсолютный путь без пробелов/dot segments, например /opt/skinulis |
 | repository variable | PRODUCTION_ROLLOUT_ENABLED | По умолчанию false; true только после настройки Environment и разрешения |
-| Built-in job token | GITHUB_TOKEN | guard: contents/actions read; publisher: contents read/packages write; deploy: contents read. Не сохраняется на VPS |
+| production variables | AWS_ACCOUNT_ID / AWS_ROLE_ARN / AWS_INSTANCE_ID | Account, отдельная OIDC role skinulis-github-production и единственная EC2 для SSM; JSON/Console setup в AWS_SSM_CD.md |
+| Built-in job token | GITHUB_TOKEN | guard: contents/actions read; publisher: contents read/packages write; deploy: contents/actions read + id-token write только после Environment approval. Не сохраняется на VPS |
 | VPS Docker credential store | GHCR read credential | read:packages и доступ к package; нужен серверу для private image pull, не входит в release bundle |
 | VPS production.env | POSTGRES_PASSWORD, JWT_SECRET_KEY, BOT_SERVICE_TOKEN, TELEGRAM_BOT_TOKEN | Runtime only, отдельные случайные значения; требования ниже |
 
@@ -156,9 +163,15 @@ lint, types, tests, docker-build, ci. PR CI не получает package write/
    разрешение и enable_polling=true. rollback_compatible=false, пока оператор
    отдельно не подтвердил совместимость старого приложения с новой схемой.
 
-SSH transport передаёт только allowlisted compose/Caddy/controller files из
+SSH-over-SSM transport передаёт только allowlisted compose/Caddy/controller files из
 проверенного checkout в `root/releases/SHA`. Production env/key не передаются.
 StrictHostKeyChecking=yes, BatchMode, без agent forwarding, без чужого SSH config.
+AWS CLI + Session Manager plugin открывают AWS-StartSSHSession к instance ID,
+порт22. HostKeyAlias сохраняет старый host-key pin; direct TCP fallback отсутствует.
+`operation=check-transport` — protected read-only проверка, работает с flag=false:
+без отправки bundle/вызова controller. Для `operation=deploy` нужен flag=true и
+отдельное разрешение. Полные IAM policies, инструкции и evidence boundary — в
+[SSM runbook](AWS_SSM_CD.md).
 
 ## Что делает controller
 

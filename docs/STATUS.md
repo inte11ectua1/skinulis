@@ -1,5 +1,18 @@
 # Фактическое состояние проекта
 
+## T-09 follow-up · 01.11.2026: AWS SSM CD transport
+
+От актуальной main `3f67828` подготовлен отдельный OIDC + SSH-over-SSM transport;
+[Console setup, exact trust и permissions JSON](operations/AWS_SSM_CD.md).
+Guard/protected production Environment/host-key pin/controller сохраняются;
+добавлены recheck после approval и read-only `check-transport` с rollout=false.
+Владелец подтвердил encrypted EBS, private SG ports8000/5432, EC2 SSM IAM role,
+Online agent и успешную интерактивную session. Новая GitHub OIDC IAM role не
+создавалась; реальный GitHub → SSM transport ещё pending после human review и
+настройки владельцем. PR #66/#67 open; их изменения сюда не включены.
+Никаких merge, production rollout, polling или изменений AWS этим заданием нет.
+**T-09 #59 / G5 остаются незавершёнными**; DNS/TLS/public acceptance отдельно.
+
 ## T-09 — инфраструктурный PR, production acceptance пока открыт (31.10.2026)
 
 От `origin/main` **38e9abf2ba07fe895835ef40b9120b67aa29abdd** подготовлена ветка
