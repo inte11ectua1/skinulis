@@ -1,0 +1,43 @@
+# Explicit opt-in for laptop-hosted Telegram polling.
+# Usage: docker compose -f compose.yaml -f compose.laptop.yaml --profile polling up -d --build
+# A normal 'docker compose up' still starts only db/migrate/api.
+services:
+  db:
+    networks: [database]
+
+  migrate:
+    networks: [database]
+
+  api:
+    networks: [application, database]
+    # The base Compose file only binds 127.0.0.1; do not expose it to the LAN.
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+
+  bot:
+    profiles: [polling]
+    image: skinulis-api:local
+    build:
+      context: .
+      args:
+        APP_COMMIT_SHA: ${APP_COMMIT_SHA:-}
+    command: ["python", "-m", "bot.main"]
+    init: true
+    restart: unless-stopped
+    environment:
+      API_BASE_URL: http://api:8000
+      BOT_SERVICE_TOKEN: ${BOT_SERVICE_TOKEN:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [application, telegram]
+    # Only one polling process with the same Telegram bot token.
+    container_name: "${COMPOSE_PROJECT_NAME:-skinulis}-laptop-bot"
+
+networks:
+  application:
+    internal: true
+  database:
+    internal: true
+  telegram: {}
