@@ -2,6 +2,10 @@
 
 **Источник фактов:** GitHub `main` на старте этого handoff `eb3ae2880348b30df852ba653f0ac977d7ad007e` после merged [T-08 PR #58](https://github.com/inte11ectua1/skinulis/pull/58), Issue [#45](https://github.com/inte11ectua1/skinulis/issues/45) closed completed. Это **закрытие объёма M4 по коду и техническому аудиту**, не формальная проверка релизных G1/G2/G3/G4 и не обещание production готовности.
 
+## Решение по хостингу с 01.11.2026 — supersedes VPS handoff ниже
+
+Тимур выбрал **ноутбук вместо VPS/домена**. Текущий M5-L: laptop Docker Compose `db/migrate/api` + **явно включаемый** `bot` polling; 127.0.0.1 API, DB private, GHCR SHA release/CI остаются, локальное обновление вручную, данные в named volume + backup. Удалённый SSH, Caddy, публичный HTTPS и GitHub production Environment **не требуются в пересмотренном командном scope**; старые упоминания ниже — сохранённый *исторический* план, а не текущие задачи. **Исходный G5 преподавателя с VPS/HTTPS не выполнен**; согласование альтернативы — отдельное условие. [ADR 003](../adr/003-laptop-as-demo-host.md), [runbook](LAPTOP_HOSTING.md), [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59). T-10 — логи/восстановление ноутбука, O-08/L-06 без изменений. T-09 PR #64 **merged**, серверный деплой никогда не производился. Не включать прежний SSH rollout из Release workflow; не устанавливать self-hosted Actions runner на личный ноутбук.
+
 ## 1. Что уже принято по M4
 
 | Workstream | Issue | PR | Доказательство |
