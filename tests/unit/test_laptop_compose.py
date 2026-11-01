@@ -15,7 +15,7 @@ def test_laptop_compose_is_separate_and_bot_opt_in() -> None:
     assert 'command: ["python", "-m", "bot.main"]' in laptop
     assert "container_name:" in laptop
     assert "API_BASE_URL: http://api:8000" in laptop
-    assert 'TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}' in laptop
+    assert "TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}" in laptop
     assert "depends_on:" in laptop and "condition: service_healthy" in laptop
 
 
@@ -23,7 +23,7 @@ def test_laptop_compose_keeps_db_and_api_private() -> None:
     base = (ROOT / "compose.yaml").read_text()
     laptop = (ROOT / "compose.laptop.yaml").read_text()
 
-    assert '127.0.0.1:${API_PORT:-8000}:8000' in laptop
+    assert "127.0.0.1:${API_PORT:-8000}:8000" in laptop
     assert "    networks: [database]" in laptop
     assert "    networks: [application, database]" in laptop
     assert "    networks: [application, telegram]" in laptop
