@@ -161,5 +161,7 @@ PUBLIC_DOMAIN ожидает выбора владельца, TELEGRAM_BOT_TOKEN
 получает временные credentials через OIDC. Trust использует exact immutable repo
 subject + production Environment. Настройка владельцем и JSON policies:
 [AWS_SSM_CD](operations/AWS_SSM_CD.md). `check-transport` не требует включать rollout
-и не запускает controller/миграции/polling. IAM/реальное SSM соединение этим PR
-не считаются проверенными; EC2 agent/session подтверждены владельцем отдельно.
+и не запускает controller/миграции/polling. AWS_ACCOUNT_ID/AWS_ROLE_ARN/AWS_INSTANCE_ID
+заполнены в production Environment; роль ещё отсутствует, OIDC provider inventory
+запрещён Organizations SCP. Local SSM SSH проверен реальным подключением и
+CloudTrail, GitHub OIDC transport пока не выполнялся. [Readiness evidence](operations/T-09_AWS_READINESS.md).
