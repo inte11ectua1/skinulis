@@ -1,5 +1,9 @@
 # T-09: фактическая подготовка EC2, 01.11.2026
 
+**Историческое evidence старого EC2.** Новый destination подготовлен отдельно:
+[новый AWS EC2](T-09_NEW_AWS_EC2.md). Приведённые ниже isolated PostgreSQL/TLS/
+backup результаты не являются проверками нового сервера или production acceptance.
+
 Refs [#59](https://github.com/inte11ectua1/skinulis/issues/59).
 Это evidence подготовки и изолированных тестов, **не production acceptance/G5**.
 Тимур разрешил installation/preparation EC2. Публичный rollout и live Telegram

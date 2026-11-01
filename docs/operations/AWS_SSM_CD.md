@@ -1,9 +1,11 @@
 # T-09: GitHub OIDC → SSM → SSH
 
 01.11.2026 · [Issue #59](https://github.com/inte11ectua1/skinulis/issues/59).
-Это инструкция для владельца AWS account и подготовленный transport. IAM provider,
-роль и настоящий GitHub → SSM connection **ещё не проверены**. Rollout flag остаётся
-`false`; production deployment и Telegram polling не выполнялись.
+Provider и отдельная runner role нового account созданы/проверены по main JSON;
+[новый EC2, policies, host pin и Environment evidence](T-09_NEW_AWS_EC2.md).
+Реальный Mac admin → SSM → SSH прошёл. [GitHub check-transport](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056)
+ожидает independent production approval, поэтому GitHub OIDC connection ещё
+**не verified**. Rollout flag `false`, deployment и polling не выполнялись.
 
 ## Границы доверия
 
@@ -21,14 +23,16 @@ existing exact-release deployment controller (only operation=deploy)
 
 SSM — только туннель к уже работающему SSH, не root shell/Run Command. Не нужны
 inbound SSH от GitHub runner, bastion, платный runner или долгоживущие AWS access
-keys. Существующий административный SSH с Mac не меняется. EC2 agent использует
+keys. Старый административный SSH с Mac не меняется; новый EC2 использует SSM.
+EC2 agent использует
 свою **отдельную** `skinulis-ec2-ssm-role` / AmazonSSMManagedInstanceCore, а runner —
 новую `skinulis-github-production`. Не прикреплять runner policy к EC2 role.
 Исходящий HTTPS к AWS SSM/ssmmessages endpoints должен оставаться доступным.
 
-Состояние EC2: владелец подтвердил encrypted EBS (`aws/ebs`), закрытые SG ports
-8000/5432, IAM instance profile, Online agent и успешную интерактивную SSM-сессию.
-Это не доказательство permissions новой GitHub роли и не публичный HTTPS acceptance.
+На новом EC2 API подтвердил encrypted EBS/AWS-managed key, SG inbound только80/443,
+instance profile и Online agent. Реальный pinned SSH-over-SSM под deployment user
+прошёл; другой host key отвергнут. Это не доказательство GitHub AssumeRole
+и не публичный HTTPS acceptance.
 
 Только deploy job получает `id-token: write`, после Environment approval. Guard и
 publish не получают AWS credentials; PR CI не запрашивает OIDC или prod secrets.
@@ -41,11 +45,12 @@ Environment subject сам по себе не кодирует ветку: за�
 Не разрешать PR refs в Environment и не добавлять workflows, использующие этот
 Environment без этих проверок. OIDC trust не делает произвольный SHA доверенным.
 
-## AWS Console: действия владельца, без автоматического применения
+## AWS Console: процедура воспроизведения по отдельному разрешению
 
 В JSON заменить `<AWS_ACCOUNT_ID>` на 12-значный ID **того же** AWS account;
-`<INSTANCE_ID>` — на ID EC2 skinulis-prod из задания/EC2 Console. В текущем T-09
-это `i-036a41b6d30814aad`, region `ap-southeast-2`. Имена ключей policy и
+`<INSTANCE_ID>` — на ID **нового** EC2 skinulis-prod из актуальной EC2 Console,
+region `ap-southeast-2`. Старый account/instance больше не CD destination.
+Имена ключей policy и
 `${aws:userid}` не менять; последняя строка — IAM variable, не placeholder.
 Account ID/ARN — configuration, не secret; реальные значения не нужны в Git.
 
@@ -60,7 +65,7 @@ Account ID/ARN — configuration, не secret; реальные значения
    Не выбирать AdministratorAccess/PowerUserAccess/AmazonSSMFullAccess.
 3. **Role → Permissions → Add permissions → Create inline policy → JSON.**
    Вставить [github-ssm-permissions.json](../../deploy/aws/github-ssm-permissions.json),
-   заменить оба placeholders; имя `SkinulisProductionSshSessions`.
+   заменить оба placeholders; имя `SkinulisProductionSsm`.
    Разрешены только StartSession к одной EC2 и AWS-StartSSHSession, data channel,
    завершение своих сессий. Никаких EC2/SG/IAM writes, SendCommand, shell/port-forward
    documents, Secrets Manager/Parameter Store, PassRole или доступа к DB secrets.
@@ -68,8 +73,9 @@ Account ID/ARN — configuration, не secret; реальные значения
    Session name ограничен `skinulis-gh-*`; workflow использует run ID/attempt.
    Max session duration оставить 1 hour; job запрашивает 1800 seconds, timeout25min.
 5. Скопировать role ARN для GitHub Environment. Передать можно ARN, не access keys.
-   Данные политики пока являются reviewable proposal; реальный IAM authorization
-   проверяется только защищённым `check-transport` после принятия PR.
+   JSON уже приняты в main через PR #68; в новом account они применены по явному
+   разрешению Тимура. Реальный GitHub IAM authorization проверяется только
+   защищённым `check-transport` после independent Environment approval.
 
 ### Точный OIDC subject этого репозитория
 

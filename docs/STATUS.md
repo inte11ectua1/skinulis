@@ -1,5 +1,31 @@
 # Фактическое состояние проекта
 
+## T-09 — новый AWS EC2 подготовлен, OIDC approval pending (01.11.2026)
+
+По отдельному разрешению Тимура создан новый t3.small Ubuntu24.04 AMD64 в Sydney,
+20GiB encrypted gp3, без новых дополнительных платных сервисов. Старый EC2/account
+не менялись. [Подробное evidence и стоимость](operations/T-09_NEW_AWS_EC2.md).
+Docker29.9.2/Compose5.6.1 и SSM Online, swap2GiB на encrypted root, отдельный
+deployment user/new keys, private fresh runtime env и пустые volumes готовы.
+Реальный SSH-over-SSM с pinned host key и отказ с неверным key проверены;
+main GHCR digest скачан, Compose/controller dry-run и runtime validators прошли.
+1175 unit tests (в том числе104 release/SSM cases), Ruff и strict mypy проходят.
+На новом сервере также прошли synthetic PostgreSQL17 dump/restore, restart target
+и off-host archive SHA256 check; production volumes не использовались.
+
+GitHub OIDC provider и новая минимальная role проверены API по main policies.
+Environment destination и оба SSH secrets обновлены на новый account/сервер;
+independent Олег/Лера, prevent_self_review, protected branches и запрет bypass
+сохранены, rollout=false. [Protected check-transport](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056):
+guard/publish success; **ожидает независимого approval**. GitHub OIDC/SSM ещё не
+verified; successful Mac admin SSM session не подменяет этот gate.
+PR #67/#68 уже merged. PR #69 относится к readiness/SCP deny старого account.
+
+Новый сервер ещё не запускал production PostgreSQL/API/Caddy/bot. Требуются
+OIDC check, DNS/ACME и отдельное разрешение
+на rollout; live Telegram отдельно. **Issue #59/G5 остаются открытыми.**
+Ниже сохранены исторические срезы старого EC2 и прежних этапов.
+
 ## T-09 — EC2 preflight выполнен, публичный rollout ожидает (01.11.2026)
 
 [PR #64](https://github.com/inte11ectua1/skinulis/pull/64) merged в `main`;

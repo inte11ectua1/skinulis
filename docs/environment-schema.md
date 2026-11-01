@@ -12,7 +12,8 @@ trusted-main release workflow и контроллер deploy/rollback; [runbook]
 Ниже local/test environment сохранён, а production-схема добавлена отдельно в конце.
 На 01.11.2026 SSH/EC2 preparation и pull опубликованного main digest проверены;
 публичный HTTPS/production rollout/G5 ещё не подтверждены.
-[Точные границы evidence](operations/T-09_EC2_PREFLIGHT.md).
+[Новый AWS EC2 и точные границы evidence](operations/T-09_NEW_AWS_EC2.md);
+[исторические изолированные проверки старого сервера](operations/T-09_EC2_PREFLIGHT.md).
 Rollout и live Telegram требуют отдельного разрешения Тимура. Secrets только в protected Environment или private
 runtime store на сервере; значения не включать в PR/logs/build args/config output.
 
@@ -150,10 +151,12 @@ image rollback без DB downgrade: [DEPLOYMENT](operations/DEPLOYMENT.md).
 **Фактически настроено 01.11.2026:** Environment `production`, required reviewers
 Олег/Лера, prevent_self_review=true, can_admins_bypass=false, protected branches
 only. SSH_PRIVATE_KEY — отдельный deployment key, не AWS bootstrap key;
-SSH_KNOWN_HOSTS проверен по доверенному fingerprint. Четыре SSH destination
-variables заданы; значения и access addresses в документацию не копируются.
+SSH_KNOWN_HOSTS проверен по authenticated AWS Console Output нового сервера.
+Семь SSH/AWS destination variables обновлены на новый account/EC2; значения
+и access addresses в документацию не копируются.
 PRODUCTION_ROLLOUT_ENABLED=false. Runtime secrets сгенерированы на EC2 в0600-файле,
-PUBLIC_DOMAIN ожидает выбора владельца, TELEGRAM_BOT_TOKEN пустой. Токен бота
+PUBLIC_DOMAIN подготовлен как временное IP-derived DNS name, публичный TLS
+ещё не проверен; TELEGRAM_BOT_TOKEN пустой. Токен бота
 может предоставить только владелец безопасным способом; polling не запускался.
 
 
@@ -161,5 +164,6 @@ PUBLIC_DOMAIN ожидает выбора владельца, TELEGRAM_BOT_TOKEN
 получает временные credentials через OIDC. Trust использует exact immutable repo
 subject + production Environment. Настройка владельцем и JSON policies:
 [AWS_SSM_CD](operations/AWS_SSM_CD.md). `check-transport` не требует включать rollout
-и не запускает controller/миграции/polling. IAM/реальное SSM соединение этим PR
-не считаются проверенными; EC2 agent/session подтверждены владельцем отдельно.
+и не запускает controller/миграции/polling. Provider/role нового account проверены
+API по main JSON. Реальное Mac admin SSM/SSH прошло, но GitHub OIDC session
+ожидает independent approval; не считать её подтверждённой заранее.
