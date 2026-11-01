@@ -14,6 +14,8 @@ trusted-main release workflow и контроллер deploy/rollback; [runbook]
 отдельного разрешения Тимура. Secrets только в protected Environment или private
 runtime store на сервере; значения не включать в PR/logs/build args/config output.
 
+**Актуализация 01.11.2026 / ADR003:** VPS/домен/SSH/Caddy не нужны для выбранного laptop M5-L. Используй **локальный** `.env` только на своём ноутбуке и `compose.yaml + compose.laptop.yaml`; API слушает 127.0.0.1, БД без host ports, бот получает `API_BASE_URL=http://api:8000` через контейнерную сеть и `TELEGRAM_BOT_TOKEN` только при opt-in polling. `APP_COMMIT_SHA` локально задаётся из verified main перед сборкой для `/version`. Инструкции **Production delivery — T-09** ниже сохранены как архивный VPS scope, **не новая задача на настройку секретов GitHub Environment**. Не путать `.env` (локальный) и старый `deploy/production.env.example` (серверный). [Новый runbook](operations/LAPTOP_HOSTING.md), [ADR003](adr/003-laptop-as-demo-host.md). Оригинальный G5 VPS/HTTPS не подтверждён.
+
 ## Переменные
 
 | Переменная | Назначение | Обязательность / default | Безопасный пример |
