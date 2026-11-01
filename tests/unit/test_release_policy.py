@@ -289,6 +289,7 @@ def test_workflows_keep_pr_secrets_out_and_deploy_manual_only() -> None:
     assert cd["jobs"]["publish"]["permissions"]["packages"] == "write"
     deploy = cd["jobs"]["deploy"]
     assert deploy["environment"] == "production"
+    assert deploy["if"].strip().startswith("false &&"), "Laptop M5 must disable VPS SSH rollout"
     assert (
         "workflow_dispatch" in deploy["if"]
         and "PRODUCTION_ROLLOUT_ENABLED" in deploy["if"]
