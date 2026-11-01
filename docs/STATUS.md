@@ -1,39 +1,20 @@
 # Фактическое состояние проекта
 
-## T-09 — инфраструктурный PR, production acceptance пока открыт (31.10.2026)
+## Решение 01.11.2026 — M5-L на ноутбуке вместо VPS (пересогласование в PR)
 
-От `origin/main` **38e9abf2ba07fe895835ef40b9120b67aa29abdd** подготовлена ветка
-`feat/T-09-ghcr-cd-vps`: общий non-root API/bot image, production Compose/Caddy,
-trusted-main release policy, digest pinning, отключённый по умолчанию SSH rollout,
-однократная миграция, health/SHA probes и image rollback без DB downgrade.
-[Runbook и ручной checklist](operations/DEPLOYMENT.md),
-[схема окружения](environment-schema.md#production-delivery--t-09).
+**Новая целевая схема:** ноутбук Тимура + Docker Compose (`db`, `migrate`, `api`, один `bot` с opt-in `polling`). API публикуется только на `127.0.0.1`; БД не публикуется; Telegram получает updates через исходящее long polling, без публичного API, домена, Caddy и SSH. [ADR 003](adr/003-laptop-as-demo-host.md), [инструкция](operations/LAPTOP_HOSTING.md), [пересогласуемая T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59). Для запуска на ноутбуке **нужен отдельный реальный smoke**, в текущем PR только код, тесты и документация. Нет оснований утверждать, что реальные сообщения Telegram уже отправлялись.
 
-Локально прошли75 новых unit cases release/deploy/SSH boundaries и Docker smoke:
-реальные PostgreSQL17.11 + non-root Caddy, trusted local-CA TLS, DB restart с
-сохранением профиля в своём UUID volume, exact /version и26 negative raw routes;
-private service actor работает. Полный локальный набор: **1133 unit +402 настоящих
-PostgreSQL integration =1535 passed**, combined branch coverage app+bot **94,76%**.
-Frozen sync/lock, Ruff, strict mypy128 files, pre-commit/secrets, pip check,
-audit72 packages и native/container actionlint прошли. Docker API/bot image собран
-и проверен без polling. Единственный Alembic head0006 сохранён.
-Обычный CI сохраняет пять required job names, добавляет main push, actionlint и
-этот Docker smoke. Фактические GitHub CI evidence — в описании инфраструктурного PR.
+**История инфраструктуры:** [PR #64](https://github.com/inte11ectua1/skinulis/pull/64) **merged в main 31.10.2026**, GHCR/SSH/VPS код, non-root image, Caddy и 5/5 CI на final head [41229643921](https://github.com/inte11ectua1/skinulis/actions/runs/41229643921). Техническая реализация сохранена, но **не используется для серверного размещения**. Не включать старый GitHub `workflow_dispatch operation=deploy`, `PRODUCTION_ROLLOUT_ENABLED` или self-hosted runner на ноутбуке. GHCR/автоматический publish после main CI остаётся отдельно от **ручного** запуска Compose на ноутбуке; публикация в реальный registry не подтверждена этим документом.
 
-**Не выполнены реальные GHCR publication/SSH/VPS/ACME/live Telegram.** Read-only
-GitHub API при проверке не показал ни одного Environment: protected production
-Environment/secrets ещё нужно создать вручную, не считать их настроенными.
-Флаг rollout не включался, branch protection не менялась. Только `Refs #59`;
-Issue #59 и G5 остаются открытыми. O-08 #61/L-06 #62/T-10 #60 не реализуются этой веткой.
+**Осталось по локальной T-09 #59:** после review/merge laptop-конфигурации на личном устройстве проверить CI, cold Compose+Alembic, /health DB, /version SHA, приватные порты, restart/persistence + backup, и отдельный Telegram polling smoke только по явному разрешению владельца токена. **T-09 open до evidence; локальный M5-L не verified.** [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) должен описывать локальную диагностику, JSON логи и rollback/backup без VPS.
 
-Ниже сохранён исходный handoff и исторические срезы main; они не заменяют статус
-отдельной ветки T-09 и не означают, что её изменения уже merged.
+**Разграничение требований:** **исходный G5 с VPS/SSH/Caddy HTTPS не выполнен** и не может считаться verified от одного локального бота; если это строгое условие курса, понадобится отдельное согласование эквивалентности у преподавателя. G1/T-01 #2, G2/G3/G4 live Telegram QA также остаются в прежних состояниях. Архивные срезы ниже до решения 01.11 сохранены как история, а не новые задания на VPS.
 
 **Актуальный статус 31.10.2026 · GitHub main `eb3ae2880348b30df852ba653f0ac977d7ad007e` после merged [T-08 PR #58](https://github.com/inte11ectua1/skinulis/pull/58):** этапы **M1/M2/M3/M4 завершены по реализации**. M4: [O-06 #46/PR #51](https://github.com/inte11ectua1/skinulis/pull/51), [O-07 #47/PR #53](https://github.com/inte11ectua1/skinulis/pull/53), [O-07N #55/PR #57](https://github.com/inte11ectua1/skinulis/pull/57), [L-05 #48/PR #54](https://github.com/inte11ectua1/skinulis/pull/54), [T-08 #45/PR #58](https://github.com/inte11ectua1/skinulis/pull/58) — **все merged, все Issues closed completed**. [T-08 финальный audit](reviews/T-08_M4_FINAL_SECURITY_REVIEW.md), [его CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41213175596), финальная кодовая [L-05 CI 5/5, 1460 tests/94,76%](https://github.com/inte11ectua1/skinulis/actions/runs/41210779152). Тесты подтверждены на **PR head**, не отдельным новым запуском после merge.
 
-**M5 Delivery назначен, реализация впереди:** Тимур [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) (main-only GHCR/CD/VPS/Caddy/private /internal) → [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) (JSON logging/rotation/runbook), Олег [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61) (real PG load 100 clients/p95 и regressions), Лера [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62) (UX errors/retries, mocked Telegram + real HTTP/PG). [Полный handoff и зависимости](operations/M5_DELIVERY_HANDOFF.md). T-09 critical path; Олег и Лера могут начинать параллельно. **Ничего не деплоили и новую нагрузку 100 клиентов не измеряли**. Настоящие SSH/VPS/Telegram действия требуют отдельного разрешения Тимура.
+**M5 Delivery назначен, реализация впереди:** Тимур [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) (GHCR CI + локальный ноутбук/Compose/API loopback/opt-in bot) → [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) (JSON logging/rotation/runbook), Олег [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61) (real PG load 100 clients/p95 и regressions), Лера [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62) (UX errors/retries, mocked Telegram + real HTTP/PG). [Полный handoff и зависимости](operations/M5_DELIVERY_HANDOFF.md). T-09 critical path; Олег и Лера могут начинать параллельно. **Ничего не деплоили и новую нагрузку 100 клиентов не измеряли**. Настоящие SSH/VPS/Telegram действия требуют отдельного разрешения Тимура.
 
-**Незакрытые проверки:** [T-01 #2](https://github.com/inte11ectua1/skinulis/issues/2)/G1 остаётся открытой (admin bypass/негативные доказательства); **G2/G3/G4 не formally verified** из-за отложенного live Telegram QA ([#38](https://github.com/inte11ectua1/skinulis/issues/38) closed not_planned); G5 недоступен до GHCR+HTTPS+/version SHA+закрытого снаружи /internal. На PR #51/#53/#57/#54/#58 **не зарегистрированы independent human APPROVED**; это процессная оговорка T08-01, которую нельзя подменять AI-комментариями или зелёным CI. Исторические срезы ниже сохранены как хронология, не как текущие M5 статусы.
+**Незакрытые проверки:** [T-01 #2](https://github.com/inte11ectua1/skinulis/issues/2)/G1 остаётся открытой (admin bypass/негативные доказательства); **G2/G3/G4 не formally verified** из-за отложенного live Telegram QA ([#38](https://github.com/inte11ectua1/skinulis/issues/38) closed not_planned); G5-original (VPS/HTTPS) не verified; laptop M5-L пересогласован, нуждается в реальном smoke. На PR #51/#53/#57/#54/#58 **не зарегистрированы independent human APPROVED**; это процессная оговорка T08-01, которую нельзя подменять AI-комментариями или зелёным CI. Исторические срезы ниже сохранены как хронология, не как текущие M5 статусы.
 
 **Срез:** 30 октября 2026 года, проверен GitHub `main` `34074adf95d65760b3ba773999f55689ded738e6` после [merged PR #44](https://github.com/inte11ectua1/skinulis/pull/44). **M3 Expenses завершён по реализации:** [O-04 #36](https://github.com/inte11ectua1/skinulis/issues/36), [O-05 #39](https://github.com/inte11ectua1/skinulis/issues/39), [L-04 #37](https://github.com/inte11ectua1/skinulis/issues/37), [T-07 #35](https://github.com/inte11ectua1/skinulis/issues/35) все **closed (completed)**, PR #41/#42/#43/#44 merged. Последний [GitHub CI PR #44](https://github.com/inte11ectua1/skinulis/actions/runs/41064210033) на `124bbe5`: **5/5 success, 857 unit +290 PostgreSQL integration =1147 tests**, combined branch coverage **95,46%**. T-07 выявил и исправил Medium T07-01 (не заменять повреждённые простые snapshots) и Low T07-02 (error responses без `no-store`); [аудит](reviews/T-07_M3_SECURITY_REVIEW.md). **Независимого зарегистрированного APPROVED-review PR #44 нет**; это не отменяет merge/CI, но не следует приписывать его участникам.
 
@@ -107,12 +88,12 @@ M4 реализован в коде и проверен PostgreSQL/HTTP/Telegram
 
 | Issue | Владелец | Что делать и зависимость |
 |---|---|---|
-| [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) | Тимур | **первый critical path**: GHCR SHA, trusted-main CD, Docker Compose/VPS, Caddy HTTPS, снаружи deny /internal, DB private, upgrade/health/version/rollback. Настоящий VPS deploy только после разрешения |
-| [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) | Тимур | JSON logs/request_id, Docker log rotation, runbook; разработка дизайна сразу, production integration **после T-09** |
+| [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) | Тимур | **первый critical path**: GHCR SHA/CI и хостинг на ноутбуке: local Compose+API loopback+PG named volume, opt-in один bot, health/version/backup; старый VPS scope отменён по решению 01.11. Настоящее локальное polling только после отдельного разрешения |
+| [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) | Тимур | JSON logs/request_id, Docker log rotation, runbook; разработка дизайна сразу, laptop integration после согласованной T-09 |
 | [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61) | Олег | **старт сейчас, параллельно**: PG financial/security/races, controlled 100 simultaneous clients, p50/p95/p99; без production load |
 | [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62) | Лера | **старт сейчас, параллельно**: Telegram mocked UX error/timeout/replay + real HTTP/PostgreSQL E2E; live Telegram запрещён |
 
-**G5 пока not verified.** Не открывать порты API/DB в Интернет, не передавать prod secrets в PR, не запускать SSH, реальные Telegram updates или стресс-тесты чужого VPS по умолчанию. [M5 handoff](operations/M5_DELIVERY_HANDOFF.md).
+**M5-L не verified** до запуска на ноутбуке и проверок /health/version/volume; **оригинальный G5 не verified** как VPS/HTTPS. Не публиковать API/DB, не передавать secrets в PR, не запускать live Telegram без явного согласия. [M5 handoff](operations/M5_DELIVERY_HANDOFF.md).
 
 ## Release gates
 
@@ -122,7 +103,7 @@ M4 реализован в коде и проверен PostgreSQL/HTTP/Telegram
 | G2 — auth и группы | **implementation complete; formal verification pending** | M2 код merged и CI зелёный; live Telegram E2E и production-изоляция `/internal` не подтверждены |
 | G3 — расходы | **not verified** | M3 PR #41–#44 merged и Issues closed, T-07 принята/закрыта; CI 5/5 и ресторанный HTTP/PostgreSQL test evidence есть. **Живой Telegram E2E отложен**, поэтому gate не объявлен verified. [Evidence](reviews/T-07_M3_SECURITY_REVIEW.md). |
 | G4 — компенсации | **implementation complete; formal live gate pending** | M4 PR #51/#53/#57/#54/#58 merged/closed, PostgreSQL race/HTTP/mock Telegram tests и T-08 audit есть. Live Telegram QA отложено, independent approvals для ряда PR отсутствуют; не выдавать за verified |
-| G5 — публикация и CD | **not verified** | M5 назначен #59/#60/#61/#62, GHCR/VPS/HTTPS/image SHA/приватный /internal ещё не доказаны |
+| G5-original — публикация и VPS/CD | **not verified / scope changed** | Исходный VPS/SSH/HTTPS отменён командным решением, эквивалентность учебным требованиям не подтверждена; отдельный local M5-L требует реального ноутбука и доказательств |
 | G6 — приёмка / демонстрация | **not verified** | M6 |
 
 ## Открытые вопросы и ограничения
