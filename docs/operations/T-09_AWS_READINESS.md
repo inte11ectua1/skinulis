@@ -64,15 +64,22 @@ write attempt и не гарантия авторизации**: агрегир�
 симуляцию нельзя выдавать за live result.
 
 Подготовлены private copies текущих trust/permissions JSON с account/instance
-substitutions; `${aws:userid}` сохранён. Создание/изменение provider/role/policy
-требует отдельного разрешения Тимура. **IAM writes не выполнялись.**
+substitutions; `${aws:userid}` сохранён. Тимур отдельно разрешил минимальное
+создание provider и отсутствующей runner role с policies из принятой main.
+**После разрешения выполнен реальный CreateOpenIDConnectProvider**, UTC
+2026-11-01T18:53:31Z: AWS вернул AccessDenied, explicit Deny в Organizations SCP
+`p-lua7mktn`. Provider не создан. Выполнение остановлено до CreateRole/PutRolePolicy;
+успешных IAM изменений нет. Это уже подтверждённый API отказ создания, а не
+предположение на основании simulator. Ни обход SCP, ни расширение permissions
+или переключение на другую identity не предпринимались.
 
 Следующий шаг владельца: передать Organizations administrator точный AccessDenied
 и запросить узкое исправление SCP для project account/GitHub OIDC provider:
 Get/List/Create provider. Не отключать SCP целиком, не создавать root access keys
 и не выдавать runner AdministratorAccess. Allow в IAM role не устраняет explicit
-SCP Deny. После доступного read-only inventory — показать идемпотентный plan,
-получить разрешение на IAM writes, применить setup и проверить GitHub transport.
+SCP Deny. После исправления доступа — повторить read-only inventory и применить
+уже разрешённый setup в прежних границах, затем проверить GitHub transport.
+Изменения существующих несовпадающих IAM ресурсов этим разрешением не покрываются.
 
 ## DNS, controller и backup
 

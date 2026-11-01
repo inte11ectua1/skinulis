@@ -9,9 +9,11 @@ PR #66/#67/#68 merged; main `dd78027bfdf293568284d36719b5ac1929c337ac`.
 [AWS/GHCR/DNS/controller/backup evidence](operations/T-09_AWS_READINESS.md).
 EBS encryption, SG/private ports, SSM Agent и настоящий **локальный** SSM SSH проверены.
 Production AWS variables заполнены; защиты/secrets сохранены, flag=false.
-**Blocker:** OIDC provider Get/List запрещены Organizations SCP Deny; runner role
-отсутствует. IAM writes не выполнялись. Нужны исправление доступа владельцем
-организации, отдельное разрешение IAM setup и protected GitHub check-transport.
+**Blocker:** OIDC provider Get/List и реальный Create запрещены Organizations SCP
+Deny. После отдельного разрешения Тимура CreateOpenIDConnectProvider отклонён
+01.11.2026 18:53:31 UTC; IAM ресурсы не изменены, CreateRole/PutRolePolicy не
+запускались. Нужны исправление SCP администратором организации, inventory,
+применение уже разрешённого setup и protected GitHub check-transport.
 PUBLIC_DOMAIN проверен только в private test copy; публичного HTTPS,
 production deployment, polling и G5 acceptance нет. Исторические формулировки ниже
 об открытых #67/#68 больше не актуальны.
