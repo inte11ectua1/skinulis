@@ -16,6 +16,8 @@
 - T-09 публично закрывает `/internal` reverse proxy/не публикует PostgreSQL; O-08 грузит **только одноразовую приватную тестовую БД** (100 concurrent), L-06 использует **mock Telegram**, без реального polling. Настоящие SSH/VPS/live Telegram/load-production действия — только с явного разрешения Тимура.
 - PR с завершённой Issue должен содержать **`Closes #N`**, частичный PR **`Refs #N`**, не закрывать незаконченный scope. **Independent human APPROVED обязателен по процессу**, даже если admin GitHub может обходить protection. Исторические PR без APPROVED не «одобрены задним числом».
 
+**M5-L update 01.11.2026:** Тимур отказался от VPS для текущего хостинга. [ADR003](adr/003-laptop-as-demo-host.md), [инструкция](operations/LAPTOP_HOSTING.md). Теперь T-09 — ноутбук/Compose и проверенная main, T-10 — локальная диагностика; O-08/L-06 не меняют scope. **Не включать** из предыдущего workflow `operation=deploy` по SSH/production rollout; отдельные облачные/серверные секреты не нужны. PR CI и GHCR publication остаются. Telegram bot long polling только по явной команде пользователя; не выдавать laptop smoke за исходный G5 VPS/HTTPS или за независимое human APPROVED.
+
 ## Перед каждым PR
 Прочитать AGENTS.md, docs/PRODUCT_RULES.md, свой SPEC и ROADMAP, выполнить одну issue, добавить тесты, указать проверки, риски, ссылку на issue. После merge обновить docs/STATUS.md.
 
