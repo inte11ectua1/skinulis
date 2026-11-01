@@ -15,7 +15,7 @@ rollout=false. Отдельный deployment key не является AWS boots
 На EC2 прошли isolated real PostgreSQL17/TLS/private actor/26 routing negatives/
 persistence smoke; manual backup helper проверен настоящим dump/restore в двух
 тестовых БД, restore restart и off-host synthetic copy с SHA256. Production DB
-не трогалась. Новые12 unit cases проверяют backup privacy/failure boundaries;
+не трогалась. Новые13 unit cases проверяют backup privacy/failure boundaries;
 helper требует отдельного review/merge перед production использованием.
 
 **Блокеры:** AWS Console authentication для реальных SG/EBS/IAM проверок; выбор

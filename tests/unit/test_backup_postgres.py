@@ -2,8 +2,10 @@
 
 import stat
 import subprocess
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import pytest
 
@@ -99,3 +101,26 @@ def test_cli_withholds_raw_database_diagnostics(
     monkeypatch.setattr(backup_postgres, "backup", fail)
     assert backup_postgres.main() == 1
     assert "sensitive database diagnostic" not in capsys.readouterr().out
+
+
+def test_filename_collision_preserves_existing_partial(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tmp_path.chmod(0o700)
+
+    class Clock:
+        @staticmethod
+        def now(tz: object = None) -> datetime:
+            return datetime(2026, 11, 1, tzinfo=UTC)
+
+    monkeypatch.setattr(backup_postgres, "datetime", Clock)
+    monkeypatch.setattr(backup_postgres, "uuid4", lambda: UUID(int=0))
+    monkeypatch.setattr(
+        "scripts.backup_postgres.subprocess.run",
+        lambda args, **kwargs: subprocess.CompletedProcess(args, 0, "a" * 64),
+    )
+    existing = tmp_path / ("20261101T000000Z-" + "0" * 32 + ".partial")
+    existing.write_bytes(b"previous interrupted backup")
+    with pytest.raises(FileExistsError):
+        backup_postgres.backup(tmp_path)
+    assert existing.read_bytes() == b"previous interrupted backup"

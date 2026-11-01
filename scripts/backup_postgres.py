@@ -52,8 +52,10 @@ def backup(directory: Path, project: str = "skinulis-production") -> Path:
         stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         target = directory / f"{stamp}-{uuid4().hex}.dump"
         partial = target.with_suffix(".partial")
+        created_partial = False
         try:
             fd = os.open(partial, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            created_partial = True
             with os.fdopen(fd, "wb") as output:
                 result = subprocess.run(
                     [
@@ -94,7 +96,8 @@ def backup(directory: Path, project: str = "skinulis-production") -> Path:
                 os.close(directory_fd)
             return target
         finally:
-            partial.unlink(missing_ok=True)
+            if created_partial:
+                partial.unlink(missing_ok=True)
 
 
 def main() -> int:

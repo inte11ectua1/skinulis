@@ -120,10 +120,10 @@ backup schedule не настроены. Не выдавать test dump за к
 ## Проверки кода follow-up
 
 Frozen sync/lock, Ruff check/format, strict mypy130 files, pre-commit/secrets,
-pip check и audit72 packages прошли. Unit **1145 passed**, PostgreSQL integration
-**402 passed** (existing isolated runner), всего **1547**, combined branch coverage
+pip check и audit72 packages прошли. Unit **1146 passed**, PostgreSQL integration
+**402 passed** (existing isolated runner), всего **1548**, combined branch coverage
 app+bot **94,76%**. Отдельный infrastructure набор release/deploy/SSH/backup:
-**87 passed**, включая12 новых backup cases. Порог60 не менялся; infrastructure
+**88 passed**, включая13 новых backup cases. Порог60 не менялся; infrastructure
 source не добавлялся в coverage приложения. Есть прежний Starlette/httpx warning.
 GitHub CI follow-up подтверждается run-ссылкой в PR body после его завершения.
 
