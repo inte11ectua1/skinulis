@@ -1,5 +1,41 @@
 # Фактическое состояние проекта
 
+## T-09 — EC2 preflight выполнен, публичный rollout ожидает (01.11.2026)
+
+[PR #64](https://github.com/inte11ectua1/skinulis/pull/64) merged в `main`;
+[PR #65](https://github.com/inte11ectua1/skinulis/pull/65) закрыт без merge;
+[PR #66](https://github.com/inte11ectua1/skinulis/pull/66) merged и восстановил
+серверный scope. [Полное evidence](operations/T-09_EC2_PREFLIGHT.md);
+[PR #67](https://github.com/inte11ectua1/skinulis/pull/67) содержит backup helper
+и проверенные результаты подготовки EC2.
+
+На EC2 установлены официальный Docker 29.9.2, containerd 2.4.2,
+Compose 5.6.1 и Buildx 0.38.1; Docker включён в автозапуск, TCP daemon
+не опубликован. Созданы отдельный deployment user/key, private runtime env
+и external volumes. Проверенный `main` image GHCR скачан по digest:
+linux/amd64, non-root и revision SHA подтверждены. GitHub Environment
+`production` настроен с независимыми reviewers, prevent self-review
+и без admin bypass; `PRODUCTION_ROLLOUT_ENABLED=false`.
+
+На EC2 прошли изолированные проверки PostgreSQL 17, TLS с тестовым CA,
+private actor, 26 негативных routing cases и сохранности данных. Backup helper
+проверен настоящим dump/restore в двух тестовых БД, перезапуском восстановленной
+БД и off-host synthetic copy с SHA256; production DB не затрагивалась.
+13 новых unit cases покрывают границы privacy/failure для backup.
+Владелец также подтвердил EBS encryption (`aws/ebs`), закрытые входящие порты
+8000/5432, работающую роль `skinulis-ec2-ssm-role`, SSM Agent Online
+и успешное открытие реальной интерактивной SSM-сессии.
+
+**Остаётся:** human review/merge PR #67 и
+[PR #68](https://github.com/inte11ectua1/skinulis/pull/68),
+настройка GitHub OIDC IAM-role и реальный `check-transport`,
+домен/DNS, PUBLIC_DOMAIN, публичный ACME HTTPS и отдельное разрешение на
+production rollout. Telegram token не настроен, polling выключен.
+Реальный production API/DB/Caddy/bot не запускался; T-09 #59 и G5 **не verified**.
+
+Ниже — восстановленный в PR #66 серверный scope и более ранние исторические
+срезы. Они не отменяют приведённые выше результаты EC2 preflight.
+
 ## M5 — серверный scope восстановлен, production acceptance открыт (01.11.2026)
 
 **Текущее решение (01.11.2026):** [PR #64](https://github.com/inte11ectua1/skinulis/pull/64) с инфраструктурой GHCR/CD/VPS/Caddy **merged в `main` 31.10.2026** (merge SHA `3f67828c40be6e14786816ffbfbcb867fcc79a7f`). [PR #65](https://github.com/inte11ectua1/skinulis/pull/65) с заменой VPS на ноутбук **closed without merge** 01.11.2026; `compose.laptop.yaml`, laptop ADR003, отключение SSH rollout и связанные правки не попали в `main`. Возвращаем [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) и [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) к исходным требованиям: VPS/cloud, публичный URL, Caddy HTTPS, trusted-main SHA GHCR/SSH deployment, серверные JSON-логи/ротация/rollback runbook. Это соответствует [DoD преподавателя](https://github.com/andrey-limasov/app-conf/blob/main/definition-of-done.md); исключение для отсутствующего сервера возможно только по предварительному согласованию. Оба issue **open**, G5 **not verified**: реальный деплой/HTTPS не проводился; SSH/secrets/live Telegram — исключительно по отдельному разрешению Тимура.
