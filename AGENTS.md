@@ -29,6 +29,12 @@
 ## Стиль задач для Codex
 Пример: «Реализуй сервис equal split по PRODUCT_RULES.md (копейки, детерминированный порядок user_id). Добавь unit-тесты: 100.00/3, 0.01/3, пустой список, дубли, один участник. API и миграции не трогай. Запусти тесты и Ruff. Не добавляй зависимости».
 
+## Текущая целевая инфраструктура M5 (решение Тимура 01.11.2026)
+
+- **T-09 #59:** ноутбук вместо VPS, `compose.yaml` + `compose.laptop.yaml` с private networks/API loopback и **явно включаемым одним** Telegram long polling ботом. [ADR003](docs/adr/003-laptop-as-demo-host.md), [runbook](docs/operations/LAPTOP_HOSTING.md). Не предлагать покупку VPS/домена, GitHub self-hosted runner, публичный Caddy/SSH-деплой, не включать `PRODUCTION_ROLLOUT_ENABLED`. Старый серверный PR #64 сохранён как историческая реализация.
+- **T-10 #60:** безопасные JSON-логи/ротация/backup и recovery **на ноутбуке**. O-08/L-06 scope прежний.
+- GitHub остаётся CI/GHCR publish, ноутбук обновляется вручную от проверенной `main`, секреты не покидают локальную `.env`. Live Telegram polling/реальные E2E не запускать без явного разрешения владельца. **Original course G5 с VPS/HTTPS не выполнен**; локальный M5-L не выдавать за его автоматический эквивалент без согласования.
+
 ## Многопользовательский процесс
 Перед задачей читать `START_HERE.md`, `docs/TEAM_WORKFLOW.md`, `docs/contracts/BOUNDARIES.md`, `docs/STATUS.md`, свой SPEC и ROADMAP. Выполнять только assigned issue ID и не менять файлы чужого владельца без согласования. Не менять main, не merge, не подставлять production secrets. После каждого задания выдавать тесты, изменённые файлы, ограничения и PR link для человеческого review.
 
