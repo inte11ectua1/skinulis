@@ -15,6 +15,10 @@
 
 **Отложенное:** [T-01 #2](https://github.com/inte11ectua1/skinulis/issues/2)/G1 (admin bypass/direct push evidence), live Telegram G2/G3/G4 ([#38](https://github.com/inte11ectua1/skinulis/issues/38) not_planned). M5 G5 ещё не verified. Преподавателя не приглашать до решения Тимура; GitHub main остаётся единственным источником истины.
 
+## Изменение инфраструктуры M5 (01.11.2026)
+
+**Решение Тимура: без VPS и домена, ноутбук как локальный host.** Стек для демонстрации — `db/migrate/api` и один **opt-in** `bot` в Docker Compose, Telegram через исходящее polling, API только `127.0.0.1` и private DB. [ADR003](docs/adr/003-laptop-as-demo-host.md), [пошаговый runbook](docs/operations/LAPTOP_HOSTING.md), пересогласованная [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59). Прежние упоминания VPS/SSH/Caddy ниже/в архивной документации — исторический план, не команда на сервер. CI/GHCR остаются, локальное обновление делается вручную. **Оригинальный VPS/HTTPS G5 не verified; нужна отдельная сверка требований преподавателя.** T-10 #60 — логи/восстановление локального ноутбука, O-08 и L-06 без смены финансов/UX scope. Никакого включения настоящего polling без явного согласия владельца токена.
+
 ## Команда
 - **Тимур** — technical lead, платформа, безопасность, DevOps и интеграция.
 - **Олег** — финансовый backend, транзакции, миграции и расчётные тесты.
