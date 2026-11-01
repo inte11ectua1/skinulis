@@ -9,9 +9,10 @@ backup/restore реально проверены; [evidence и ограниче�
 
 **Дополнение 01.11.2026:** подготовлен [AWS OIDC + SSH-over-SSM transport](AWS_SSM_CD.md).
 Владелец подтвердил encrypted EBS и работающий EC2 SSM agent/profile/session.
-Новая runner IAM role ещё не создана/не проверена этим заданием. Создание provider/
-role по JSON — отдельное действие владельца; rollout остаётся false. Подготовка
-EC2/backup из [PR #67](https://github.com/inte11ectua1/skinulis/pull/67) уже merged.
+PR #66/#67/#68 merged; EC2/backup и local SSM проверены. Runner IAM role ещё нет;
+OIDC provider inventory запрещён Organizations SCP. IAM writes требуют отдельного
+разрешения; rollout остаётся false.
+[Текущие AWS/CI/GHCR/DNS/preflight evidence и blocker](T-09_AWS_READINESS.md).
 
 ## Архитектура и образы
 

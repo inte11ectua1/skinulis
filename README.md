@@ -470,6 +470,11 @@ JSON policies после review. Protected `operation=check-transport` пров�
 подключение и Docker version с rollout flag=false; controller не запускается.
 Production rollout/HTTPS и live Telegram остаются отдельной приёмкой.
 
+[Актуальный AWS readiness](docs/operations/T-09_AWS_READINESS.md): PR #66/#67/#68
+merged, main CI/GHCR и local SSM SSH проверены. GitHub OIDC ожидает устранения
+Organizations SCP Deny на IAM provider inventory и отдельного разрешения IAM writes.
+Rollout flag=false; публичный HTTPS/G5 ещё не подтверждены.
+
 ```sh
 actionlint
 uv run pytest tests/unit/test_release_policy.py tests/unit/test_deployment.py tests/unit/test_remote_deploy.py tests/unit/test_backup_postgres.py tests/unit/test_ssm_transport.py

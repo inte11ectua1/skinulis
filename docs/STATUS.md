@@ -1,5 +1,21 @@
 # Фактическое состояние проекта
 
+## T-09 — актуальная main, AWS readiness и IAM blocker (01.11.2026)
+
+PR #66/#67/#68 merged; main `dd78027bfdf293568284d36719b5ac1929c337ac`.
+[Main CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41333607302):
+1175 unit +402 PostgreSQL tests, coverage94,76%.
+[Release guard/publish success, deploy skipped](https://github.com/inte11ectua1/skinulis/actions/runs/41334146071).
+[AWS/GHCR/DNS/controller/backup evidence](operations/T-09_AWS_READINESS.md).
+EBS encryption, SG/private ports, SSM Agent и настоящий **локальный** SSM SSH проверены.
+Production AWS variables заполнены; защиты/secrets сохранены, flag=false.
+**Blocker:** OIDC provider Get/List запрещены Organizations SCP Deny; runner role
+отсутствует. IAM writes не выполнялись. Нужны исправление доступа владельцем
+организации, отдельное разрешение IAM setup и protected GitHub check-transport.
+PUBLIC_DOMAIN проверен только в private test copy; публичного HTTPS,
+production deployment, polling и G5 acceptance нет. Исторические формулировки ниже
+об открытых #67/#68 больше не актуальны.
+
 ## T-09 — EC2 preflight выполнен, публичный rollout ожидает (01.11.2026)
 
 [PR #64](https://github.com/inte11ectua1/skinulis/pull/64) merged в `main`;
