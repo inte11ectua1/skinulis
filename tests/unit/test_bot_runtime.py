@@ -135,7 +135,7 @@ def test_main_missing_token_fails_without_traceback(
     monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     monkeypatch.delenv("API_BASE_URL", raising=False)
     assert runtime.main() == 2
-    assert "TELEGRAM_BOT_TOKEN" in caplog.text
+    assert "bot_configuration_invalid" in caplog.text
     assert "Traceback" not in caplog.text
 
 
@@ -162,3 +162,43 @@ def test_main_process_outcomes_do_not_log_secrets(
     assert runtime.main() == expected
     assert private not in caplog.text
     assert "Traceback" not in caplog.text
+
+
+@pytest.mark.parametrize("kind", ["timeout", "retry", "network", "telegram"])
+def test_main_telegram_failures_emit_safe_json_outcomes(
+    settings: BotSettings,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    kind: str,
+) -> None:
+    import json
+
+    from aiogram.exceptions import (
+        TelegramBadRequest,
+        TelegramNetworkError,
+        TelegramRetryAfter,
+    )
+    from aiogram.methods import GetMe
+
+    private = settings.telegram_bot_token.get_secret_value()
+    method = GetMe()
+    errors = {
+        "timeout": TimeoutError(private),
+        "retry": TelegramRetryAfter(method=method, message=private, retry_after=5),
+        "network": TelegramNetworkError(method=method, message=private),
+        "telegram": TelegramBadRequest(method=method, message=private),
+    }
+
+    async def fail(configuration: BotSettings) -> None:
+        raise errors[kind]
+
+    monkeypatch.setattr(runtime, "BotSettings", lambda: settings)
+    monkeypatch.setattr(runtime, "run", fail)
+    assert runtime.main() == 1
+    captured = capsys.readouterr()
+    assert not captured.err
+    assert private not in captured.out
+    entry = json.loads(captured.out)
+    assert entry["event"] == "bot_runtime_failed"
+    assert entry["service"] == "bot"
+    assert entry["outcome"] == kind

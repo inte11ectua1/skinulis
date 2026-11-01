@@ -36,8 +36,7 @@ from bot.ui import (
 )
 from bot.ui import UNKNOWN as UNKNOWN
 from bot.ui import WELCOME as WELCOME
-
-logger = logging.getLogger(__name__)
+from skinulis_logging import Event, emit
 
 
 async def start(
@@ -229,7 +228,7 @@ async def unknown_callback(callback: CallbackQuery) -> None:
 
 
 async def on_error(event: ErrorEvent) -> bool:
-    logger.warning("Bot action failed")
+    emit(Event.BOT_HANDLER_FAILED, level=logging.WARNING)
     try:
         if event.update.callback_query is not None:
             await event.update.callback_query.answer(FAILED, show_alert=True)
@@ -239,7 +238,7 @@ async def on_error(event: ErrorEvent) -> bool:
         ):
             await event.update.message.answer(FAILED)
     except TelegramAPIError:
-        logger.warning("Bot could not deliver error notice")
+        emit(Event.TELEGRAM_DELIVERY_FAILED, level=logging.WARNING)
     return True
 
 

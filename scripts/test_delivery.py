@@ -115,6 +115,34 @@ def main() -> int:
                 for key in ("JWT_SECRET_KEY", "BOT_SERVICE_TOKEN", "TELEGRAM_BOT_TOKEN")
             )
 
+            for log_service in ("api", "bot", "migrate", "db", "caddy"):
+                assert services[log_service]["logging"] == {
+                    "driver": "json-file",
+                    "options": {"max-size": "5m", "max-file": "3", "compress": "true"},
+                }
+
+            def log_options(service: str) -> list[str]:
+                config = services[service]["logging"]
+                return [
+                    "--log-driver",
+                    config["driver"],
+                    *[
+                        arg
+                        for key, value in config["options"].items()
+                        for arg in ("--log-opt", f"{key}={value}")
+                    ],
+                ]
+
+            def logs(name: str) -> str:
+                result = subprocess.run(
+                    ["docker", "logs", name],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    timeout=30,
+                )
+                return result.stdout + result.stderr
+
             stage = "networks and image"
             print(
                 "Delivery smoke: config, digest selection, private ports and migration topology validated"
@@ -157,7 +185,14 @@ def main() -> int:
             )
 
             def create(name: str, *args: str) -> None:
-                docker("create", "--name", name, *args, env=env)
+                docker(
+                    "create",
+                    "--name",
+                    name,
+                    *log_options(name.rsplit("-", 1)[1]),
+                    *args,
+                    env=env,
+                )
                 names.append(name)
 
             db, api, caddy = (
@@ -180,6 +215,7 @@ def main() -> int:
                 f"type=volume,source={test_volume},target=/var/lib/postgresql/data",
                 *db_args,
                 services["db"]["image"],
+                *services["db"]["command"],
             )
             docker("start", db)
             wait(
@@ -213,6 +249,7 @@ def main() -> int:
                 "--network",
                 db_net,
                 *backend_args,
+                *log_options("migrate"),
                 image,
                 "python",
                 "-m",
@@ -343,14 +380,14 @@ def main() -> int:
 
             def request(
                 path: str, *, method: str = "GET", headers: dict[str, str] | None = None
-            ) -> tuple[int, bytes]:
+            ) -> tuple[int, bytes, dict[str, str]]:
                 connection = http.client.HTTPSConnection(
                     "localhost", port, context=context, timeout=5
                 )
                 try:
                     connection.request(method, path, headers=headers or {})
                     response = connection.getresponse()
-                    return response.status, response.read()
+                    return response.status, response.read(), dict(response.getheaders())
                 finally:
                     connection.close()
 
@@ -412,6 +449,75 @@ def main() -> int:
                     },
                 )[1]
             ) == {"status": "ok", "database": "ok"}
+            stage = "log privacy and rotation"
+            canary = "privacy-canary-" + secrets.token_hex(16)
+            status, _, response_headers = request(
+                "/groups?private=" + canary,
+                headers={
+                    "Authorization": "Bearer " + canary,
+                    "X-Bot-Service-Token": canary,
+                },
+            )
+            assert (
+                status == 400
+            )  # ambiguous public/service authentication remains rejected
+            correlation = next(
+                v for k, v in response_headers.items() if k.lower() == "x-request-id"
+            )
+            entries = [json.loads(line) for line in logs(api).splitlines()]
+            assert any(
+                e.get("request_id") == correlation and e.get("status") == 400
+                for e in entries
+            )
+            assert all(
+                e["service"] == "api" and e["timestamp"].endswith("Z") for e in entries
+            )
+            # Genuine PostgreSQL input failure: server must not echo a financial/user value.
+            failed_sql = subprocess.run(
+                [
+                    "docker",
+                    "exec",
+                    db,
+                    "psql",
+                    "-U",
+                    values["POSTGRES_USER"],
+                    "-d",
+                    values["POSTGRES_DB"],
+                    "-c",
+                    "SELECT CAST('" + canary + "' AS BIGINT)",
+                ],
+                capture_output=True,
+                timeout=30,
+            )
+            assert failed_sql.returncode != 0
+            assert canary not in logs(db)
+            for name in (db, api, caddy):
+                expected = services[name.rsplit("-", 1)[1]]["logging"]
+                actual = json.loads(docker("inspect", name))[0]["HostConfig"][
+                    "LogConfig"
+                ]
+                assert actual == {
+                    "Type": expected["driver"],
+                    "Config": expected["options"],
+                }
+            # A real upstream failure used to include URI, headers and raw error text.
+            # Only the UUID test API is stopped; production is never contacted.
+            docker("stop", api)
+            assert (
+                request(
+                    "/groups/123?secret=" + canary,
+                    headers={"Authorization": "Bearer " + canary, **service},
+                )[0]
+                == 502
+            )
+            assert canary not in logs(caddy) + logs(api)
+            assert values["BOT_SERVICE_TOKEN"] not in logs(caddy) + logs(api) + logs(db)
+            assert values["POSTGRES_PASSWORD"] not in logs(caddy) + logs(api) + logs(db)
+            docker("start", api)
+            wait(ready)
+            print(
+                "Delivery smoke: JSON UTC/correlation, API/PG/Caddy negative privacy checks and daemon log rotation verified"
+            )
             print(
                 f"Delivery smoke: real TLS, DB health, exact SHA and {len(variants) + 5} negative routing cases passed; private service actor works"
             )

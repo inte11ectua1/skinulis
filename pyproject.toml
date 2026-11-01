@@ -45,7 +45,7 @@ markers = ["integration: requires an explicitly configured disposable PostgreSQL
 
 [tool.coverage.run]
 branch = true
-source = ["app", "bot"]
+source = ["app", "bot", "skinulis_logging"]
 omit = ["tests/*"]
 
 [tool.coverage.report]

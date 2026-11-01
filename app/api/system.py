@@ -1,6 +1,5 @@
 import logging
 from typing import Annotated
-from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
@@ -10,17 +9,17 @@ from sqlalchemy.orm import Session
 
 from app import __version__
 from app.config import Settings
+from app.core.errors import error_response
 from app.db import get_session
 from app.schemas.system import (
-    ErrorDetail,
     ErrorResponse,
     HealthResponse,
     RootResponse,
     VersionResponse,
 )
+from skinulis_logging import Event, emit
 
 router = APIRouter(tags=["system"])
-logger = logging.getLogger(__name__)
 
 
 @router.get("/", response_model=RootResponse)
@@ -38,20 +37,8 @@ def health(
         session.execute(text("SELECT 1"))
     except SQLAlchemyError:
         # DB exceptions can contain connection details; do not log them or their args.
-        request_id = str(uuid4())
-        logger.warning("Database health check failed; request_id=%s", request_id)
-        error = ErrorResponse(
-            error=ErrorDetail(
-                code="database_unavailable",
-                message="Database is unavailable",
-                request_id=request_id,
-            )
-        )
-        return JSONResponse(
-            status_code=503,
-            content=error.model_dump(),
-            headers={"X-Request-ID": request_id},
-        )
+        emit(Event.DATABASE_UNAVAILABLE, level=logging.WARNING)
+        return error_response(503, "database_unavailable", "Database is unavailable")
     return HealthResponse()
 
 

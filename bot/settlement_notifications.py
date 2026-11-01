@@ -1,14 +1,13 @@
 """One private delivery attempt after a server claim; never retries finance writes."""
 
 import asyncio
-import logging
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 
 from bot.api_client import ApiError, BotApi
+from skinulis_logging import Event, emit
 
-logger = logging.getLogger(__name__)
 DELIVERY_TIMEOUT = 5
 NOTICE = (
     "Для вас могла появиться заявка на подтверждение перевода. "
@@ -28,7 +27,7 @@ async def notify_receiver(
     try:
         claim = await api.claim_settlement_notification(actor, settlement_id)
     except ApiError:
-        logger.info("Pending notification claim unavailable")
+        emit(Event.NOTIFICATION_CLAIM_FAILED)
         return
     if claim is None:
         return
@@ -39,4 +38,4 @@ async def notify_receiver(
             )
     except (TelegramAPIError, TimeoutError, OSError):
         # Never log the Telegram exception: it can contain identity or credentials.
-        logger.info("Pending notification delivery unavailable")
+        emit(Event.NOTIFICATION_DELIVERY_FAILED)

@@ -1,6 +1,7 @@
 """T-03 health and approved T-06 service channel. No automatic write retries."""
 
 import asyncio
+import logging
 from enum import StrEnum
 from types import TracebackType
 from typing import Literal, Protocol, Self
@@ -35,6 +36,14 @@ from bot.settlement_dto import (
     SettlementMutation,
     SettlementProfile,
     SettlementStatus,
+)
+from skinulis_logging import (
+    Event,
+    Fields,
+    Outcome,
+    canonical_request_id,
+    current_request_id,
+    emit,
 )
 
 TOTAL_TIMEOUT = 10.0
@@ -226,13 +235,30 @@ class ApiClient:
         version: int | None = None,
         query: dict[str, str | int] | None = None,
     ) -> T:
+        correlation = current_request_id()
+
+        def diagnostic(kind: ApiFailure, status: int | None = None) -> None:
+            emit(
+                Event.CLIENT_FAILED,
+                level=logging.WARNING,
+                fields=Fields(
+                    method=method,
+                    status=status,
+                    outcome=Outcome(kind.value),
+                    request_id=correlation,
+                ),
+            )
+
         if self.is_closed:
+            diagnostic(ApiFailure.NETWORK)
             raise ApiError(ApiFailure.NETWORK)
         headers: dict[str, str] = {}
         if actor is not None:
             if not self._service_token:
+                diagnostic(ApiFailure.AUTH)
                 raise ApiError(ApiFailure.AUTH)
             if type(actor) is not int or not 0 < actor <= 2**63 - 1:
+                diagnostic(ApiFailure.INPUT)
                 raise ApiError(ApiFailure.INPUT)
             headers = {
                 "X-Bot-Service-Token": self._service_token.get_secret_value(),
@@ -251,10 +277,15 @@ class ApiClient:
                     method, path, headers=headers, json=body, params=params
                 )
         except (httpx.TimeoutException, TimeoutError):
+            diagnostic(ApiFailure.TIMEOUT)
             raise ApiError(ApiFailure.TIMEOUT) from None
         except httpx.RequestError:
+            diagnostic(ApiFailure.NETWORK)
             raise ApiError(ApiFailure.NETWORK) from None
 
+        correlation = (
+            canonical_request_id(response.headers.get("X-Request-ID")) or correlation
+        )
         statuses = (
             (expected_status,) if isinstance(expected_status, int) else expected_status
         )
@@ -273,6 +304,7 @@ class ApiClient:
                 detail = ErrorEnvelope.model_validate(response.json()).error
             except ValueError:
                 detail = None
+            diagnostic(kind, response.status_code)
             raise ApiError(kind, status_code=response.status_code, detail=detail)
         try:
             adapter = (
@@ -283,12 +315,23 @@ class ApiClient:
             if response.status_code == 204:
                 if response.content:
                     raise ValueError("Expected empty response")
-                return adapter.validate_python(None)
-            result = adapter.validate_json(response.content)
-            if result is None:
-                raise ValueError("Unexpected null response")
+                result = adapter.validate_python(None)
+            else:
+                result = adapter.validate_json(response.content)
+                if result is None:
+                    raise ValueError("Unexpected null response")
+            emit(
+                Event.CLIENT_COMPLETED,
+                fields=Fields(
+                    method=method,
+                    status=response.status_code,
+                    outcome=Outcome.OK,
+                    request_id=correlation,
+                ),
+            )
             return result
         except ValueError:
+            diagnostic(ApiFailure.UNEXPECTED, response.status_code)
             raise ApiError(
                 ApiFailure.UNEXPECTED, status_code=response.status_code
             ) from None

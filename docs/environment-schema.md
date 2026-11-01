@@ -163,3 +163,15 @@ subject + production Environment. Настройка владельцем и JSO
 [AWS_SSM_CD](operations/AWS_SSM_CD.md). `check-transport` не требует включать rollout
 и не запускает controller/миграции/polling. IAM/реальное SSM соединение этим PR
 не считаются проверенными; EC2 agent/session подтверждены владельцем отдельно.
+
+## T-10: логирование без новых секретов
+
+Новых environment variables/secrets не требуется. Существующий LOG_LEVEL API
+ограничен валидными уровнями Settings, production по умолчанию INFO. Bot runtime
+использует INFO; чувствительные third-party debug/access logs не включаются.
+request_id — серверный UUIDv4, а не credential; клиентский заголовок игнорируется.
+Общий формат и redaction policy: [runbook](operations/INCIDENTS_AND_ROLLBACK.md).
+API/bot не печатают Settings, exception text, request bodies/headers или SQL binds.
+Production Docker json-file rotation: max-size=5m, max-file=3, compress=true у
+api/bot/migrate/db/caddy; применяется при разрешённом создании новых контейнеров.
+Ни secrets на EC2, ни GitHub Environment policies T-10 не изменяет.
