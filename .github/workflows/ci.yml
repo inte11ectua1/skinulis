@@ -137,6 +137,22 @@ jobs:
           python-version: "3.12.15"
           enable-cache: false
       - run: uv sync --frozen
+      - name: Validate laptop Compose networking and opt-in bot (no Telegram)
+        run: |
+          export POSTGRES_PASSWORD
+          POSTGRES_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
+          docker compose -f compose.yaml -f compose.laptop.yaml --profile polling config --quiet
+          docker compose -f compose.yaml -f compose.laptop.yaml --profile polling config --format json |
+            python3 -c '
+          import json, sys
+          data = json.load(sys.stdin)["services"]
+          assert not data["db"].get("ports"), "PostgreSQL must have no public ports"
+          assert not data["bot"].get("ports"), "Bot must have no public ports"
+          assert all(p.get("host_ip") == "127.0.0.1" for p in data["api"].get("ports", []))
+          assert data["bot"].get("profiles") == ["polling"]
+          assert data["bot"]["environment"]["API_BASE_URL"] == "http://api:8000"
+          assert "POSTGRES_PASSWORD" not in data["bot"]["environment"]
+          '
       - name: Disposable production routing and image tests (no Telegram)
         env:
           T09_TEST_IMAGE: skinulis-ci:${{ github.sha }}
