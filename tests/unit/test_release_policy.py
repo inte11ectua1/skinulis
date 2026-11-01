@@ -33,6 +33,7 @@ def run_data() -> dict[str, Any]:
 
 def environment() -> dict[str, Any]:
     return dict(
+        can_admins_bypass=False,
         deployment_branch_policy=dict(
             protected_branches=True, custom_branch_policies=False
         ),
@@ -84,7 +85,12 @@ def test_untrusted_ci_cannot_authorize_release(field: str, value: Any) -> None:
 
 def test_protected_environment_requires_another_reviewer_and_branch_policy() -> None:
     assert release.protected_environment(environment())
-    for field, value in (("protection_rules", []), ("deployment_branch_policy", None)):
+    for field, value in (
+        ("protection_rules", []),
+        ("deployment_branch_policy", None),
+        ("can_admins_bypass", True),
+        ("can_admins_bypass", None),
+    ):
         assert not release.protected_environment(environment() | {field: value})
     for field, invalid in (("reviewers", []), ("prevent_self_review", False)):
         config = environment()
@@ -213,6 +219,43 @@ def test_deploy_refuses_unprotected_environment(
         release.guard()
 
 
+def test_read_only_transport_check_requires_environment_but_not_rollout(
+    guard_env: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "workflow_dispatch")
+    monkeypatch.setenv("OPERATION", "check-transport")
+    monkeypatch.setenv("ROLLOUT_ENABLED", "false")
+    monkeypatch.setattr(release, "github", api)
+    release.guard()
+    assert guard_env.exists()
+    monkeypatch.setattr(
+        release,
+        "github",
+        lambda path: {} if path == "environments/production" else api(path),
+    )
+    with pytest.raises(ValueError):
+        release.guard()
+
+
+def test_untrusted_sha_not_on_main_is_denied_before_deployment(
+    guard_env: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "workflow_dispatch")
+    monkeypatch.setenv("OPERATION", "deploy")
+    monkeypatch.setenv("ROLLOUT_ENABLED", "true")
+    monkeypatch.setattr(release, "github", api)
+
+    def command(args: list[str]) -> str:
+        if "merge-base" in args:
+            raise RuntimeError("Not an ancestor of main")
+        return ""
+
+    monkeypatch.setattr(release, "command", command)
+    with pytest.raises(RuntimeError):
+        release.guard()
+    assert not guard_env.exists()
+
+
 @pytest.mark.parametrize("existing", [True, False])
 def test_published_sha_is_never_overwritten(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, existing: bool
@@ -289,6 +332,32 @@ def test_workflows_keep_pr_secrets_out_and_deploy_manual_only() -> None:
     assert cd["jobs"]["publish"]["permissions"]["packages"] == "write"
     deploy = cd["jobs"]["deploy"]
     assert deploy["environment"] == "production"
+    assert deploy["permissions"] == {
+        "contents": "read",
+        "actions": "read",
+        "id-token": "write",
+    }
+    assert all(
+        "id-token" not in cd["jobs"][name]["permissions"]
+        for name in ("guard", "publish")
+    )
+    steps = deploy["steps"]
+    aws = next(s for s in steps if s.get("uses", "").startswith("aws-actions/"))
+    assert aws["with"]["audience"] == "sts.amazonaws.com"
+    assert aws["with"]["unset-current-credentials"] is True
+    recheck = next(
+        i
+        for i, s in enumerate(steps)
+        if s.get("run") == "python3 scripts/release.py guard"
+    )
+    assert recheck < steps.index(aws)
+    assert steps[0]["with"]["ref"] == "${{ github.sha }}"
+    assert steps[0]["with"]["path"] == "transport"
+    assert any(
+        s.get("with", {}).get("path") == "release"
+        and s["with"]["ref"] == "${{ needs.guard.outputs.sha }}"
+        for s in steps
+    )
     assert (
         "workflow_dispatch" in deploy["if"]
         and "PRODUCTION_ROLLOUT_ENABLED" in deploy["if"]

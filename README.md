@@ -463,9 +463,16 @@ main CI, проверяет происхождение image и передаёт
 production Environment с независимым approval. Polling требует отдельного флага.
 PR pipeline не получает этих secrets/permissions.
 
+Для AWS подготовлен [OIDC + SSH-over-SSM transport](docs/operations/AWS_SSM_CD.md):
+временные AWS credentials, pinned ED25519 host key, отдельный deployment user,
+без открытия SSH GitHub runner в интернет. IAM provider/role создаёт владелец по
+JSON policies после review. Protected `operation=check-transport` проверяет только
+подключение и Docker version с rollout flag=false; controller не запускается.
+Production rollout/HTTPS и live Telegram остаются отдельной приёмкой.
+
 ```sh
 actionlint
-uv run pytest tests/unit/test_release_policy.py tests/unit/test_deployment.py tests/unit/test_remote_deploy.py tests/unit/test_backup_postgres.py
+uv run pytest tests/unit/test_release_policy.py tests/unit/test_deployment.py tests/unit/test_remote_deploy.py tests/unit/test_backup_postgres.py tests/unit/test_ssm_transport.py
 docker build --build-arg APP_COMMIT_SHA="$(git rev-parse HEAD)" -t skinulis-t09-test:local .
 T09_TEST_IMAGE=skinulis-t09-test:local uv run python scripts/test_delivery.py
 ```

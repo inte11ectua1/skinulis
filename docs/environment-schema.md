@@ -135,7 +135,8 @@ Telegram Bot API token. Compose передаёт service secret только api
 | APP_COMMIT_SHA | Встроен в образ из verified main SHA, не переопределяется runtime config |
 | API_BASE_URL | Production bot: фиксировано http://api:8000, public proxy для bot-service не используется |
 | PRODUCTION_ROLLOUT_ENABLED | GitHub repository variable; отсутствует/false до отдельного разрешения |
-| SSH_HOST / SSH_USER / SSH_PORT / SSH_DEPLOY_DIR | GitHub production Environment variables; destination без shell syntax |
+| SSH_HOST / SSH_USER / SSH_PORT / SSH_DEPLOY_DIR | GitHub production Environment variables; pinned host-key alias / skinulis-deploy / 22 / deploy root; TCP destination заменён SSM instance ID |
+| AWS_ACCOUNT_ID / AWS_ROLE_ARN / AWS_INSTANCE_ID | GitHub production Environment variables, не secrets; отдельная OIDC role skinulis-github-production и одна EC2, region ap-southeast-2 закреплён workflow |
 | SSH_PRIVATE_KEY / SSH_KNOWN_HOSTS | Только GitHub protected production Environment secrets; required independent approval, prevent self-review |
 | GHCR read credential | Только для private package: VPS Docker credential store, read:packages. Проверенный текущий package доступен для anonymous pull; широкий личный GitHub token на сервер не копировался |
 
@@ -154,3 +155,11 @@ variables заданы; значения и access addresses в документ
 PRODUCTION_ROLLOUT_ENABLED=false. Runtime secrets сгенерированы на EC2 в0600-файле,
 PUBLIC_DOMAIN ожидает выбора владельца, TELEGRAM_BOT_TOKEN пустой. Токен бота
 может предоставить только владелец безопасным способом; polling не запускался.
+
+
+Для AWS нет статических access-key secrets: deploy job после independent approval
+получает временные credentials через OIDC. Trust использует exact immutable repo
+subject + production Environment. Настройка владельцем и JSON policies:
+[AWS_SSM_CD](operations/AWS_SSM_CD.md). `check-transport` не требует включать rollout
+и не запускает controller/миграции/polling. IAM/реальное SSM соединение этим PR
+не считаются проверенными; EC2 agent/session подтверждены владельцем отдельно.

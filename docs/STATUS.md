@@ -36,6 +36,20 @@ production rollout. Telegram token не настроен, polling выключе
 Ниже — восстановленный в PR #66 серверный scope и более ранние исторические
 срезы. Они не отменяют приведённые выше результаты EC2 preflight.
 
+## T-09 follow-up · 01.11.2026: AWS SSM CD transport
+
+В [PR #68](https://github.com/inte11ectua1/skinulis/pull/68) подготовлен OIDC + SSH-over-SSM transport;
+[Console setup, exact trust и permissions JSON](operations/AWS_SSM_CD.md).
+Guard/protected production Environment/host-key pin/controller сохраняются;
+добавлены recheck после approval и read-only `check-transport` с rollout=false.
+Владелец подтвердил encrypted EBS, private SG ports8000/5432, EC2 SSM IAM role,
+Online agent и успешную интерактивную session. Новая GitHub OIDC IAM role не
+создавалась; реальный GitHub → SSM transport ещё pending после human review и
+настройки владельцем. PR #66 и PR #67 уже merged; их изменения сохранены ниже.
+PR #68 остаётся открытым; GitHub OIDC IAM role ещё не настроена,
+production rollout и polling не выполнялись.
+**T-09 #59 / G5 остаются незавершёнными**; DNS/TLS/public acceptance отдельно.
+
 ## M5 — серверный scope восстановлен, production acceptance открыт (01.11.2026)
 
 **Текущее решение (01.11.2026):** [PR #64](https://github.com/inte11ectua1/skinulis/pull/64) с инфраструктурой GHCR/CD/VPS/Caddy **merged в `main` 31.10.2026** (merge SHA `3f67828c40be6e14786816ffbfbcb867fcc79a7f`). [PR #65](https://github.com/inte11ectua1/skinulis/pull/65) с заменой VPS на ноутбук **closed without merge** 01.11.2026; `compose.laptop.yaml`, laptop ADR003, отключение SSH rollout и связанные правки не попали в `main`. Возвращаем [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) и [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) к исходным требованиям: VPS/cloud, публичный URL, Caddy HTTPS, trusted-main SHA GHCR/SSH deployment, серверные JSON-логи/ротация/rollback runbook. Это соответствует [DoD преподавателя](https://github.com/andrey-limasov/app-conf/blob/main/definition-of-done.md); исключение для отсутствующего сервера возможно только по предварительному согласованию. Оба issue **open**, G5 **not verified**: реальный деплой/HTTPS не проводился; SSH/secrets/live Telegram — исключительно по отдельному разрешению Тимура.
