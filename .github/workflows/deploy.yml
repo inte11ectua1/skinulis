@@ -97,8 +97,10 @@ jobs:
 
   deploy:
     needs: [guard, publish]
-    # Safe by default: ordinary main merges can publish, but NEVER SSH/deploy.
+    # ADR003/M5-L: SSH/VPS jobs are permanently disabled for laptop hosting.
+    # Preserve historical PR64 deploy configuration, but it cannot run until a separately reviewed ADR changes this condition.
     if: >-
+      false &&
       github.event_name == 'workflow_dispatch' && inputs.operation == 'deploy' &&
       github.ref == 'refs/heads/main' && vars.PRODUCTION_ROLLOUT_ENABLED == 'true'
     runs-on: ubuntu-24.04
