@@ -15,6 +15,8 @@ Issue: [#13](https://github.com/inte11ectua1/skinulis/issues/13) — **closed п
 [README](../../README.md#github-actions-ci). Версии Python/uv, lock-файл,
 настройки Ruff/mypy/coverage не изменяются задачей T-04.
 
+**Решение 01.11.2026:** CI и GHCR publish на trusted main сохраняются; ноутбук Тимура — временная runtime-машина с локальным Docker Compose и вручную проверенным `main`. Прежний VPS `deploy.yml` SSH job существует в PR #64, но **не должен включаться** (`PRODUCTION_ROLLOUT_ENABLED` оставлять выключенной, `operation=deploy` не запускать). Не использовать self-hosted Actions runner на домашнем ноутбуке; нет необходимости открывать inbound 80/443/5432/8000. [ADR003](../adr/003-laptop-as-demo-host.md), [M5-L инструкция](LAPTOP_HOSTING.md). **G5-original не verified**, laptop gate ещё требует личного local smoke.
+
 ## Устройство проверки
 
 `pull_request` в main проверяет merge ref текущего PR. События opened,
