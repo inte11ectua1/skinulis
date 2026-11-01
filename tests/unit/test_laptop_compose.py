@@ -41,6 +41,5 @@ def test_laptop_docs_require_non_destructive_and_no_claim_of_original_g5() -> No
     adr = (ROOT / "docs/adr/003-laptop-as-demo-host.md").read_text()
     assert "down -v" in instructions and "**Нельзя:**" in instructions
     assert "APP_COMMIT_SHA" in instructions and "/health" in instructions
-    assert "не**" not in instructions
     assert "не** публичный HTTPS" in instructions
     assert "не** доказывают" in adr or "**не** доказывают" in adr
