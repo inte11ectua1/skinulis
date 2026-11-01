@@ -2,6 +2,8 @@
 
 > **Исторический чек-лист первоначальной настройки (M0)**, не повторная команда. На 31.10.2026 **M1–M4 завершены по реализации**; M4 [PR #51/#53/#57/#54/#58](https://github.com/inte11ectua1/skinulis/pull/58) merged, Issues #45/#46/#47/#48/#55 closed. **Текущий M5 назначен:** Тимуру [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) → [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60), Олегу [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61), Лере [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62). [M5 handoff](M5_DELIVERY_HANDOFF.md). T-01/G1 ещё открыта, live Telegram QA G2/G3/G4 отложено, G5 требует реального deploy/evidence. Преподавателя пока не приглашать; GitHub main — актуальный источник.
 
+**Решение 01.11.2026:** для T-09 #59 сервером выступает ноутбук. Использовать `compose.yaml` + `compose.laptop.yaml`, GHCR/CI, локальный startup/backup/health, без VPS/SSH/Caddy и публичного адреса. [ADR003](../adr/003-laptop-as-demo-host.md), [runbook](LAPTOP_HOSTING.md). Старые инструкции VPS ниже **не выполнять**. T-10 #60 относится к локальным логам/восстановлению, O-08/L-06 прежние. Исходный курс G5 (VPS/HTTPS) требует отдельного согласования альтернативы, не заявлять verified.
+
 ## Ниже — исходные инструкции первоначальной настройки
 
 ## Тимур — один раз
