@@ -8,7 +8,7 @@
 - **Олег:** O-08 [#61](https://github.com/inte11ectua1/skinulis/issues/61) / [PR #74](https://github.com/inte11ectua1/skinulis/pull/74) — security/finance/races и нагрузка.
 - **Лера:** L-06 [#62](https://github.com/inte11ectua1/skinulis/issues/62) / [PR #75](https://github.com/inte11ectua1/skinulis/pull/75) — mock Telegram + local HTTP/PostgreSQL E2E, без live polling.
 - **Тимур:** O-09 [#76](https://github.com/inte11ectua1/skinulis/issues/76) / [PR #77](https://github.com/inte11ectua1/skinulis/pull/77) — исправлен PostgreSQL double checkout; 100-client HTTP500 → 0, p95≈0.96/1.10s. **Цель p95≤500ms не достигнута**, но принята владельцем как необязательная для закрытия O-09. [Полный отчёт](docs/operations/LOAD_TEST_M5.md).
-- После PR #77 [CI PR 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706); post-merge main CI на момент среза выполнялся. Все Issue/PR закрыты; **не придумывать уже назначенные M6 issues**.
+- После PR #77 [CI PR 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706); post-merge main CI на момент среза выполнялся. Все задачи M5 закрыты и соответствующие PR merged; документационный [PR #78](https://github.com/inte11ectua1/skinulis/pull/78) проходит ревью. **Не придумывать уже назначенные M6 issues**.
 - **G5** имеет evidence первого rollout; **G1** не полностью принят (T-01 #2 закрыта `not_planned`); **G2/G3/G4** без live Telegram. Не все исторические PR имеют независимый GitHub APPROVED. Полный DoD/защита ещё впереди.
 
 ## M6: дальнейшая работа

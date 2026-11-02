@@ -12,7 +12,7 @@
 | Лера L-06, Telegram UX/offline E2E | [#62](https://github.com/inte11ectua1/skinulis/issues/62), closed completed | [#75](https://github.com/inte11ectua1/skinulis/pull/75); mock Telegram → локальные HTTP/FastAPI/PostgreSQL17, recovery/error/UUID |
 | Тимур O-09 follow-up, pool starvation | [#76](https://github.com/inte11ectua1/skinulis/issues/76), closed completed | [#77](https://github.com/inte11ectua1/skinulis/pull/77); освобождение auth connection до RR snapshot и повторный тест 100 клиентов |
 
-На момент среза **открытых Issues и PR нет**. Для задач M6 **новые Issues ещё не заведены**; они являются планом, а не уже назначенной работой. Исторический [M4 → M5 handoff](M5_DELIVERY_HANDOFF.md) хранится для аудита, но не отражает нынешнюю очередь задач.
+На момент закрытия M5 **не было открытых Issues или PR по продуктовым задачам**; этот документ подготовлен в отдельном [документационном PR #78](https://github.com/inte11ectua1/skinulis/pull/78). Для задач M6 **новые Issues ещё не заведены**; они являются планом, а не уже назначенной работой. Исторический [M4 → M5 handoff](M5_DELIVERY_HANDOFF.md) хранится для аудита, но не отражает нынешнюю очередь задач.
 
 ## 2. Нагрузка и явно принятая уступка
 
