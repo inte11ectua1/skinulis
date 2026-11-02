@@ -6,6 +6,11 @@ Refs [#59](https://github.com/inte11ectua1/skinulis/issues/59).
 должны получить отдельное подтверждение после устранения блокеров.
 Access addresses, instance/SG identifiers, ключи и runtime credentials здесь не публикуются.
 
+**Последующий срез:** [AWS readiness после merged #66/#67/#68](T-09_AWS_READINESS.md).
+Он обновляет main SHA/digest, EC2 profile/SG/EBS/SSM и IAM blocker. Исторические
+формулировки ниже про отсутствующий instance profile и несозданный transport
+не отменяют более поздние результаты; публичного rollout по-прежнему нет.
+
 ## Источник релиза
 
 - [PR #64](https://github.com/inte11ectua1/skinulis/pull/64) merged.
