@@ -1,0 +1,363 @@
+{
+  "snapshot_date": "2026-11-03",
+  "timezone": "Europe/Moscow",
+  "baseline": "git:638a97616e6d408dda0647fe08a8ebc74657c1ba",
+  "code_source": "git:65042cc70198d4f3c5278e86e1ed38903952ae5f",
+  "course_dod": "https://github.com/andrey-limasov/app-conf/blob/8bff1a6f4d01f5417aeae4fa424e3f577085105c/definition-of-done.md",
+  "branch_protection": {
+    "required_checks": [
+      {
+        "context": "lint",
+        "app_id": 15368
+      },
+      {
+        "context": "types",
+        "app_id": 15368
+      },
+      {
+        "context": "tests",
+        "app_id": 15368
+      },
+      {
+        "context": "docker-build",
+        "app_id": 15368
+      },
+      {
+        "context": "ci",
+        "app_id": 15368
+      }
+    ],
+    "strict": true,
+    "review": {
+      "url": "https://api.github.com/repos/inte11ectua1/skinulis/branches/main/protection/required_pull_request_reviews",
+      "dismiss_stale_reviews": true,
+      "require_code_owner_reviews": false,
+      "require_last_push_approval": false,
+      "required_approving_review_count": 1
+    },
+    "enforce_admins": false,
+    "force_push": false,
+    "deletion": false,
+    "resolve_conversations": true,
+    "rulesets": []
+  },
+  "production_environment": {
+    "can_admins_bypass": false,
+    "protected_branches": true,
+    "prevent_self_review": true,
+    "reviewers": [
+      "pylinolg-max",
+      "Valeria18-new"
+    ]
+  },
+  "rollout_flag": "false (read only)",
+  "pr_audit": {
+    "total": 49,
+    "merged": 48,
+    "missing_premerge_approved": [
+      78,
+      77,
+      75,
+      74,
+      73,
+      72,
+      70,
+      69,
+      68,
+      67,
+      66,
+      64,
+      63,
+      58,
+      57,
+      56,
+      54,
+      53,
+      52,
+      51,
+      50,
+      49,
+      44,
+      43,
+      42,
+      41,
+      40,
+      34,
+      33,
+      31,
+      30,
+      27,
+      26,
+      25,
+      20,
+      19,
+      1
+    ],
+    "approved": [
+      71,
+      28,
+      18,
+      17,
+      16,
+      15,
+      14,
+      9,
+      8,
+      7,
+      6
+    ]
+  },
+  "first_parent_main": {
+    "commits": 48,
+    "pr_changes_after_initial": 47,
+    "outside_pr": [
+      "git:f7af23a74fdca9295950c097043fd818c666f9cb"
+    ]
+  },
+  "unit_passed": 1280,
+  "postgres_integration_passed": 446,
+  "combined_branch_coverage_percent": "95.00",
+  "coverage_sources": [
+    "app",
+    "bot",
+    "skinulis_logging"
+  ],
+  "coverage_threshold_percent": 60,
+  "local_checks": [
+    {
+      "name": "unit",
+      "returncode": 0
+    },
+    {
+      "name": "integration",
+      "returncode": 0
+    },
+    {
+      "name": "coverage",
+      "returncode": 0
+    },
+    {
+      "name": "dependencies",
+      "returncode": 0
+    },
+    {
+      "name": "audit",
+      "returncode": 0
+    }
+  ],
+  "local_compose": {
+    "source": "git:65042cc70198d4f3c5278e86e1ed38903952ae5f",
+    "synthetic_only": true,
+    "checks": [
+      "clean PostgreSQL + automatic migrations",
+      "register/login/me/401",
+      "three members + voluntary invites",
+      "cross-group 404 + owner-only 403",
+      "equal exact 100/3",
+      "custom exact + zero share",
+      "by_items restaurant 3200",
+      "replay UUID + conflicting409",
+      "balances sum0 + plan",
+      "partial500 pending/confirmed + repeat",
+      "reject/cancel + wrong actor403",
+      "edit/version409/soft-delete + immutable confirmed reverse debt"
+    ],
+    "health": {
+      "status": "ok",
+      "database": "ok"
+    },
+    "version": {
+      "version": "0.1.0",
+      "commit_sha": "git:65042cc70198d4f3c5278e86e1ed38903952ae5f"
+    },
+    "database": "0006_settlement_notification_claim",
+    "logging": {
+      "json_lines": 113,
+      "secret_negative": true
+    },
+    "result": "PASS"
+  },
+  "local_delivery": {
+    "result": "PASS",
+    "source": "git:65042cc70198d4f3c5278e86e1ed38903952ae5f",
+    "real_tls": true,
+    "negative_routing_probes": 26,
+    "restart_persistence": true,
+    "private_actor": true,
+    "logging_rotation": "5m x 3",
+    "polling_started": false
+  },
+  "history_secrets": {
+    "scope": "all unique UTF-8 blobs reachable from baseline origin/main",
+    "network_secret_verification": false,
+    "counts": {
+      "blobs": 655,
+      "text": 655,
+      "binary": 0,
+      "bytes": 9378687
+    },
+    "findings": [
+      {
+        "blob": "git-blob:60840b9dccf7d772e75c9e5961175f83b9a44a86",
+        "path": "tests/unit/test_ssm_transport.py",
+        "line": 136,
+        "type": "Hex High Entropy String",
+        "classification": "public pinned SHA256 of official AWS SSM plugin package; also present in installer, not credential"
+      },
+      {
+        "blob": "git-blob:bb513f675566be39de6353b70a9bf6ab37561f61",
+        "path": "tests/unit/test_ssm_transport.py",
+        "line": 135,
+        "type": "Hex High Entropy String",
+        "classification": "public pinned SHA256 of official AWS SSM plugin package; also present in installer, not credential"
+      },
+      {
+        "blob": "git-blob:e586124aba9daa386ba4d44ca5e8888b3dc24fab",
+        "path": "tests/unit/test_ssm_transport.py",
+        "line": 134,
+        "type": "Hex High Entropy String",
+        "classification": "public pinned SHA256 of official AWS SSM plugin package; also present in installer, not credential"
+      }
+    ],
+    "result": "PASS: no credential findings; 3 public artifact digest false positives manually verified"
+  },
+  "ghcr": {
+    "sha": "git:638a97616e6d408dda0647fe08a8ebc74657c1ba",
+    "image": "ghcr.io/inte11ectua1/skinulis@sha256:7140db7b9d920078f12f1f8223457fc5ef52082b4c4bb998bbccadf4797e2b39",
+    "manifest_digest_verified": true,
+    "config_digest_verified": true,
+    "architecture": "amd64",
+    "os": "linux",
+    "user": "skinulis",
+    "cmd": [
+      "python",
+      "-m",
+      "app.core.serve"
+    ],
+    "oci_revision": "git:638a97616e6d408dda0647fe08a8ebc74657c1ba",
+    "oci_source": "https://github.com/inte11ectua1/skinulis",
+    "anonymous_pull_metadata_access": true,
+    "compressed_layers_mib": 61.52
+  },
+  "production_public": {
+    "url": "https://3-25-53-31.sslip.io",
+    "tls_verification": true,
+    "requests": [
+      {
+        "path": "/health",
+        "status": 200,
+        "content_type": "application/json",
+        "request_id_present": true,
+        "body": {
+          "status": "ok",
+          "database": "ok"
+        }
+      },
+      {
+        "path": "/version",
+        "status": 200,
+        "content_type": "application/json",
+        "request_id_present": true,
+        "body": {
+          "version": "0.1.0",
+          "commit_sha": "git:f7020cda3908d7e0c40c0b0f840e322b3d6cfda5"
+        }
+      },
+      {
+        "path": "/docs",
+        "status": 200,
+        "content_type": "text/html; charset=utf-8",
+        "request_id_present": true
+      },
+      {
+        "path": "/openapi.json",
+        "status": 200,
+        "content_type": "application/json",
+        "request_id_present": true,
+        "path_count": 41,
+        "sha256": "sha256:7392bd03806382b668c95934490b611972312be982e617b63ca0917cd36821b7"
+      },
+      {
+        "path": "/internal",
+        "status": 404
+      },
+      {
+        "path": "/internal/",
+        "status": 404
+      },
+      {
+        "path": "/%69nternal/users/me",
+        "status": 404
+      },
+      {
+        "path": "/%2569nternal/users/me",
+        "status": 404
+      },
+      {
+        "path": "/internal%2fusers/me",
+        "status": 404
+      },
+      {
+        "path": "//internal/users/me",
+        "status": 404
+      },
+      {
+        "path": "/x/../internal/users/me",
+        "status": 404
+      }
+    ],
+    "certificate": {
+      "issuer": [
+        [
+          [
+            "countryName",
+            "US"
+          ]
+        ],
+        [
+          [
+            "organizationName",
+            "Let's Encrypt"
+          ]
+        ],
+        [
+          [
+            "commonName",
+            "YE2"
+          ]
+        ]
+      ],
+      "subjectAltName": [
+        [
+          "DNS",
+          "3-25-53-31.sslip.io"
+        ]
+      ],
+      "notBefore": "Nov  2 09:30:54 2026 GMT",
+      "notAfter": "Jan 31 09:30:53 2027 GMT"
+    },
+    "tls": "TLSv1.3"
+  },
+  "openapi_examples": {
+    "operations": 53,
+    "missing_success": 0,
+    "missing_request": 0,
+    "regression_before": "1 failed on old schemas",
+    "regression_after": "2 passed"
+  },
+  "main_ci": "https://github.com/inte11ectua1/skinulis/actions/runs/41541471109",
+  "main_release_publish": "https://github.com/inte11ectua1/skinulis/actions/runs/41542597809",
+  "forbidden_operations_performed": [],
+  "performance": {
+    "result": "FAIL",
+    "p95_ms": {
+      "mixed": 956.05,
+      "contention": 1098.46
+    },
+    "goal_ms": 500,
+    "http_500_after_o09": 0,
+    "concurrent_clients": 100,
+    "source": "https://github.com/andrey-limasov/app-conf/blob/8bff1a6f4d01f5417aeae4fa424e3f577085105c/project-requirements.md#L134",
+    "owner_m5_waiver_is_not_instructor_exception": true
+  }
+}
