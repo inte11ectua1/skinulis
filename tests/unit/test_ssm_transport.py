@@ -123,6 +123,7 @@ def test_iam_templates_limit_identity_instance_and_session_ownership() -> None:
     assert "aws-access-key-id" not in aws_step["with"]
     assert "aws-secret-access-key" not in aws_step["with"]
 
+
 def test_ssm_plugin_install_retries_transient_failures_with_pinned_digest() -> None:
     """Temporary AWS S3 HTTP 503 must not weaken transport integrity checks."""
     root = Path(__file__).resolve().parents[2]
