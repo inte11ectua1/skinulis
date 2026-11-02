@@ -209,10 +209,15 @@ skip/xfail и не переписана чужая инфраструктура.
 Полный Linux suite и штатный pre-commit проверяются GitHub CI.
 
 Первый полный local PG:412passed/2failed по timezone expected. Исправленные2кейса
-прошли; полный повтор выполняется. Disposable Docker runner и Docker build локально
+прошли; полный повтор: **414passed**,462.68s, без skip/xfail. Disposable Docker runner и Docker build локально
 недоступны из-за Engine и не считаются passed. Один Alembic head0006; clean/repeated
 upgrade/schema drift/0006backfill/downgrade/reupgrade входят в полный PG suite.
-Новых миграций нет. Финальные полный PG/CI результаты публикуются в PR evidence.
+Новых миграций нет. На измеренном implementation SHA9f2f75b:
+[CI41494219268](https://github.com/inte11ectua1/skinulis/actions/runs/41494219268)
+**5/5success**,1243unit+414PG=1657passed, combined branch coverage**95.00%**
+(3836statements/844branches). Docker build и disposable production-routing image
+smoke прошли только в GitHub CI; это не production deploy. Checks окончательного
+документационного head проверяются отдельно и публикуются в PR evidence.
 
 Ограничения: локальная нагрузка без TLS/reverse proxy/production network и live
 Telegram; closed-loop без think time — интенсивный профиль, не модель всех UX.
