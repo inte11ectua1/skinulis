@@ -3,6 +3,7 @@
 import importlib
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -122,3 +123,15 @@ def test_iam_templates_limit_identity_instance_and_session_ownership() -> None:
     )
     assert "aws-access-key-id" not in aws_step["with"]
     assert "aws-secret-access-key" not in aws_step["with"]
+
+
+def test_ssm_plugin_install_retries_transient_failures_with_pinned_digest() -> None:
+    """Temporary AWS S3 HTTP 503 must not weaken transport integrity checks."""
+    root = Path(__file__).resolve().parents[2]
+    installer = (root / "scripts/install_ssm_plugin.sh").read_text()
+    assert "--retry 5 --retry-delay 2 --retry-max-time 120" in installer
+    assert "--connect-timeout 15 --max-time 45" in installer
+    assert "--proto '=https' --tlsv1.2" in installer
+    assert "sha256sum --check --status" in installer
+    assert re.search(r"(?m)^  [0-9a-f]{64} \\$", installer) is not None
+    assert "plugin/1.2.896.0/ubuntu_64bit/session-manager-plugin.deb" in installer

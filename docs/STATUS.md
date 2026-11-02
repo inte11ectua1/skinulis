@@ -16,18 +16,45 @@ Read-only аудит T-09 подтвердил new-account Environment/OIDC targ
 [PR #70](https://github.com/inte11ectua1/skinulis/pull/70), не дублируется здесь.
 [check-transport](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056)
 прошёл independent approval, но download SSM plugin получил HTTP 503;
-OIDC/SSH пока не проверены. PRODUCTION_ROLLOUT_ENABLED=false;
+исправление загрузки merged в PR #72. Повторный check-transport ещё не выполнен,
+GitHub OIDC/SSH пока не проверены. PRODUCTION_ROLLOUT_ENABLED=false;
 production containers/migrations/polling не запускались. T-09 #59 остаётся open.
 Нижележащие EC2/роль-срезы — исторические; активная конфигурация нового AWS описана
 в #70, документационный #69 относится к отказу IAM в старом аккаунте.
 
+## T-09 — новый AWS EC2 подготовлен, ожидается повторный transport check (02.11.2026)
+
+По отдельному разрешению Тимура создан новый t3.small Ubuntu24.04 AMD64 в Sydney,
+20GiB encrypted gp3, без новых дополнительных платных сервисов. Старый EC2/account
+не менялись. [Подробное evidence и стоимость](operations/T-09_NEW_AWS_EC2.md).
+Docker29.9.2/Compose5.6.1 и SSM Online, swap2GiB на encrypted root, отдельный
+deployment user/new keys, private fresh runtime env и пустые volumes готовы.
+Реальный SSH-over-SSM с pinned host key и отказ с неверным key проверены;
+main GHCR digest скачан, Compose/controller dry-run и runtime validators прошли.
+1175 unit tests (в том числе104 release/SSM cases), Ruff и strict mypy проходят.
+На новом сервере также прошли synthetic PostgreSQL17 dump/restore, restart target
+и off-host archive SHA256 check; production volumes не использовались.
+
+GitHub OIDC provider и новая минимальная role проверены API по main policies.
+Environment destination и оба SSH secrets обновлены на новый account/сервер;
+independent Олег/Лера, prevent_self_review, protected branches и запрет bypass
+сохранены, rollout=false. [Protected check-transport](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056):
+guard/publish и approval прошли; **скачивание SSM plugin завершилось HTTP 503**,
+поэтому GitHub OIDC/SSM ещё не
+verified; successful Mac admin SSM session не подменяет этот gate.
+PR #67/#68 уже merged. PR #69 относится к readiness/SCP deny старого account.
+
+Новый сервер ещё не запускал production PostgreSQL/API/Caddy/bot. Требуются
+повторный check-transport после merged PR #72, DNS/ACME и отдельное разрешение
+на rollout; live Telegram отдельно. **Issue #59/G5 остаются открытыми.**
+Ниже сохранены исторические срезы старого EC2 и прежних этапов.
 
 
-## Историческая запись: прежний AWS-аккаунт (01.11.2026)
+## Историческая запись: прежний AWS-аккаунт и SCP (01.11.2026)
 
-Этот блок относится к старому аккаунту и устаревшему IAM blocker.
+Этот блок относится к старому аккаунту и не описывает текущий IAM статус нового EC2.
 
-### Старый AWS: SSM/IAM readiness до миграции
+### Старый AWS: IAM blocker и readiness
 
 PR #66/#67/#68 merged; main `dd78027bfdf293568284d36719b5ac1929c337ac`.
 [Main CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41333607302):
