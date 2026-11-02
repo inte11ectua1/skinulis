@@ -1,6 +1,6 @@
 # Фактическое состояние проекта
 
-## T-09 — новый AWS EC2 подготовлен, OIDC approval pending (01.11.2026)
+## T-09 — новый AWS EC2 подготовлен, transport check требует исправления (02.11.2026)
 
 По отдельному разрешению Тимура создан новый t3.small Ubuntu24.04 AMD64 в Sydney,
 20GiB encrypted gp3, без новых дополнительных платных сервисов. Старый EC2/account
@@ -17,14 +17,39 @@ GitHub OIDC provider и новая минимальная role проверен�
 Environment destination и оба SSH secrets обновлены на новый account/сервер;
 independent Олег/Лера, prevent_self_review, protected branches и запрет bypass
 сохранены, rollout=false. [Protected check-transport](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056):
-guard/publish success; **ожидает независимого approval**. GitHub OIDC/SSM ещё не
+guard/publish и approval прошли; **скачивание SSM plugin завершилось HTTP 503**,
+поэтому GitHub OIDC/SSM ещё не
 verified; successful Mac admin SSM session не подменяет этот gate.
 PR #67/#68 уже merged. PR #69 относится к readiness/SCP deny старого account.
 
 Новый сервер ещё не запускал production PostgreSQL/API/Caddy/bot. Требуются
-OIDC check, DNS/ACME и отдельное разрешение
+повторный check-transport после исправления загрузки plugin, DNS/ACME и отдельное разрешение
 на rollout; live Telegram отдельно. **Issue #59/G5 остаются открытыми.**
 Ниже сохранены исторические срезы старого EC2 и прежних этапов.
+
+
+## Историческая запись: прежний AWS-аккаунт и SCP (01.11.2026)
+
+Этот блок относится к старому аккаунту и не описывает текущий IAM статус нового EC2.
+
+### Старый AWS: IAM blocker и readiness
+
+PR #66/#67/#68 merged; main `dd78027bfdf293568284d36719b5ac1929c337ac`.
+[Main CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41333607302):
+1175 unit +402 PostgreSQL tests, coverage94,76%.
+[Release guard/publish success, deploy skipped](https://github.com/inte11ectua1/skinulis/actions/runs/41334146071).
+[AWS/GHCR/DNS/controller/backup evidence](operations/T-09_AWS_READINESS.md).
+EBS encryption, SG/private ports, SSM Agent и настоящий **локальный** SSM SSH проверены.
+Production AWS variables заполнены; защиты/secrets сохранены, flag=false.
+**Blocker:** OIDC provider Get/List и реальный Create запрещены Organizations SCP
+Deny. После отдельного разрешения Тимура CreateOpenIDConnectProvider отклонён
+01.11.2026 18:53:31 UTC; IAM ресурсы не изменены, CreateRole/PutRolePolicy не
+запускались. Нужны исправление SCP администратором организации, inventory,
+применение уже разрешённого setup и protected GitHub check-transport.
+PUBLIC_DOMAIN проверен только в private test copy; публичного HTTPS,
+production deployment, polling и G5 acceptance нет. Исторические формулировки ниже
+об открытых #67/#68 больше не актуальны.
+
 
 ## T-09 — EC2 preflight выполнен, публичный rollout ожидает (01.11.2026)
 

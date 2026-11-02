@@ -472,8 +472,14 @@ PR pipeline не получает этих secrets/permissions.
 Protected `operation=check-transport` проверяет только
 подключение и Docker version с rollout flag=false; controller не запускается.
 Его [реальный запуск](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056)
-ожидает независимого production approval; OIDC connection пока не verified.
+прошёл independent approval, но installer SSM plugin получил HTTP 503;
+OIDC connection пока не verified.
 Production rollout/HTTPS и live Telegram остаются отдельной приёмкой.
+
+[Исторический AWS readiness старого аккаунта](docs/operations/T-09_AWS_READINESS.md): PR #66/#67/#68
+merged, main CI/GHCR и local SSM SSH проверены. В старом аккаунте GitHub OIDC блокировался Organizations SCP; в новом аккаунте
+provider/role созданы и проверены. [Новый EC2 и readiness](docs/operations/T-09_NEW_AWS_EC2.md).
+Rollout flag=false; публичный HTTPS/G5 ещё не подтверждены.
 
 ```sh
 actionlint

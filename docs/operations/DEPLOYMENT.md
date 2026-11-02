@@ -12,8 +12,11 @@ backup/restore реально проверены; [evidence и ограниче�
 Новый EC2/Docker/SSM, fresh env/keys/volumes и минимальная GitHub OIDC role готовы;
 политики из main прочитаны обратно. Environment обновлён с сохранением защиты.
 [Protected check-transport](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056)
-ожидает независимого approval. Rollout=false; production не запускался.
+получил independent approval, но шаг установки SSM plugin завершился HTTP 503;
+OIDC/SSH не выполнялись. Rollout=false; production не запускался.
 PR #67/#68 merged; PG/TLS/backup evidence старого EC2 не переносится на новый.
+Исторический отказ SCP в старом AWS-аккаунте описан в
+[AWS readiness](T-09_AWS_READINESS.md).
 
 ## Архитектура и образы
 

@@ -4,8 +4,11 @@
 Provider и отдельная runner role нового account созданы/проверены по main JSON;
 [новый EC2, policies, host pin и Environment evidence](T-09_NEW_AWS_EC2.md).
 Реальный Mac admin → SSM → SSH прошёл. [GitHub check-transport](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056)
-ожидает independent production approval, поэтому GitHub OIDC connection ещё
+получил independent approval, но загрузка SSM plugin с AWS S3 завершилась HTTP 503
+до GitHub OIDC/SSH. Поэтому GitHub OIDC connection ещё
 **не verified**. Rollout flag `false`, deployment и polling не выполнялись.
+Историческая ошибка SCP относилась к прежнему AWS-аккаунту:
+[AWS readiness](T-09_AWS_READINESS.md).
 
 ## Границы доверия
 

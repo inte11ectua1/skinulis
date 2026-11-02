@@ -166,4 +166,4 @@ subject + production Environment. Настройка владельцем и JSO
 [AWS_SSM_CD](operations/AWS_SSM_CD.md). `check-transport` не требует включать rollout
 и не запускает controller/миграции/polling. Provider/role нового account проверены
 API по main JSON. Реальное Mac admin SSM/SSH прошло, но GitHub OIDC session
-ожидает independent approval; не считать её подтверждённой заранее.
+пока не подтверждена: independent approval прошёл, но installation\nSSM plugin на GitHub runner получила HTTP 503 до OIDC/SSH шага.
