@@ -32,6 +32,8 @@
 Среда: настоящий MacBook, macOS15.3.2/arm64, Python3.12.15, uv0.13.5,
 Docker Engine23.0.5/Compose2.17.3. PostgreSQL17.11 из закреплённого official image.
 Новые тестовые credentials генерировались в памяти; `.env` оператора не перезаписан.
+В JSON evidence публичные Git IDs нормализованы префиксами `git:`/`git-blob:`;
+это обозначение идентификаторов, не буквальная строка `commit_sha` HTTP-ответа.
 Нет AWS-операций, production migrations/deploy, изменения protection/secrets,
 нагрузки production, live Telegram или отправки реальным пользователям.
 
