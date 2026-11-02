@@ -7,7 +7,7 @@ PostgreSQL/API/Caddy healthy, migrate exited0, polling выключен.
 [Release41428440222](https://github.com/inte11ectua1/skinulis/actions/runs/41428440222)
 успешен после independent approval pylinolg-max. Repository rollout flag возвращён
 false. Новые rollout/live polling требуют новых отдельных разрешений и approval.
-Issue остаётся открытой для owner acceptance; частичный evidence PR использует Refs #59.
+**Актуализация приёмки 03.11.2026:** Issue #59 закрыта `completed` владельцем, M5 принят в ограниченном scope API-first; формулировка `Refs #59` относится к историческому evidence PR, не сегодняшнему состоянию. Последний `main` `0de89b3` (включая O-09) **не развёрнут автоматически**, production SHA первого rollout `f7020cd`. Новые deploy/polling только с явным разрешением. [Handoff](M5_CLOSEOUT_M6_HANDOFF.md).
 
 Текущий destination — новый AWS account/EC2 в Sydney; старый сервер/account не
 менялись. [Preparation](T-09_NEW_AWS_EC2.md) и [исторический отказ SCP старого account](T-09_AWS_READINESS.md)

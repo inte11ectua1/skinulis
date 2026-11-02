@@ -1,6 +1,6 @@
 # Подготовка к Codex
 
-> **Исторический чек-лист первоначальной настройки (M0)**, не повторная команда. На 31.10.2026 **M1–M4 завершены по реализации**; M4 [PR #51/#53/#57/#54/#58](https://github.com/inte11ectua1/skinulis/pull/58) merged, Issues #45/#46/#47/#48/#55 closed. **Текущий M5 назначен:** Тимуру [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) → [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60), Олегу [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61), Лере [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62). [M5 handoff](M5_DELIVERY_HANDOFF.md). T-01/G1 ещё открыта, live Telegram QA G2/G3/G4 отложено, G5 требует реального deploy/evidence. Преподавателя пока не приглашать; GitHub main — актуальный источник.
+> **Исторический M0 checklist, не новая команда на конфигурацию.** Состояние на 03.11.2026: M5 принят (все #59/#60/#61/#62/#76 closed), [M5 closeout / M6 handoff](M5_CLOSEOUT_M6_HANDOFF.md); T-01 #2 closed `not_planned`, не fully accepted; первый API G5 rollout подтверждён, но live Telegram G2/G3/G4 всё ещё не verified. Список ниже — первоначальный setup, не нужно повторять уже выполненные изменения. Преподавателя не приглашать без отдельного решения Тимура; каноническое состояние — GitHub main.
 
 ## Ниже — исходные инструкции первоначальной настройки
 

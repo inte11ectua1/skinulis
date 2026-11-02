@@ -29,11 +29,11 @@
 
 [L-05 #48](https://github.com/inte11ectua1/skinulis/issues/48) / [PR #54](https://github.com/inte11ectua1/skinulis/pull/54) **merged/closed**. Балансы/план, pending/confirm/reject/cancel, original UUID replay, bot-service auth и best-effort приватные уведомления через O-07N [#55](https://github.com/inte11ectua1/skinulis/issues/55)/[PR #57](https://github.com/inte11ectua1/skinulis/pull/57) реализованы. [Последний CI](https://github.com/inte11ectua1/skinulis/actions/runs/41210779152) 5/5, 1460 unit+PG tests/94,76%. T-08 [#45](https://github.com/inte11ectua1/skinulis/issues/45) audit закрыт PR #58. Никакого live Telegram polling в этих тестах не было.
 
-## Текущая задача M5 — [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62)
+## M5 L-06 завершена; следующий план — L-07 / M6
 
-**Начинать сейчас с fresh main:** полноформатный mocked Telegram FSM → реальный локальный FastAPI HTTP/PostgreSQL17, UI 400/401/403/404/409/429/5xx, timeout/lost-response, stable UUID original replay vs актуальный статус, duplicate callback/restart, partial/terminal/reverse balances, no spam notifications и отсутствие финансовой математики в боте. README troubleshooting и `docs/bot/L-06_UX_REGRESSION.md` с тестовым чек-листом и безопасными mock screenshots. [Handoff](../operations/M5_DELIVERY_HANDOFF.md).
+**L-06 [#62](https://github.com/inte11ectua1/skinulis/issues/62) / [PR #75](https://github.com/inte11ectua1/skinulis/pull/75) merged/closed.** UX 400/401/403/404/409/429/5xx и timeout/network, UUID original replay/current GET, stale callbacks/double-click/restart/notification best effort проверены mock Telegram → настоящие локальные HTTP/PostgreSQL17; 35 новых unit и13 HTTP/PG сценариев. [L-06 regression matrix](../bot/L-06_UX_REGRESSION.md), [CI PR #75 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41517984688). Ни реальный Telegram polling, ни живые участники не проверялись.
 
-**Никакого живого Telegram E2E или настоящих участников/токенов** до отдельного разрешения Тимура: G2/G3/G4 не verified. O-08 #61 и T-09 #59 выполняются параллельно; при изменениях production auth/proxy получить ревью Тимура. Финальный `Closes #62` лишь после готовых mock/HTTP/PG acceptance, промежуточный `Refs #62`.
+**L-07 / M6 ещё не оформлена отдельной Issue:** user guide для 3 участников, пошаговая demo/smoke инструкция, сценарии ошибок и безопасные synthetic screenshots. Live Telegram/E2E — только по явному разрешению Тимура; G2/G3/G4 до такого теста not verified. [M5→M6 handoff](../operations/M5_CLOSEOUT_M6_HANDOFF.md).
 
 ## Для своего чата
 «Разбей создание by_items на последовательные кнопки», «Проверь возможные ошибки мастера», «Дай промпт Codex для L-04 без изменения backend», «Составь E2E чек-лист».

@@ -1,5 +1,7 @@
 # Handoff M4 → M5 Delivery (31.10.2026)
 
+> **Исторический срез задач на 31.10.2026, НЕ текущая очередь задач.** По состоянию на 03.11.2026 M5 закрыт, T-09 #59/T-10 #60/O-08 #61/L-06 #62/O-09 #76 merged/accepted; T-01 #2 закрыта `not_planned`; подтвержден первичный G5 rollout, но live Telegram gates не проверены. Новый статус и [M5→M6 handoff](M5_CLOSEOUT_M6_HANDOFF.md). Все фразы ниже «issue open», «G5 не проверен» отражают исключительно дату первоначального handoff.
+
 **Источник фактов:** GitHub `main` на старте этого handoff `eb3ae2880348b30df852ba653f0ac977d7ad007e` после merged [T-08 PR #58](https://github.com/inte11ectua1/skinulis/pull/58), Issue [#45](https://github.com/inte11ectua1/skinulis/issues/45) closed completed. Это **закрытие объёма M4 по коду и техническому аудиту**, не формальная проверка релизных G1/G2/G3/G4 и не обещание production готовности.
 
 ## 1. Что уже принято по M4

@@ -39,13 +39,15 @@
 
 **Merged/closed:** T-08 contracts #50/#56, backend O-06 #51, O-07 #53, notification claim #57, L-05 #54, [финальный отчёт](../reviews/T-08_M4_FINAL_SECURITY_REVIEW.md) #58. GitHub `main` на момент handoff `eb3ae28`; [CI PR #58 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41213175596). Нет independent human APPROVED на некоторых PR; не приписывать их задним числом. **Live Telegram gates G2/G3/G4 не verified**, T-01/G1 отдельно.
 
-## Текущий M5 — [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) → [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60)
+## M5 завершён (03.11.2026) → следующий план T-11 / M6
 
-**T-09 — начать с него:** trusted-main GitHub Actions CD, GHCR immutable SHA, one-time migration, Compose api/bot/db + HTTPS Caddy, публичная network isolation /internal и private PostgreSQL, безопасный rollback образа. Начать с анализа CI/Dockerfile/compose и архитектуры; **настоящие SSH/VPS/deploy, секреты и запуск polling запрещены до отдельного разрешения**. Без нужных доступов отправить документацию/проверяемый код в частичном PR `Refs #59`, оставив live acceptance open; не выдумывать успешный G5.
+**T-09 [#59](https://github.com/inte11ectua1/skinulis/issues/59) и T-10 [#60](https://github.com/inte11ectua1/skinulis/issues/60) закрыты `completed`:** protected GHCR CD, approved первый HTTPS/API deployment на AWS с private PostgreSQL, JSON logs/privacy/rotation/runbook. [Первый rollout evidence](../operations/T-09_FIRST_PRODUCTION_ROLLOUT.md). Production SHA `f7020cd`; новый merge `0de89b3` не deployed. Telegram polling off.
 
-**T-10 — после согласованной инфраструктуры T-09:** JSON structured logs, request_id, Docker log rotation, diagnostics/incident/rollback runbook и redaction tests. Проектирование в параллельной ветке возможно, финальную Compose-интеграцию делать после T-09. Номера Issues: [#59](https://github.com/inte11ectua1/skinulis/issues/59), [#60](https://github.com/inte11ectua1/skinulis/issues/60).
+**O-09 [#76](https://github.com/inte11ectua1/skinulis/issues/76) / [PR #77](https://github.com/inte11ectua1/skinulis/pull/77) выполнена Тимуром и замержена:** устранено двойное удержание pool connections (auth → REPEATABLE READ), 19 PG regressions; 100-client HTTP500→0 и p95≈956/1098ms. p95≤500ms **FAIL**, но принято владельцем как допустимое ограничение для учебного проекта, не PASS.
 
-**Параллельно:** Олег [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61) делает controlled real PG concurrency/load (100 clients/p95), Лера [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62) — bot UX mock/HTTP/PG regression. Тесты не запускать на production. [Полный handoff](../operations/M5_DELIVERY_HANDOFF.md). T-01 #2 остаётся открытой, преподавателя пока не приглашать.
+**T-01 #2** закрыта `not_planned`, а не fully accepted; admin bypass/direct-push evidence и недостающие формальные approvals остаются риском DoD.
+
+**Следующий T-11** — план DoD gap audit, чистый Docker Compose boot и доказательства процесса/демо; Issue ещё не создана. Не объявлять преподавательский DoD выполненным до проверки или согласования исключений. M5 [closeout](../operations/M5_CLOSEOUT_M6_HANDOFF.md). Новый rollout, AWS изменения, Telegram live — только отдельное разрешение.
 
 ## Вопросы для своего ChatGPT-чата
 «Что мой следующий gate?», «Проверь угрозы Telegram actor», «Сформулируй PR description и тестовый план», «Какие доказательства CI/CD нужны для преподавателя?».

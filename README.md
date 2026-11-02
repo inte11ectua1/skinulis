@@ -13,7 +13,7 @@ timeout повторяйте прежние UUID/body: replay возвращае
 
 **O-07N #55 merged PR #57 и L-05 #48 merged PR #54:** защищённый bot-service `POST /internal/settlements/{settlement_id}/notification-claim` выдаёт одноразовое разрешение уведомить получателя (200 server-bound Telegram ID, 204 после claim/terminal/no binding). Alembic 0006 хранит отметку, миграция помечает исторические записи. Бот отправляет одну best-effort private notification **только** после 200 claim, без гарантии доставки и без банковского перевода. [Контракт](docs/contracts/T-08_PENDING_NOTIFICATION.md), [L-05 документация](docs/bot/L-05_SETTLEMENTS.md).
 
-> **M4 завершён по реализации 31.10.2026:** [O-06 #46/PR #51](https://github.com/inte11ectua1/skinulis/pull/51), [O-07 #47/PR #53](https://github.com/inte11ectua1/skinulis/pull/53), [O-07N #55/PR #57](https://github.com/inte11ectua1/skinulis/pull/57), [L-05 #48/PR #54](https://github.com/inte11ectua1/skinulis/pull/54), [T-08 #45/PR #58](https://github.com/inte11ectua1/skinulis/pull/58) merged, Issues closed. [T-08 финальный security review](docs/reviews/T-08_M4_FINAL_SECURITY_REVIEW.md), [CI #58 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41213175596). **Следующий этап M5 Delivery** — назначены T-09 #59, T-10 #60, O-08 #61, L-06 #62. [Handoff](docs/operations/M5_DELIVERY_HANDOFF.md). Live Telegram G2/G3/G4 не verified; production /internal isolation проверена 02.11 (см. evidence ниже); T-01/G1 по-прежнему open.
+> **03.11.2026: M5 Delivery завершён и принят по согласованному объёму.** Все T-09 #59/T-10 #60/O-08 #61/L-06 #62/O-09 #76 закрыты; PR #74/#75/#77 merged. [M5 closeout и M6 handoff](docs/operations/M5_CLOSEOUT_M6_HANDOFF.md) · [STATUS](docs/STATUS.md). Исправлена проблема PostgreSQL double checkout: на локальном тесте 100 клиентов HTTP500=0, p95≈956/1098ms; **внутренний таргет p95≤500ms остаётся FAIL**, владелец принял отклонение. На AWS проверялся первый API rollout SHA `f7020cd`, а не новый `main` `0de89b3`; Telegram polling выключен. G1 не fully accepted (T-01 #2 закрыта `not_planned`), live G2/G3/G4 и обязательные human APPROVED отдельных PR — M6 audit gaps.
 
 ## Начало работы
 
@@ -38,8 +38,9 @@ timeout повторяйте прежние UUID/body: replay возвращае
 - **M2 Identity завершён по коду:** [T-05 #21 / PR #26](https://github.com/inte11ectua1/skinulis/pull/26), [T-06 #22 / PR #27](https://github.com/inte11ectua1/skinulis/pull/27), [O-03 #23 / PR #31](https://github.com/inte11ectua1/skinulis/pull/31), [L-03 #24 / PR #28](https://github.com/inte11ectua1/skinulis/pull/28) merged, соответствующие Issues closed. Финансовая документация принята через PR #33, UTC API даты через PR #30. G2 требует отдельной проверки.
 - **M3 Expenses завершён:** Олег [O-04 #36 / PR #41](https://github.com/inte11ectua1/skinulis/pull/41) и [O-05 #39 / PR #42](https://github.com/inte11ectua1/skinulis/pull/42) — expense CRUD и snapshots; Лера [L-04 #37 / PR #43](https://github.com/inte11ectua1/skinulis/pull/43) — Telegram expense UI; Тимур [T-07 #35 / PR #44](https://github.com/inte11ectua1/skinulis/pull/44) — audit и regression fixes. Issues закрыты, CI #44 зелёный. G3 не verified без отложенного live Telegram E2E.
 - **M4 Balances/Settlements завершён:** O-06/PR #51, O-07/PR #53, O-07N/PR #57, L-05/PR #54 и T-08/PR #58 — merged/closed. Финансовая история, балансы, manual settlement и best-effort notifications через verified bot actor протестированы реальными HTTP/PostgreSQL и mock Telegram, не live polling.
-- **M5 Delivery назначен:** Тимур [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) (GHCR/CD/VPS/Caddy/network isolation) и [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) (JSON логи/runbook); Олег [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61) (PG races/load 100 clients/p95), Лера [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62) (mock Telegram → HTTP/PG UX regression). O-08/L-06 могут стартовать параллельно, T-10 после T-09 infrastructure.
-- **Границы:** T-01/G1 открыта, G2/G3/G4 formally not verified из-за отложенного live Telegram; технические сигналы G5 проверены первым rollout; приёмка M5 отдельно. Нет автоматического SSH/VPS/production actions без разрешения, PR jobs не получают secrets. Новые задачи: отдельная ветка → PR → CI 5/5 → independent human review → merge, полный PR body Closes #N. [Roadmap](docs/roadmaps/MASTER_ROADMAP.md), [STATUS](docs/STATUS.md).
+- **M5 Delivery завершён (03.11.2026):** Тимур T-09 #59/T-10 #60 и O-09 #76, Олег O-08 #61, Лера L-06 #62 — соответствующие PR merged и Issues закрыты. [Evidence](docs/operations/M5_CLOSEOUT_M6_HANDOFF.md).
+- **M6 Acceptance — следующий план, новых Issues ещё нет:** Тимур T-11 DoD audit/clean boot, Олег финальный finance QA (O-09 ID уже использован #76), Лера L-07 user guide/demo script. Сначала согласовать и завести отдельные Issues.
+- **Границы:** G5 технически verified на первом API production rollout; новый `main` не деплоился автоматически. G1/T-01 #2 закрыта `not_planned`, но admin bypass/direct push evidence не закрыты; G2/G3/G4 live Telegram not verified. Не все PR имеют independent submitted APPROVED. Prod rollout, AWS changes, live polling и production stress — только с отдельного разрешения Тимура. [Roadmap](docs/roadmaps/MASTER_ROADMAP.md), [STATUS](docs/STATUS.md).
 
 
 ## Telegram-бот: онбординг и группы (L-03)
@@ -461,7 +462,7 @@ pylinolg-max. Trusted HTTPS, health с PostgreSQL, version SHA, docs/OpenAPI,
 backup/isolated restore/encrypted off-host copy проверены.
 [Evidence и acceptance matrix](docs/operations/T-09_FIRST_PRODUCTION_ROLLOUT.md).
 PostgreSQL/API/Caddy healthy, migrate exited0; Telegram polling не запускался.
-Rollout flag возвращён false, Issues #59/#60 остаются open для owner acceptance.
+Rollout flag возвращён false. Issues #59/#60 позже закрыты `completed` владельцем (M5 closeout 03.11); на момент первого rollout приёмка ещё ожидалась.
 
 [deploy.yml](.github/workflows/deploy.yml) публикует SHA-tag только после trusted
 main CI, проверяет происхождение image и передаёт deploy **digest**. Rollout выключен
@@ -612,7 +613,8 @@ JSON/privacy/correlation проверены без вызова production outag
 immutable image rollback без DB downgrade и отдельную проверку restore.
 [Production evidence](docs/operations/T-09_FIRST_PRODUCTION_ROLLOUT.md) фиксирует
 успешный API rollout и проверки логов; bot runtime не запускался. Owner acceptance
-и независимый review evidence остаются до закрытия #59/#60.
+#59/#60 выполнена 03.11 в ограниченном scope; наличие формального независимого review
+для исторических PR проверять отдельно, не приписывать задним числом.
 
 ```sh
 uv run pytest tests/unit/test_logging.py tests/unit/test_bot_runtime.py
@@ -639,7 +641,8 @@ TLS и существующую сетевую границу. Тестовый 
 O-09 #76 устраняет double checkout короткой auth Session перед business transaction.
 [Before/after](docs/operations/LOAD_TEST_M5.md):100clients, неизменные pool/worker/mix;
 pool timeouts/HTTP500 исчезли, но p95≈956/1098ms пока выше500ms. Это performance
-FAIL и открытый follow-up; production не менялась. [Агрегаты](docs/operations/O-09_LOAD_RESULTS.json).
+FAIL, но владелец явно принял эти показатели и закрыл #76 после merged PR #77; это
+не performance PASS и не тест текущего production. [Агрегаты](docs/operations/O-09_LOAD_RESULTS.json).
 
 ## Telegram offline UX regression — L-06
 

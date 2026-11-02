@@ -9,12 +9,13 @@
 
 Согласовывать общий API до реализации, не изменять чужие модели без ревью. Ревью по кругу: Тимур → Олег → Лера → Тимур. Изменения финансов дополнительно проверяет Тимур, безопасности — Олег.
 
-## M5 Delivery — границы общего процесса (31.10.2026)
+## M5 Delivery — принят (03.11.2026) / M6 Acceptance — план
 
-- **Задачи назначены:** Тимур T-09 #59 → T-10 #60, Олег O-08 #61, Лера L-06 #62; [полный handoff](operations/M5_DELIVERY_HANDOFF.md). O-08/L-06 могут начинаться параллельно с T-09, T-10 финальная эксплуатационная часть после T-09.
-- В **pull_request** workflow только CI на недоверенном коде **без** SSH/prod DB/GHCR deploy secrets. CD/публикация/deploy — исключительно после одобренного merge в main; если настоящих серверных данных нет, сделать dry-run/static tests/partial PR, не утверждать G5 verified.
-- T-09 публично закрывает `/internal` reverse proxy/не публикует PostgreSQL; O-08 грузит **только одноразовую приватную тестовую БД** (100 concurrent), L-06 использует **mock Telegram**, без реального polling. Настоящие SSH/VPS/live Telegram/load-production действия — только с явного разрешения Тимура.
-- PR с завершённой Issue должен содержать **`Closes #N`**, частичный PR **`Refs #N`**, не закрывать незаконченный scope. **Independent human APPROVED обязателен по процессу**, даже если admin GitHub может обходить protection. Исторические PR без APPROVED не «одобрены задним числом».
+- M5 T-09 #59, T-10 #60, O-08 #61, L-06 #62 и O-09 #76 **закрыты**; PR #74/#75/#77 merged, первый API HTTPS/CD G5 evidence есть. [Closeout](operations/M5_CLOSEOUT_M6_HANDOFF.md). O-09 100-client pool500 устранены, p95 956/1098ms — внутренний FAIL, явно принят Тимуром.
+- **Следующий M6:** T-11 DoD audit/cold start у Тимура, финальный financial QA у Олега (O-09 ID уже использован), L-07 user guide/demo у Леры. Новые Issues ещё не созданы.
+- По-прежнему обязательно независимое человеческое GitHub APPROVED до merge; исторические PR без APPROVED не выдавать за reviewed. T-01 #2 закрыта `not_planned`, но исходные branch-protection evidence не закрыты по DoD.
+- `pull_request` не получает prod secrets; после merge trusted main может публиковать образ, **но автоматически не деплоит в AWS**: защищённый Environment approval и разрешённый rollout flag. Production SSH/AWS/DB/Telegram polling/live/production stress — только с новой явной командой Тимура.
+- G2/G3/G4 live Telegram не проверены; G5 evidence относится к первому API rollout, а не актуальному `main`. `Closes #N` только после полного acceptance; при согласованной уступке фиксировать точное FAIL, как в O-09.
 
 ## Перед каждым PR
 Прочитать AGENTS.md, docs/PRODUCT_RULES.md, свой SPEC и ROADMAP, выполнить одну issue, добавить тесты, указать проверки, риски, ссылку на issue. После merge обновить docs/STATUS.md.
