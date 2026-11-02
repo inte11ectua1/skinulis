@@ -303,7 +303,9 @@ async def create(
                 error.kind in UNCERTAIN_KINDS,
             )
             await message.answer(
-                UNCERTAIN if error.kind in UNCERTAIN_KINDS else settlement_error(error)
+                UNCERTAIN + " " + settlement_error(error)
+                if error.kind in UNCERTAIN_KINDS
+                else settlement_error(error)
             )
             await recovery(message, state, session)
         else:
@@ -358,7 +360,9 @@ async def resolve(
         session.uncertain = "transition" if error.kind in UNCERTAIN_KINDS else None
         await keep(state, session)
         await message.answer(
-            UNCERTAIN if session.uncertain else settlement_error(error)
+            UNCERTAIN + " " + settlement_error(error)
+            if session.uncertain
+            else settlement_error(error)
         )
         await find_current(message, state, api, actor, session)
         return

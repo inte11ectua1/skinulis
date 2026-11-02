@@ -66,8 +66,13 @@ async def keep(
 ) -> None:
     if changed:
         draft.preview_body = None
-        draft.sent_body = None
-        draft.request_key = None
+        try:
+            same_intent = draft.business().model_dump_json() == draft.sent_body
+        except ValidationError:
+            same_intent = False
+        if not same_intent:
+            draft.sent_body = None
+            draft.request_key = None
     await state.update_data(
         expense_session=draft.model_dump_json(), screen=None, actions=[]
     )

@@ -628,3 +628,28 @@ Coverage измеряет branch coverage app/, bot/ и нового общег�
 тестовые файлы в процент не входят. Docker smoke использует только UUID test
 resources, проверяет JSON/privacy/correlation, daemon log options, PG/Caddy ошибки,
 TLS и существующую сетевую границу. Тестовый named volume остаётся для оператора.
+
+## Telegram offline UX regression — L-06
+
+Полный synthetic сценарий create/link → invite/group → equal/custom/by_items →
+balances/plan → pending/confirm/reject/cancel проверяется через mocked Telegram,
+настоящие локальные HTTP/Uvicorn и PostgreSQL17. Production и живой Telegram
+не используются. [Матрица, исправления, UUID/recovery и handoff L-07](docs/bot/L-06_UX_REGRESSION.md).
+
+```sh
+uv run pytest tests/unit/test_bot_ux_regression.py
+uv run python scripts/test_integration.py tests/integration/test_bot_ux_e2e.py tests/integration/test_bot_ux_recovery.py
+```
+
+При ошибке чтения используйте новую «Повторить просмотр»; старая кнопка недействительна.
+После известного отказа сохранения draft остаётся, требуется новый preview.
+При неизвестном исходе POST повторяйте только исходное frozen intent с прежним
+UUID/body; original response не доказывает current state. /cancel не отменяет API
+commit, после restart сначала проверьте сохранённые записи. HTTP429 требует паузы
+и явного действия, автоматических финансовых повторов нет.
+
+Полные pytest/mypy/pre-commit проекта включают Unix deployment tooling и выполняются
+в Linux CI. На Windows fcntl отсутствует: не добавляйте skip/ignore или fake fcntl
+ради зелёного результата. Для локальной диагностики доступны bot unit tests,
+strict mypy --platform linux и integration-каталог через отдельный TEST_DATABASE_URL;
+это не заменяет обязательный полный Linux CI. Подробности — в матрице L-06.
