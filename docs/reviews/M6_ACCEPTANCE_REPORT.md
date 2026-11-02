@@ -7,6 +7,9 @@
 окончательная выкладка и репетиция не выполнены.
 Ни согласие владельца с M5, ни green CI не являются исключением преподавателя.
 
+**PR M6: [#81](https://github.com/inte11ectua1/skinulis/pull/81) · [required checks текущего head](https://github.com/inte11ectua1/skinulis/pull/81/checks).**
+Запрошенный review не равен APPROVED; Issue #79 не закрывается.
+
 ## 1. Границы, версии и источники доказательств
 
 - Baseline `main`: [638a976](https://github.com/inte11ectua1/skinulis/commit/638a97616e6d408dda0647fe08a8ebc74657c1ba), PR #77/#78 merged.
