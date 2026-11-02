@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.core.security import create_access_token, hash_password
-from app.db import get_session
+from app.db import get_database, get_session
 from app.main import create_app
 from app.models import User
 
@@ -49,6 +49,9 @@ def user(password: str) -> User:
 def client(settings: Settings, session: MagicMock) -> Iterator[TestClient]:
     application = create_app(settings)
     application.dependency_overrides[get_session] = lambda: session
+    database = MagicMock(spec=["sessions"])
+    database.sessions.return_value.__enter__.return_value = session
+    application.dependency_overrides[get_database] = lambda: database
     with TestClient(application) as instance:
         yield instance
 
