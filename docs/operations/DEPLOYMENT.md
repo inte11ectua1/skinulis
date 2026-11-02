@@ -1,22 +1,18 @@
 # T-09 — выпуск и production deployment
 
-Актуализация 01.11.2026 · [Issue #59](https://github.com/inte11ectua1/skinulis/issues/59).
-PR #64 merged. EC2 preparation/SSH, GHCR digest pull, isolated TLS smoke и
-backup/restore реально проверены; [evidence и ограничения](T-09_EC2_PREFLIGHT.md).
-**Публичный production rollout/ACME и G5 ещё не проверены.** Подготовительные
-изменения EC2 разрешены Тимуром; rollout и live polling требуют отдельных
-подтверждений. Частичный follow-up использует `Refs #59`, Issue остаётся открытой.
+Актуализация 02.11.2026 · [Issue #59](https://github.com/inte11ectua1/skinulis/issues/59).
+**Первый approved production rollout выполнен**: https://3-25-53-31.sslip.io,
+PostgreSQL/API/Caddy healthy, migrate exited0, polling выключен.
+[Полное evidence, release SHA/digest, backup/restore и acceptance matrix](T-09_FIRST_PRODUCTION_ROLLOUT.md).
+[Release41428440222](https://github.com/inte11ectua1/skinulis/actions/runs/41428440222)
+успешен после independent approval pylinolg-max. Repository rollout flag возвращён
+false. Новые rollout/live polling требуют новых отдельных разрешений и approval.
+Issue остаётся открытой для owner acceptance; частичный evidence PR использует Refs #59.
 
-**Текущий destination 01.11.2026:** новый AWS account/EC2 в Sydney,
-[подробное evidence](T-09_NEW_AWS_EC2.md). Старый сервер/account не менялись.
-Новый EC2/Docker/SSM, fresh env/keys/volumes и минимальная GitHub OIDC role готовы;
-политики из main прочитаны обратно. Environment обновлён с сохранением защиты.
-[Protected check-transport](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056)
-получил independent approval, но шаг установки SSM plugin завершился HTTP 503;
-OIDC/SSH не выполнялись. Rollout=false; production не запускался.
-PR #67/#68 merged; PG/TLS/backup evidence старого EC2 не переносится на новый.
-Исторический отказ SCP в старом AWS-аккаунте описан в
-[AWS readiness](T-09_AWS_READINESS.md).
+Текущий destination — новый AWS account/EC2 в Sydney; старый сервер/account не
+менялись. [Preparation](T-09_NEW_AWS_EC2.md) и [исторический отказ SCP старого account](T-09_AWS_READINESS.md)
+сохранены отдельно. [Protected check-transport41401010599](https://github.com/inte11ectua1/skinulis/actions/runs/41401010599)
+успешен; прежний HTTP503 installer исправлен в принятой main.
 
 ## Архитектура и образы
 
@@ -82,8 +78,8 @@ Workflow не загружает PR artifacts/caches в привилегиров
 Следующая процедура остаётся инструкцией воспроизведения. На 01.11 Environment
 уже создан через API: independent reviewers Олег/Лера, prevent_self_review=true,
 protected branches only, **can_admins_bypass=false** (повторный GET подтвердил).
-SSH secrets и destination variables заданы; rollout явно false. Это не означает,
-что approval/deployment уже выполнялись или runner имеет сетевой доступ к SSH.
+SSH secrets и destination variables заданы; rollout явно false. Фактические approval/deployment и SSM transport подтверждены в
+[current evidence](T-09_FIRST_PRODUCTION_ROLLOUT.md); ниже процедура воспроизведения.
 
 1. Settings → Environments → **production**.
 2. Required reviewers: Олег и/или Лера, минимум один независимый reviewer.
@@ -168,8 +164,9 @@ lint, types, tests, docker-build, ci. PR CI не получает package write/
    До миграции проверить восстановление backup и совместимость предыдущего image.
    Штатный POSTGRES_USER на пустом официальном image создаётся как superuser:
    оценить права отдельно, сохранить административный доступ и ограничить runtime
-   роль необходимыми правами своей БД/DDL до публичной эксплуатации. Эти server-side
-   действия здесь не выполнялись; не считать bootstrap-role автоматически least-privilege.
+   роль необходимыми правами своей БД/DDL до публичной эксплуатации. На текущем сервере runtime ограничен, отдельный admin проверен, bootstrap
+   NOLOGIN; [точное evidence и особенности OID10](T-09_FIRST_PRODUCTION_ROLLOUT.md#private-postgresql-и-роли).
+   При новом кластере повторить безопасный provision; bootstrap не least-privilege.
 6. Только после разрешения Тимура поставить rollout flag=true и запустить Release
    **на main**, operation=deploy, sha=полный main SHA с trusted CI.
    enable_polling=false по умолчанию. Для запуска настоящего бота нужно отдельное
@@ -221,9 +218,12 @@ container/volume, сравнить контрольные данные и сох
 Резервная копия на том же EC2 не защищает от потери EC2/EBS: нужен согласованный
 защищённый off-host target. Проверка 01.11 использовала только synthetic test DB,
 два UUID volumes и private network; restore сохранился после restart. Тестовый dump
-также скопирован на Mac с0600 и совпадающим SHA256. Production backup/restore ещё
-не выполнялись, production DB не инициализирована. Автоматизация расписания,
-retention и эксплуатационные задачи T-10 в этот follow-up не входят.
+также скопирован на Mac с0600 и совпадающим SHA256. 02.11 production backup после миграций реально восстановлен в изолированном
+tmpfs-only PostgreSQL, схема/Alembic/row counts проверены. Новая off-host копия
+на Mac age-encrypted; decrypt/recovery/SHA256/tamper rejection проверены.
+[Hashes, key custody и границы database-only dump](T-09_FIRST_PRODUCTION_ROLLOUT.md).
+Global roles/passwords и original OWNER/ACL нужно provision отдельно; admin secret
+не переносился. Расписание и retention не автоматизированы.
 
 ## Что делает controller
 

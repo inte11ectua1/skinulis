@@ -1,10 +1,11 @@
 # T-10 — инциденты, логи и безопасный откат
 
-[Issue #60](https://github.com/inte11ectua1/skinulis/issues/60) · реализация для
-review, production validation ещё не выполнена. Этот документ **не разрешает**
-rollout, polling, восстановление production DB или обход Environment approval.
-Актуальная подготовка нового AWS описана в [PR #70](https://github.com/inte11ectua1/skinulis/pull/70);
-исторические сведения старого аккаунта не являются адресом deployment.
+[Issue #60](https://github.com/inte11ectua1/skinulis/issues/60) · код принят в main
+f7020cd, первый approved rollout выполнен02.11.2026. [Production evidence](T-09_FIRST_PRODUCTION_ROLLOUT.md)
+подтверждает API/migrate JSON/privacy/correlation, Docker rotation и безопасный
+backup/isolated restore. Live bot и production500/DB fault injection не запускались.
+Этот runbook **не разрешает** следующий rollout, polling, restore production DB
+или обход Environment approval; rollout flag после запуска возвращён false.
 
 ## Формат и границы логирования
 
@@ -67,7 +68,7 @@ backups и Caddy volumes считаются отдельно. Запас на 20
 prune, down -v, volume rm, удаление WAL/backup или production данных автоматически.
 
 Logging options применяются к **новым** контейнерам, не изменяют существующие.
-Поэтому этот PR следует review/merge до первого production release; выбранный
+Код принят до первого production release f7020cd; при следующих изменениях выбранный
 release SHA должен содержать и модуль, и Compose/Caddy changes. Перезапуск ради
 ротации на EC2 в рамках подготовки не выполнялся. Для уже работающего стека
 изменения проводить только через разрешённый controller rollout.
@@ -242,10 +243,13 @@ volume. Не превращать tmpfs drill в restart-test и не удаля
 Предыдущий synthetic server backup/restore drill зафиксирован в PR #70; это не
 production backup и не новый live restore в T-10.
 
-## Чеклист первого production rollout (не выполнялся)
+## Чеклист production rollout (первый выполнен02.11.2026)
 
-1. Независимо review/merge T-10 и согласовать T-09 документационные PR #69/#70:
-   historical old-account deny из #69 не отменяет new-account readiness из #70.
+Фактические результаты и границы — в [evidence](T-09_FIRST_PRODUCTION_ROLLOUT.md).
+Ниже checklist для следующего отдельно разрешённого запуска.
+
+1. Выбрать независимо проверенные/принятые T-09/T-10 изменения; historical
+   old-account deny не отменяет current new-account evidence.
 2. Новый main SHA: все lint/types/tests/docker-build/ci зелёные, Release publish
    создал/проверил linux/amd64 image и immutable digest/OCI revision. Выбрать SHA,
    содержащий T-10, а не прежний dd78027 без JSON/rotation.

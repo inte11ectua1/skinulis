@@ -10,8 +10,8 @@
 trusted-main release workflow и контроллер deploy/rollback; [runbook](operations/DEPLOYMENT.md).
 Последняя миграция — `0006_settlement_notification_claim`; новых миграций T-09 нет.
 Ниже local/test environment сохранён, а production-схема добавлена отдельно в конце.
-На 01.11.2026 SSH/EC2 preparation и pull опубликованного main digest проверены;
-публичный HTTPS/production rollout/G5 ещё не подтверждены.
+02.11.2026 approved production rollout выполнен; trusted HTTPS, exact version SHA,
+private boundary и backup/restore подтверждены. [Current evidence](operations/T-09_FIRST_PRODUCTION_ROLLOUT.md).
 [Новый AWS EC2 и точные границы evidence](operations/T-09_NEW_AWS_EC2.md);
 [исторические изолированные проверки старого сервера](operations/T-09_EC2_PREFLIGHT.md).
 Rollout и live Telegram требуют отдельного разрешения Тимура. Secrets только в protected Environment или private
@@ -107,7 +107,7 @@ Telegram Bot API token. Compose передаёт service secret только api
 не Docker build. Миграционный сервис работает без обоих auth secrets.
 Тесты генерируют разные свежие JWT/service secrets в памяти для каждого теста,
 не используют .env оператора. Production reverse proxy должен закрывать /internal
-снаружи; это требование будущего T-09, не результат текущего deployment.
+снаружи; production Caddy boundary проверена 02.11.2026 (см. current evidence).
 
 [Контракт T-06](contracts/T-06_IDENTITY.md) фиксирует утверждённые tech lead в Issue #22 заголовки, DTO,
 ошибки, no-merge и безопасные повторы. Следующая ревизия 0003_groups_identity
@@ -155,8 +155,8 @@ SSH_KNOWN_HOSTS проверен по authenticated AWS Console Output ново�
 Семь SSH/AWS destination variables обновлены на новый account/EC2; значения
 и access addresses в документацию не копируются.
 PRODUCTION_ROLLOUT_ENABLED=false. Runtime secrets сгенерированы на EC2 в0600-файле,
-PUBLIC_DOMAIN подготовлен как временное IP-derived DNS name, публичный TLS
-ещё не проверен; TELEGRAM_BOT_TOKEN пустой. Токен бота
+PUBLIC_DOMAIN — временное IP-derived DNS name; trusted public TLS проверен
+02.11.2026; TELEGRAM_BOT_TOKEN пустой. Токен бота
 может предоставить только владелец безопасным способом; polling не запускался.
 
 
@@ -165,9 +165,14 @@ PUBLIC_DOMAIN подготовлен как временное IP-derived DNS na
 subject + production Environment. Настройка владельцем и JSON policies:
 [AWS_SSM_CD](operations/AWS_SSM_CD.md). `check-transport` не требует включать rollout
 и не запускает controller/миграции/polling. Provider/role нового account проверены
-API по main JSON. Реальное Mac admin SSM/SSH прошло, но GitHub OIDC session
-пока не подтверждена: independent approval прошёл, но installation
-SSM plugin на GitHub runner получила HTTP 503 до OIDC/SSH шага.
+API по main JSON. GitHub OIDC/SSM/SSH подтверждены успешными protected
+check-transport41401010599 и deploy41428440222. Прежний installer503 исправлен.
+
+Backup encryption identity не является runtime env/Actions secret: Mac Keychain
+и отдельный server-only0600 recovery file на encrypted EBS. Новые off-host dumps
+age-encrypted; recovery обеими копиями проверен. PostgreSQL admin credential
+хранится отдельно от runtime env,0600/0700, и на Mac не переносился.
+[Hashes, key custody и restore boundaries](operations/T-09_FIRST_PRODUCTION_ROLLOUT.md).
 
 ## T-10: логирование без новых секретов
 
