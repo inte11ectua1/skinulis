@@ -206,7 +206,11 @@ pre-commit на Windows имеют15 существующих POSIX-only type er
 skip/xfail и не переписана чужая инфраструктура. Local unit subset без3 POSIX files:
 1173passed; новые unit23passed. Временная локальная pre-commit config сохраняет
 все5hooks, явно добавляя mypy --platform linux; repo config/CI не изменены.
-Полный Linux suite и штатный pre-commit проверяются GitHub CI.
+Полный Linux suite проверяется GitHub CI. CI запускает Ruff/mypy/lock/audit отдельно
+и только detect-secrets через pre-commit; full pre-commit на Linux не заявляется.
+Для portable PG локально использован документированный direct TEST_DATABASE_URL
+вариант: uv run pytest tests/integration -m integration. Существующий fixture
+создаёт отдельную UUID database на каждый тест и не удаляет указанную admin DB.
 
 Первый полный local PG:412passed/2failed по timezone expected. Исправленные2кейса
 прошли; полный повтор: **414passed**,462.68s, без skip/xfail. Disposable Docker runner и Docker build локально
