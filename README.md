@@ -629,6 +629,13 @@ Coverage измеряет branch coverage app/, bot/ и нового общег�
 resources, проверяет JSON/privacy/correlation, daemon log options, PG/Caddy ошибки,
 TLS и существующую сетевую границу. Тестовый named volume остаётся для оператора.
 
+## Проверка финансов и нагрузки O-08
+
+Изолированный real HTTP runner на100 клиентах, фиксированные профили и методика:
+[LOAD_TEST_M5](docs/operations/LOAD_TEST_M5.md). Только loopback API и новая UUID
+база PostgreSQL17 из TEST_DATABASE_URL; production и настоящий Telegram запрещены.
+Полный load запускается отдельно от pytest; green CI не заменяет измерения latency.
+
 ## Telegram offline UX regression — L-06
 
 Полный synthetic сценарий create/link → invite/group → equal/custom/by_items →
