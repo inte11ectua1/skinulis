@@ -636,6 +636,11 @@ TLS и существующую сетевую границу. Тестовый 
 база PostgreSQL17 из TEST_DATABASE_URL; production и настоящий Telegram запрещены.
 Полный load запускается отдельно от pytest; green CI не заменяет измерения latency.
 
+O-09 #76 устраняет double checkout короткой auth Session перед business transaction.
+[Before/after](docs/operations/LOAD_TEST_M5.md):100clients, неизменные pool/worker/mix;
+pool timeouts/HTTP500 исчезли, но p95≈956/1098ms пока выше500ms. Это performance
+FAIL и открытый follow-up; production не менялась. [Агрегаты](docs/operations/O-09_LOAD_RESULTS.json).
+
 ## Telegram offline UX regression — L-06
 
 Полный synthetic сценарий create/link → invite/group → equal/custom/by_items →

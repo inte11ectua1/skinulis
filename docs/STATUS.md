@@ -1,9 +1,22 @@
 # Фактическое состояние проекта
 
-**O-08 #61: in progress / PR review.** Отдельная ветка test/O-08-finance-security-load;
-финансовые/security/race regressions и безопасный loopback load runner.
-[Методика и фактические измерения](operations/LOAD_TEST_M5.md); не merged,
-не G5/live verification. Production/Telegram и инфраструктура Тимура не меняются.
+**O-08 #61 / PR #74 merged; L-06 #62 / PR #75 merged.** Актуальная база O-09 —
+`f4a3a11b8f09160d781587b61164dddd921528ca`. O-08 закрыта как диагностика и tests;
+исходный performance FAIL передан в отдельную **O-09 #76**, назначенную Тимуру.
+
+## O-09 #76 — auth pool lifecycle, performance follow-up (03.11.2026)
+
+В отдельной ветке исправлено одновременное удержание auth lease и RR reader:
+JWT/bot actor lookup использует короткую собственную Session, возвращает загруженный
+detached User. Endpoint Session/финансовые транзакции/REPEATABLE READ не менялись.
+19 новых PostgreSQL regressions: один pool slot, parallel reads, detached DTO,
+caller transaction, actor isolation/foreign404, exception cleanup, общий RR snapshot.
+[Нагрузочный before/after и ограничения](operations/LOAD_TEST_M5.md),
+[агрегаты](operations/O-09_LOAD_RESULTS.json): mixed p95 12075→956ms,
+contention12072→1098ms; measured HTTP500368/353→0/0 и pool timeouts533/517→0/0.
+**Цель p95≤500ms остаётся FAIL**, Issue76 не закрывать; Refs PR и human review.
+Полные проверки и финальный CI публикуются в PR; это не merge/deploy или PASS M5.
+AWS/production/GHCR/CD/flags/live Telegram в O-09 не затрагивались.
 
 ## Первый публичный rollout T-09/T-10 выполнен (02.11.2026)
 
