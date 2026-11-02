@@ -83,13 +83,13 @@ Docker Engine23.0.5/Compose2.17.3. PostgreSQL17.11 из закреплённог
 | 4 L66 | Lint | PASS | Ruff check, local и main CI |
 | 4 L67 | Format | PASS | Ruff format --check, сохранён согласованный аналог black |
 | 4 L68 | Types | PASS | mypy strict на всём проекте, включая bot/tests/scripts |
-| 4 L70 | Автотесты | PASS | pytest unit и явный `-m integration` |
-| 4 L71 | Изолированные тесты | PASS | UUID-БД fixture, disposable Docker project, synthetic env |
-| 4 L72 | Настоящий PostgreSQL service | PASS | CI service PG17.11; локальный runner с тем же pinned image, не SQLite |
-| 4 L73 | Coverage минимум60% | PASS | Combined branch app/bot/skinulis_logging, tests исключены; exact результаты в §3 |
-| 4 L76 | Сборка контейнера | PASS | CI docker-build и локальный Compose build |
-| 4 L77 | Реальная registry publication | PASS | GHCR anonymous metadata/digest audit, trusted main Release success |
-| 4 L78 | Версионный image tag | PASS | Полный40hex SHA tag, immutable deploy digest и OCI revision проверены |
+| 4 L71 | Автотесты | PASS | pytest unit и явный `-m integration` |
+| 4 L72 | Изолированные тесты | PASS | UUID-БД fixture, disposable Docker project, synthetic env |
+| 4 L73 | Настоящий PostgreSQL service | PASS | CI service PG17.11; локальный runner с тем же pinned image, не SQLite |
+| 4 L74 | Coverage минимум60% | PASS | Combined branch app/bot/skinulis_logging, tests исключены; exact результаты в §3 |
+| 4 L77 | Сборка контейнера | PASS | CI docker-build и локальный Compose build |
+| 4 L78 | Реальная registry publication | PASS | GHCR anonymous metadata/digest audit, trusted main Release success |
+| 4 L79 | Версионный image tag | PASS | Полный40hex SHA tag, immutable deploy digest и OCI revision проверены |
 | 4 L81 | Green pipeline | PASS | Main CI5/5, publish success; CI M6 PR по ссылке в его описании |
 | 4 L82 | Red CI запрещает merge | FAIL | Required5 checks strict/app_id15368 есть, но enforce_admins=false и rulesets=[]; универсальной блокировки нет |
 | 5 L88 | Серверное приложение | PASS | Public API отвечает; первичный approved EC2 deployment evidence02.11 |

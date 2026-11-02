@@ -361,5 +361,10 @@
     "source": "https://github.com/andrey-limasov/app-conf/blob/8bff1a6f4d01f5417aeae4fa424e3f577085105c/project-requirements.md#L148",
     "owner_m5_waiver_is_not_instructor_exception": true
   },
-  "identifier_encoding": "Public Git identifiers use git: / git-blob: prefixes in normalized evidence, including commit_sha fields. Strip these prefixes for wire comparisons; production_public and local_compose are summaries, not raw response captures."
+  "identifier_encoding": "Public Git identifiers use git: / git-blob: prefixes in normalized evidence, including commit_sha fields. Strip these prefixes for wire comparisons; production_public and local_compose are summaries, not raw response captures.",
+  "course_dod_checkbox_mapping": {
+    "official_checkboxes": 75,
+    "unmapped_source_lines": [],
+    "source": "raw GitHub contents at pinned course commit; includes defense checklist"
+  }
 }
