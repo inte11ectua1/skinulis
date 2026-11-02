@@ -8,6 +8,8 @@ from typing import Any
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Update
 
+from skinulis_logging import Event, emit, request_context
+
 
 class SafeTelegramLogs(logging.Filter):
     """aiogram can log bot identity and raw exception args outside router errors."""
@@ -15,7 +17,7 @@ class SafeTelegramLogs(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         if record.levelno < logging.WARNING:
             return False
-        record.msg = "Telegram transport or dispatcher failure"
+        record.msg = Event.TELEGRAM
         record.args = ()
         record.exc_info = None
         record.exc_text = None
@@ -47,4 +49,9 @@ class DeliveredUpdates(BaseMiddleware):
             self._seen[event.update_id] = None
             if len(self._seen) > 4096:
                 self._seen.popitem(last=False)
-        return await handler(event, data)
+        with request_context():
+            try:
+                return await handler(event, data)
+            except Exception:
+                emit(Event.BOT_UPDATE_FAILED, level=logging.ERROR)
+                raise

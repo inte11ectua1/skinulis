@@ -1,6 +1,28 @@
 # Фактическое состояние проекта
 
-## T-09 — новый AWS EC2 подготовлен, transport check требует исправления (02.11.2026)
+## T-10 — JSON logging, rotation и runbook: реализация для review (02.11.2026)
+
+В feature-ветке T-10 добавлены единый безопасный JSON stdout API/bot/migrate,
+серверный request_id, allowlist events/fields, secret-negative тесты, Docker
+rotation всех пяти services и [incident/rollback runbook](operations/INCIDENTS_AND_ROLLBACK.md).
+Новые зависимости/миграции/финансовые изменения отсутствуют. Локально прошли
+1219 unit +403 PostgreSQL integration tests; branch coverage app/bot94,80%,
+с общим logging-модулем95,00% (порог60% сохранён), frozen/lock/Ruff/mypy/
+pre-commit/secrets/pip check/audit, Docker build и реальный isolated delivery smoke.
+Production validation пока **pending**: PR использует Refs #60, #60/G5 не закрываются.
+
+Read-only аудит T-09 подтвердил new-account Environment/OIDC targets, SG только
+80/443, активные Docker/SSM, RAM/swap/disk; подробное new-EC2 evidence уже в
+[PR #70](https://github.com/inte11ectua1/skinulis/pull/70), не дублируется здесь.
+[check-transport](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056)
+прошёл independent approval, но download SSM plugin получил HTTP 503;
+исправление загрузки merged в PR #72. Повторный check-transport ещё не выполнен,
+GitHub OIDC/SSH пока не проверены. PRODUCTION_ROLLOUT_ENABLED=false;
+production containers/migrations/polling не запускались. T-09 #59 остаётся open.
+Нижележащие EC2/роль-срезы — исторические; активная конфигурация нового AWS описана
+в #70, документационный #69 относится к отказу IAM в старом аккаунте.
+
+## T-09 — новый AWS EC2 подготовлен, ожидается повторный transport check (02.11.2026)
 
 По отдельному разрешению Тимура создан новый t3.small Ubuntu24.04 AMD64 в Sydney,
 20GiB encrypted gp3, без новых дополнительных платных сервисов. Старый EC2/account
@@ -23,7 +45,7 @@ verified; successful Mac admin SSM session не подменяет этот gate
 PR #67/#68 уже merged. PR #69 относится к readiness/SCP deny старого account.
 
 Новый сервер ещё не запускал production PostgreSQL/API/Caddy/bot. Требуются
-повторный check-transport после исправления загрузки plugin, DNS/ACME и отдельное разрешение
+повторный check-transport после merged PR #72, DNS/ACME и отдельное разрешение
 на rollout; live Telegram отдельно. **Issue #59/G5 остаются открытыми.**
 Ниже сохранены исторические срезы старого EC2 и прежних этапов.
 

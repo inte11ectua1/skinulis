@@ -166,4 +166,17 @@ subject + production Environment. Настройка владельцем и JSO
 [AWS_SSM_CD](operations/AWS_SSM_CD.md). `check-transport` не требует включать rollout
 и не запускает controller/миграции/polling. Provider/role нового account проверены
 API по main JSON. Реальное Mac admin SSM/SSH прошло, но GitHub OIDC session
-пока не подтверждена: independent approval прошёл, но installation\nSSM plugin на GitHub runner получила HTTP 503 до OIDC/SSH шага.
+пока не подтверждена: independent approval прошёл, но installation
+SSM plugin на GitHub runner получила HTTP 503 до OIDC/SSH шага.
+
+## T-10: логирование без новых секретов
+
+Новых environment variables/secrets не требуется. Существующий LOG_LEVEL API
+ограничен валидными уровнями Settings, production по умолчанию INFO. Bot runtime
+использует INFO; чувствительные third-party debug/access logs не включаются.
+request_id — серверный UUIDv4, а не credential; клиентский заголовок игнорируется.
+Общий формат и redaction policy: [runbook](operations/INCIDENTS_AND_ROLLBACK.md).
+API/bot не печатают Settings, exception text, request bodies/headers или SQL binds.
+Production Docker json-file rotation: max-size=5m, max-file=3, compress=true у
+api/bot/migrate/db/caddy; применяется при разрешённом создании новых контейнеров.
+Ни secrets на EC2, ни GitHub Environment policies T-10 не изменяет.

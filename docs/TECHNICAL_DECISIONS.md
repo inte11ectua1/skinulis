@@ -20,7 +20,7 @@
 - Денежный формат в БД: целочисленный `BIGINT` (`amount_kopecks`). На внешнем API — строго десятичные строки рублей с двумя знаками, например `"1500.00"`.
 - JWT с конечным сроком; Argon2 через подходящую библиотеку хэширования; бот имеет отдельный внутренний service token и не запрашивает пароли в Telegram.
 - Ruff для lint + format; mypy для статической проверки; pytest, pytest-cov, httpx, PostgreSQL service-container для integration.
-- structlog, JSON-логи в stdout, Docker logging driver с ограничением размера и сохранением логов; не логировать токены/пароли.
+- JSON-логи API/bot в stdout: стандартный `logging`, общий независимый модуль `skinulis_logging.py`, allowlist безопасных событий/полей; Docker logging driver с ограничением размера. T-10 использует явно разрешённый в постановке stdlib вместо ранее намеченного structlog: дополнительная зависимость не нужна, формат и privacy проверяются тестами. Не логировать токены, пароли, payload и сырые исключения.
 - Docker Compose локально (`api`, `bot`, `db`); на VPS дополнительно Caddy reverse-proxy. Dockerfile non-root с кэшируемыми зависимостями и multi-stage при применимости.
 - GitHub Flow, GitHub Actions: на PR `lint -> types -> tests (PostgreSQL) -> build`; после успешного merge `build -> push GHCR :SHA -> deploy SSH to VPS -> migrate -> healthcheck`. Не публиковать/деплоить недоверенные PR и не выдавать им production-секреты.
 

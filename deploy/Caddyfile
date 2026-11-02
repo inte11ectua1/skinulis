@@ -1,5 +1,19 @@
 {
 	admin off
+	# Access logging stays disabled. Scrub request/error objects from runtime logs,
+	# including upstream failures which otherwise contain request URI and headers.
+	log default {
+		output stdout
+		format filter {
+			wrap json
+			fields {
+				request delete
+				msg replace proxy_event
+				error delete
+				err_trace delete
+			}
+		}
+	}
 }
 
 {$PUBLIC_DOMAIN} {

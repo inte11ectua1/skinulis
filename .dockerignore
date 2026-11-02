@@ -4,6 +4,7 @@
 !uv.lock
 !.python-version
 !README.md
+!skinulis_logging.py
 !alembic.ini
 !app/
 !app/**

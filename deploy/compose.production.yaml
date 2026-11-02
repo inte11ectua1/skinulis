@@ -1,4 +1,11 @@
 # Separate from local compose.yaml. Use scripts/deployment.py and an explicit env file.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "5m"
+    max-file: "3"
+    compress: "true"
+
 x-app: &app
   image: ${APP_IMAGE:?Use a verified ghcr.io image@sha256 digest}
   init: true
@@ -6,6 +13,7 @@ x-app: &app
   tmpfs: [/tmp]
   cap_drop: [ALL]
   security_opt: [no-new-privileges:true]
+  logging: *logging
 
 x-db-env: &db-env
   APP_ENV: prod
@@ -18,6 +26,9 @@ x-db-env: &db-env
 services:
   db:
     image: postgres:17.11-bookworm@sha256:858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27
+    logging: *logging
+    # No query/bind/detail diagnostics containing user data on ordinary SQL errors.
+    command: [postgres, -c, log_statement=none, -c, log_min_messages=fatal, -c, log_min_error_statement=panic, -c, log_error_verbosity=terse, -c, log_parameter_max_length=0, -c, log_parameter_max_length_on_error=0]
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER}
@@ -82,6 +93,7 @@ services:
   caddy:
     image: caddy:2.11.7-alpine@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5
     user: "10001:10001"
+    logging: *logging
     cap_drop: [ALL]
     cap_add: [NET_BIND_SERVICE]
     security_opt: [no-new-privileges:true]
