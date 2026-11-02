@@ -1,6 +1,10 @@
 # T-04 — CI и защита main
 
-## M4 closeout / M5 Delivery (31.10.2026)
+## Актуальный M5 closeout / CI срез (03.11.2026)
+
+M5 задачи #59/#60/#61/#62/#76 закрыты по принятому объёму; последняя O-09 [PR #77](https://github.com/inte11ectua1/skinulis/pull/77) merged с head [5/5 CI success](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706) (1278 unit +446 PostgreSQL =1724 tests, coverage94.98%). Сборка `main` после merge `0de89b3`: [run #41536084636](https://github.com/inte11ectua1/skinulis/actions/runs/41536084636) **выполнялся на момент снимка**, не объявлять его прошедшим без проверки. **Human APPROVED для PR #77 не зарегистрирован**; эта проблема не исчезает от зелёного CI. T-01 #2 закрыта `not_planned`, без полного branch protection DoD evidence; [M5→M6 handoff](M5_CLOSEOUT_M6_HANDOFF.md). Production deploy после merge не автоматический.
+
+## Исторический M4 closeout / назначение M5 (31.10.2026)
 
 **M4 завершён по реализации:** [финальный T-08 PR #58](https://github.com/inte11ectua1/skinulis/pull/58) merged, Issue #45 closed. [CI его последнего head](https://github.com/inte11ectua1/skinulis/actions/runs/41213175596): lint/types/tests/docker-build/ci **5/5 success**. Предыдущие product PR также подтверждены на head: [O-06 #51](https://github.com/inte11ectua1/skinulis/actions/runs/41096303217) 1181 tests, [O-07 #53](https://github.com/inte11ectua1/skinulis/actions/runs/41195690077) 1283, [O-07N #57](https://github.com/inte11ectua1/skinulis/actions/runs/41208270181) 1311, [L-05 #54](https://github.com/inte11ectua1/skinulis/actions/runs/41210779152) 1460 tests/94,76%. Отдельные результаты **не суммировать**. На merge commit этих PR не обязаны существовать собственные checks: указан evidence final head. Несколько PR, включая #58, не имеют зарегистрированного independent human APPROVED; зелёный CI не является человеческим ревью.
 

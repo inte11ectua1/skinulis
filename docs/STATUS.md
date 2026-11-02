@@ -1,42 +1,38 @@
 # Фактическое состояние проекта
 
-**O-08 #61 / PR #74 merged; L-06 #62 / PR #75 merged.** Актуальная база O-09 —
-`f4a3a11b8f09160d781587b61164dddd921528ca`. O-08 закрыта как диагностика и tests;
-исходный performance FAIL передан в отдельную **O-09 #76**, назначенную Тимуру.
+**Актуализация 03.11.2026 (срез GitHub): `main` `0de89b3a5f47522fe4932551d746fe1eb839e463`. M5 Delivery завершён и принят владельцем по согласованному объёму.** [M5 closeout → M6 handoff](operations/M5_CLOSEOUT_M6_HANDOFF.md) содержит критерии, факты и ограничения. Все Issues и PR закрыты/замержены; новые M6 Issues **пока не созданы**.
 
-## O-09 #76 — auth pool lifecycle, performance follow-up (03.11.2026)
+## M5 — завершённый объём и доказательства
 
-В отдельной ветке исправлено одновременное удержание auth lease и RR reader:
-JWT/bot actor lookup использует короткую собственную Session, возвращает загруженный
-detached User. Endpoint Session/финансовые транзакции/REPEATABLE READ не менялись.
-19 новых PostgreSQL regressions: один pool slot, parallel reads, detached DTO,
-caller transaction, actor isolation/foreign404, exception cleanup, общий RR snapshot.
-[Нагрузочный before/after и ограничения](operations/LOAD_TEST_M5.md),
-[агрегаты](operations/O-09_LOAD_RESULTS.json): mixed p95 12075→956ms,
-contention12072→1098ms; measured HTTP500368/353→0/0 и pool timeouts533/517→0/0.
-**Цель p95≤500ms остаётся FAIL**, Issue76 не закрывать; Refs PR и human review.
-Полные проверки и финальный CI публикуются в PR; это не merge/deploy или PASS M5.
-AWS/production/GHCR/CD/flags/live Telegram в O-09 не затрагивались.
+- **Тимур T-09 #59 (closed completed):** [публичный rollout](operations/T-09_FIRST_PRODUCTION_ROLLOUT.md) через защищённый AWS OIDC/SSM/SSH, GHCR digest, Caddy HTTPS, private PostgreSQL и внешний отказ `/internal`; первый deployed SHA `f7020cd` проверен на `/health` и `/version` 02.11. Это не тест нового `main`.
+- **Тимур T-10 #60 (closed completed):** [PR #71](https://github.com/inte11ectua1/skinulis/pull/71), [#73](https://github.com/inte11ectua1/skinulis/pull/73), JSON logs/request_id/privacy/rotation/incident runbook; живой API, не live Telegram.
+- **Олег O-08 #61 (closed completed):** [PR #74](https://github.com/inte11ectua1/skinulis/pull/74), finance/security/PG races и честный первоначальный FAIL нагрузки 100 клиентов.
+- **Лера L-06 #62 (closed completed):** [PR #75](https://github.com/inte11ectua1/skinulis/pull/75), UX/UUID/error recovery, mock Telegram + real local FastAPI/PostgreSQL17 E2E; без реального polling.
+- **Тимур O-09 #76 (closed completed, решением владельца):** [PR #77](https://github.com/inte11ectua1/skinulis/pull/77) уже merged; auth session освобождает соединение перед RR financial snapshot, 19 PG regressions. [CI head PR #77](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706) 5/5, **1724 теста**, branch coverage **94.98%**. Post-merge CI `main` (run #41536084636) на момент среза **ещё выполнялся**; не утверждать его PASS без нового запроса.
 
-## Первый публичный rollout T-09/T-10 выполнен (02.11.2026)
+## Performance O-09: принятые границы
 
-[Production API](https://3-25-53-31.sslip.io), [approved Release41428440222](https://github.com/inte11ectua1/skinulis/actions/runs/41428440222):
-trusted main `f7020cda3908d7e0c40c0b0f840e322b3d6cfda5`, independent approval
-**pylinolg-max**, guard/publish/deploy success. PostgreSQL/API/Caddy healthy;
-migrate exited0 на `0006_settlement_notification_claim`, один запуск; bot/polling
-не запускались. Rollout flag возвращён false. Trusted HTTPS/health/version/docs,
-26 raw internal-denial probes, private actor, JSON/privacy/request_id/rotation и
-post-migration backup/isolated restore/encrypted off-host recovery проверены.
-[Полное evidence, hashes и acceptance matrix](operations/T-09_FIRST_PRODUCTION_ROLLOUT.md).
+[Same-host before/after и исходные агрегаты](operations/LOAD_TEST_M5.md): 100 клиентов, исходный пул 5+10/3s; mixed **368 HTTP500 → 0, 13.72 → 126.92 RPS, p95 12075 → 956ms**; contention **353 → 0, 13.11 → 120.24 RPS, p95 12072 → 1098ms**. Pool timeouts после fix **0**. **p95≤500ms = FAIL**, но Тимур явно **принял достигнутую скорость и снял этот внутренний критерий как блокер закрытия #76**. Не заявлять performance PASS и не считать результаты AWS production load evidence.
 
-Технические сигналы G5 подтверждены фактическим deployment; это не закрывает весь
-M5 или live Telegram G2/G3/G4. Issues #59/#60 оставлены open для owner acceptance
-и review evidence PR. Новые rollout и live polling требуют отдельных разрешений.
+## G1/G2/G3/G4/G5/DoD
 
-## Исторические срезы до первого rollout
+- **G5:** технические признаки **первого** production rollout (HTTPS/health/version/GHCR/migrations/private DB, blocked /internal) подтверждены 02.11. Проверка после новых merge/deploy отсутствует; production не обновлялся автоматически.
+- **G1/T-01 #2:** закрыта `not_planned`, но direct-push/admin-bypass evidence и полноценная приемка не получены. Есть формальный процессный риск.
+- **G2/G3/G4:** реализации/автотесты есть, **живой Telegram E2E не проведён**, polling off. [#38](https://github.com/inte11ectua1/skinulis/issues/38) закрыта `not_planned`, не `verified`.
+- **Официальный DoD:** зелёный CI, покрытие, инфраструктура и docs — лишь часть критериев. Independent human APPROVED требуется на каждом PR; у ряда исторических PR, включая #77, его нет. Не утверждать весь DoD без отдельного M6 audit и согласования с преподавателем при исключениях.
+- [Production API](https://3-25-53-31.sslip.io) и его действительность проверялись во время первого rollout (02.11), **не** текущим запросом. Развёрнутый код `f7020cd` отличается от `main` `0de89b3`; rollout flag false; live bot off. Новый deploy/Telegram polling только после отдельного разрешения.
+- Бэкапы/escrow/домен/Elastic IP не расширять без явной новой задачи: это не закреплённые отдельные требования преподавательского DoD. Не путать `Stop` с `Terminate` EC2.
 
-Следующие записи сохраняют состояние на соответствующем этапе; их формулировки
-«не проверено/не запускалось» не описывают текущий production.
+## Следующий этап — M6 Acceptance (план, задачи не назначены)
+
+- **Тимур / T-11:** независимая сверка DoD, чистый Docker Compose запуск, evidence protection/reviews, release/demo checklist.
+- **Олег / финальный QA:** проверка финансовых invariants и отчёта O-09, explanation/report к защите; **ID O-09 уже занят #76** — следующий scope оформлять отдельно.
+- **Лера / L-07:** user guide и 3-user demo/smoke script; live Telegram только по разрешению Тимура.
+- **M7:** подготовка презентации 7 минут, демо 5 минут и Q&A. Новые GitHub Issues не создавались в рамках обновления документации.
+
+## Исторические срезы до закрытия M5
+
+Ниже сохранены датированные записи хода разработки. Формулировки «Issue открыта», «M5 не выполнен», «G5 not verified» описывают **прошлые срезы**, а не сегодняшнее состояние. При конфликте использовать верх этого файла и GitHub Issues/PR.
 
 ## T-10 — JSON logging, rotation и runbook: реализация для review (02.11.2026)
 

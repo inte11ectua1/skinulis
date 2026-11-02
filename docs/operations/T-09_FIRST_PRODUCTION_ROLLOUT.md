@@ -3,6 +3,8 @@
 Актуализация 02.11.2026. Refs #59, Refs #60. Этот документ фиксирует реальные
 проверки; он не разрешает следующие deployment, polling или restore production.
 
+> **Статус приёмки на 03.11.2026:** Issues T-09 #59 и T-10 #60 закрыты `completed` по решению владельца в ограниченном API-first scope; M5 принят. Упоминания «Issue открыта», «pending owner acceptance» и строки матрицы ниже — **снимок на дату первого rollout 02.11**, не актуальные GitHub статусы. Отчёт подтверждает deployment SHA `f7020cd`, **не** последний `main` `0de89b3`; polling по-прежнему off. [Closeout](M5_CLOSEOUT_M6_HANDOFF.md).
+
 ## Текущее состояние
 
 Тимур отдельно разрешил первый публичный rollout без Telegram polling.

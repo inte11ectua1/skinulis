@@ -1,8 +1,6 @@
 # O-08 — финансовая безопасность и нагрузка M5
 
-**Follow-up O-09 #76 (03.11.2026):** минимальный auth-lifecycle fix прошёл
-новые pool regressions;100-client before/after устранил pool500, но p95≤500ms
-пока не достигнут. [Отдельный раздел O-09 ниже](#o-09-76--исправление-lifecycle-и-beforeafter-03112026),
+**Итоговая приёмка O-09 #76 (03.11.2026):** [PR #77](https://github.com/inte11ectua1/skinulis/pull/77) merged, задача закрыта владельцем. Минимальный auth-lifecycle fix устранил pool starvation (100-client HTTP500/pool timeouts=0), но **p95≤500ms остаётся FAIL** (mixed 956ms, contention 1098ms). Тимур явно принял эти остаточные задержки как допустимые для учебного проекта; это не performance PASS, не AWS benchmark и не изменение официального DoD. [Отдельный раздел O-09 ниже](#o-09-76--исправление-lifecycle-и-beforeafter-03112026),
 [машинные агрегаты](O-09_LOAD_RESULTS.json). Исходные результаты Олега не заменены.
 
 Исторический отчёт O-08: Issue #61 / PR #74 уже merged. Ниже сохранён срез
@@ -350,3 +348,8 @@ workload, затем оценка сокращения round trips/объёма 
 Issue76 остаётся open, PR использует **Refs #76**, поскольку p95≤500ms не достигнут.
 Независимое review Олега/Леры требуется. Fix ещё не merged и не deployed;
 готовность production по этим локальным измерениям не объявляется.
+
+
+## Формальное решение по O-09 #76 / M5 closeout (03.11.2026)
+
+[PR #77](https://github.com/inte11ectua1/skinulis/pull/77) merged в `main`; [Issue #76](https://github.com/inte11ectua1/skinulis/issues/76) закрыта `completed` после явного решения Тимура. Устранены HTTP500/QueuePool timeouts при зафиксированной нагрузке 100 клиентов. **p95≤500ms всё ещё FAIL**: mixed 956.05ms, contention 1098.46ms. Владелец принял этот ограниченный результат и не требует дальнейшей оптимизации в O-09; дальнейшее профилирование — отдельный будущий scope только по новой задаче. Принятие по внутренней планке **не** заменяет DoD audit и не доказывает latency на production. [M5 closeout](M5_CLOSEOUT_M6_HANDOFF.md).

@@ -1,6 +1,6 @@
 # Общий roadmap (зависимости, интеграция, gate)
 
-**Актуальный статус 31.10.2026:** **M1/M2/M3/M4 завершены по реализации.** M4 — O-06 #46/PR #51, O-07 #47/PR #53, O-07N #55/PR #57, L-05 #48/PR #54 и T-08 #45/PR #58 — все merged/closed. [T-08 финальный audit](../reviews/T-08_M4_FINAL_SECURITY_REVIEW.md), [CI PR #58 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41213175596). **Следующий этап M5 Delivery назначен:** Тимур T-09 #59 → T-10 #60, Олег O-08 #61, Лера L-06 #62. [Handoff M5](../operations/M5_DELIVERY_HANDOFF.md). **G1/G2/G3/G4 не объявлены formally verified**: T-01/G1 остаётся открытой, live Telegram G2/G3/G4 отложены по решению Тимура; production /internal и G5 будут проверяться на M5. M0–M7 — фазы, не календарные недели. Исторические M1–M3 срезы ниже сохранены. Источник статуса — [STATUS](../STATUS.md).
+**Актуальный статус 03.11.2026:** M1–M5 **завершены по принятому объёму реализации и первичному rollout**, включая T-09 #59, T-10 #60, O-08 #61, L-06 #62 и O-09 #76, все closed. [M5 closeout и handoff M6](../operations/M5_CLOSEOUT_M6_HANDOFF.md), [STATUS](../STATUS.md). G5 технически подтверждён первым public rollout (SHA `f7020cd`); последний `main` `0de89b3` ещё не был развёрнут. G1 (закрытая `not_planned` T-01 #2), G2/G3/G4 live Telegram и независимые GitHub review — отдельные **незакрытые вопросы приемки курса**. M6 — следующая **планируемая** фаза; новых Issues пока нет. M0–M7 — фазы, не календарные недели. Исторические вехи ниже не переписываются задним числом.
 
 | Фаза | Тимур (T) | Олег (O) | Лера (L) | Общий gate |
 |---|---|---|---|---|
@@ -9,8 +9,8 @@
 | M2 Identity | T-05 Auth/JWT, T-06 группы/invites и bot actor | O-03 модели финансов и миграции | L-03 /start, bootstrap/link и группы на mocked API | E2E профиль -> группа |
 | M3 Expenses | T-07 review безопасности, интеграция API | O-04 CRUD equal/custom, O-05 by_items | L-04 мастера расходов по контракту | Ресторанный тест и bot flow |
 | M4 Balances | T-08 audit locking/idempotency | O-06 балансы и settlement plan; O-07 компенсации | L-05 баланс, переводы, подтверждения | Частичный перевод обновляет баланс только после confirm |
-| M5 Delivery | T-09 GHCR/CD/VPS/Caddy, T-10 логи | O-08 integration/concurrency/load tests | L-06 E2E, UX errors, README | Merge -> image -> HTTPS /health /version |
-| M6 Acceptance | T-11 DoD audit, reset/test clean environment | O-09 bugfix, invariants, PR audit | L-07 user guide, demo script, smoke bots | CI green, coverage >=60%, p95/100 concurrent documented |
+| M5 Delivery (закрыт) | T-09 #59 GHCR/CD/VPS/Caddy, T-10 #60 логи; O-09 #76 pool fix | O-08 #61 PG/finance/load | L-06 #62 offline E2E/UX | Первичный GHCR/HTTPS G5 evidence; O-09 p95 waiver |
+| M6 Acceptance (план) | T-11 DoD audit, clean start, demo evidence | Финальный finance/PG QA; O-09 #76 уже выполнена на M5, новый ID TBD | L-07 guide и 3-user demo script | Независимые reviews, DoD gap list, clean start; p95 measured, waived internally |
 | M7 Defense | T-12 rehearsal PR to deploy | O-10 defense calculations/Q&A | L-08 Telegram live demonstration | 7m presentation, 5m live-demo, 8m Q&A |
 
 ## Итог M1 — принято в main (27.10.2026)
@@ -44,12 +44,17 @@
 - **Лера:** [L-05 #48 / PR #54](https://github.com/inte11ectua1/skinulis/pull/54) — **merged/closed**, Telegram balances/settlements, mocked notification + real HTTP/PG tests, [финальный CI 5/5, 1460 tests/94,76%](https://github.com/inte11ectua1/skinulis/actions/runs/41210779152).
 - **Ограничения:** G4 **кодовые/PG доказательства есть, формальный live gate not verified**. Не зарегистрированы independent APPROVED reviews нескольких завершённых PR, [T08-01](../reviews/T-08_M4_FINAL_SECURITY_REVIEW.md) — процессный риск. Live Telegram не запускать до команды Тимура.
 
-## Текущий M5 Delivery — assigned (31.10.2026)
+## M5 Delivery завершён (03.11.2026); M6 Acceptance — следующий план
 
-- **Тимур:** [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) — GHCR SHA + trusted-main CD, VPS/Compose, Caddy HTTPS, сеть/публичный отказ /internal, миграции, rollback. **Критический путь**; код/конфиг можно начинать, реальный VPS/SSH/deploy только с отдельного разрешения. Затем [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) — JSON logging/rotation/request_id и operational runbook; проектирование допускается параллельно, финальная интеграция после T-09.
-- **Олег:** [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61) — PG financial/security/concurrency regression, независимые соединения, контролируемая нагрузка 100 simultaneous clients, задокументированные p95/условия. **Может стартовать параллельно T-09**, без production тестов.
-- **Лера:** [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62) — UX errors/timeout/replay, mocked Telegram → реальный локальный HTTP/PostgreSQL E2E; **параллельно T-09**, никакого настоящего Telegram polling/live QA.
-- **G5:** только после фактического GHCR SHA, HTTPS /health с DB и /version=SHA, закрытого снаружи /internal и private DB. Ничего из этого ещё не подтверждено. [M5 handoff/зависимости](../operations/M5_DELIVERY_HANDOFF.md).
+| Владелец | Реальный итог M5 |
+|---|---|
+| Тимур | [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59)/[T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60), approved rollout Caddy/HTTPS/GHCR/DB, logs, runbook; [O-09 #76](https://github.com/inte11ectua1/skinulis/issues/76)/[PR #77](https://github.com/inte11ectua1/skinulis/pull/77) pool fix |
+| Олег | [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61)/[PR #74](https://github.com/inte11ectua1/skinulis/pull/74), финансы, PostgreSQL races, измеренная нагрузка |
+| Лера | [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62)/[PR #75](https://github.com/inte11ectua1/skinulis/pull/75), Telegram UX, mocked → real HTTP/PG offline E2E |
+
+**G5:** проверен первый production API deployment (SHA `f7020cd`), но новый `main` не выкладывался. O-09 после fix: 100 clients, HTTP500=0, p95 956/1098ms; целевые 500ms **FAIL**, Тимур принял отклонение. [Evidence и ограничения](../operations/M5_CLOSEOUT_M6_HANDOFF.md).
+
+**M6:** Тимуру T-11 DoD audit + clean start; Олегу финальный аудит финансов/тестов (не заново O-09), Лере L-07 user guide/demo script; задачи ещё **не заведены**, gate G6 не подтверждён. G1 admin/protection и formal review, G2/G3/G4 live Telegram остаются отдельными вопросами. Без явного разрешения Тимура не проводить live Telegram, AWS rollout или production stress.
 
 ## Release gates
 - **G1 (после M1):** cold start, migration, /health 200, one real reviewed PR with green CI.

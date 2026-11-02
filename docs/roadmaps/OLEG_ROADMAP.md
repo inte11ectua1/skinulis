@@ -12,7 +12,7 @@
 | O-06 | M4 | balance service + greedy settlement plan | O-04/05 | invariant sum zero, stable plan and tests |
 | O-07 | M4 | settlements state machine confirm/reject/cancel, partial, locks | O-06, T-06 | concurrency 2 pending same debt; only 1 confirm |
 | O-08 | M5 | Cross-group security, retry, property/integration, load p95 test | O-07 | coverage >=60 globally, 100 concurrent report |
-| O-09 | M6 | Performance fixes, migrations review, debt after soft-delete regression | O-08 | regression suite green under CI |
+| O-09 | M5 follow-up (перенесён раньше) | Тимур: double checkout / pool fix, issue #76 закрыта | O-08 | 100-client zero pool500, 19 PG cases; p95 internal exception |
 | O-10 | M7 | Financial demo rehearsal + questions | all | can explain transaction/rounding/invariants |
 
 ## Завершённая фаза M1 (27.10.2026)
@@ -31,11 +31,13 @@
 
 [O-06 #46](https://github.com/inte11ectua1/skinulis/issues/46)/[PR #51](https://github.com/inte11ectua1/skinulis/pull/51), [O-07 #47](https://github.com/inte11ectua1/skinulis/issues/47)/[PR #53](https://github.com/inte11ectua1/skinulis/pull/53) и дополнительная O-07N [#55](https://github.com/inte11ectua1/skinulis/issues/55)/[PR #57](https://github.com/inte11ectua1/skinulis/pull/57) **merged/closed**. T-08 [#45](https://github.com/inte11ectua1/skinulis/issues/45)/[PR #58](https://github.com/inte11ectua1/skinulis/pull/58) завершил финальный security review, [отчёт](../reviews/T-08_M4_FINAL_SECURITY_REVIEW.md). Реальные concurrency/PG CI пройдены, но это не live Telegram G4. Процессное замечание о независимых approvals сохраняется.
 
-## Текущая задача M5 — [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61)
+## M5 закрыт — O-08 #61, отдельный follow-up O-09 #76
 
-**Начинать сейчас от актуальной main**: security и свойства financial invariants, strict public/internal actor, реальные независимые PostgreSQL17 concurrent session tests и controlled load из 100 одновременно активных клиентов с p50/p95/p99/ошибками и воспроизводимым сценарием. Цель p95 ≤500 ms зависит от описанной нагрузки и **должна быть измерена**, а не заявлена заранее. Все деньги точные копейки, стабильные terminal effects и replay; не трогать bot и деплой без согласования. [Handoff](../operations/M5_DELIVERY_HANDOFF.md), [CI/требования](../TECHNICAL_DECISIONS.md).
+**O-08 [#61](https://github.com/inte11ectua1/skinulis/issues/61)/[PR #74](https://github.com/inte11ectua1/skinulis/pull/74)** merged/closed: настоящие финансовые PostgreSQL security/race/property regression и reproducible 100-client load. Исходно p95 9.6–12s и массовые HTTP500 из-за pool starvation; тесты и находка документированы.
 
-**Безопасность:** никаких production DB/VPS/load/live Telegram. Добавить документацию нагрузки, PG race доказательства, 5/5 CI и independent review. Финальный PR `Closes #61` только когда весь scope измерен и принят, промежуточный `Refs #61`. M5 инфраструктура T-09 #59 развивается параллельно, не блокирует локальное O-08.
+**O-09 [#76](https://github.com/inte11ectua1/skinulis/issues/76)/[PR #77](https://github.com/inte11ectua1/skinulis/pull/77)** уже завершена **Тимуром**, а не дополнительная незавершённая O-09 Олега: short auth Session убрала pool HTTP500, p95 после 956/1098ms. Внутренний таргет 500ms не выполнен и явно принят Тимуром. [Методика/агрегаты](../operations/LOAD_TEST_M5.md).
+
+**M6 для Олега — пока план:** финальный QA финансов, тестов/миграций, review evidence и помощь защите; отдельную Issue с новым ID согласовать перед Codex. Повторно `O-09` не создавать. Никаких новых production stress или изменения финансовых правил без отдельной задачи. [M5→M6 handoff](../operations/M5_CLOSEOUT_M6_HANDOFF.md).
 
 ## Для своего чата
 «Проверь расчёты на контрпример», «Составь тест конкурентного подтверждения для PostgreSQL», «Раздели O-07 на безопасные PR», «Проверь атомарность изменения расхода».

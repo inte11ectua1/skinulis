@@ -2,7 +2,9 @@
 
 **Источник истины — GitHub main:** docs, ADR, Issues, PR и docs/STATUS.md. ChatGPT-чаты и Codex могут расходиться и не синхронизируют память автоматически.
 
-**Актуальный handoff 31.10.2026:** M4 **completed by implementation**: [T-08 #45/PR #58](https://github.com/inte11ectua1/skinulis/pull/58) и O-06/O-07/O-07N/L-05 в main, Issues closed; [финальный security report](../reviews/T-08_M4_FINAL_SECURITY_REVIEW.md). **M5 assigned:** Тимур [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) → [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60), Олег [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61), Лера [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62). Источник подробностей — [M5 Delivery handoff](M5_DELIVERY_HANDOFF.md) и [STATUS](../STATUS.md). G1 T-01 #2, G2/G3/G4 live Telegram и G5 остаются отдельно не verified; реальный SSH/VPS/Telegram/stress без разрешения Тимура запрещён.
+**Актуальный handoff 03.11.2026:** M5 **принят по согласованному объёму**. T-09 #59 и T-10 #60 (Тимур), O-08 #61 (Олег), L-06 #62 (Лера), O-09 #76 (Тимур) — все **closed** и PR #74/#75/#77 merged. [Фактический closeout и M6-план](M5_CLOSEOUT_M6_HANDOFF.md); подробности [STATUS](../STATUS.md). G5 — evidence первого API production rollout (не новый `main`), Telegram polling off, live G2/G3/G4 not verified. O-09 устранила HTTP500 на 100-client local load; p95≈956/1098ms **выше внутреннего таргета 500ms**, но Тимур принял это отклонение. T-01 #2 закрыта `not_planned` и не fully accepted; недостающие GitHub human APPROVED — риск для DoD.
+
+**Следом M6 Acceptance (ещё без Issues):** Тимур T-11 DoD/cold start, Олег финальный PG/finance audit, Лера L-07 user guide/demo. Утверждать, что новая задача назначена, можно только после создания GitHub Issue. Prod deploy/AWS/SSH/live Telegram/stress — только после явной новой команды Тимура.
 
 ## Цикл
 1. В начале задачи прочитать latest main, STATUS.md, issue, AGENTS.md и персональные документы.
