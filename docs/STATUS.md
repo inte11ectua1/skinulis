@@ -1,5 +1,25 @@
 # Фактическое состояние проекта
 
+## Первый публичный rollout T-09/T-10 выполнен (02.11.2026)
+
+[Production API](https://3-25-53-31.sslip.io), [approved Release41428440222](https://github.com/inte11ectua1/skinulis/actions/runs/41428440222):
+trusted main `f7020cda3908d7e0c40c0b0f840e322b3d6cfda5`, independent approval
+**pylinolg-max**, guard/publish/deploy success. PostgreSQL/API/Caddy healthy;
+migrate exited0 на `0006_settlement_notification_claim`, один запуск; bot/polling
+не запускались. Rollout flag возвращён false. Trusted HTTPS/health/version/docs,
+26 raw internal-denial probes, private actor, JSON/privacy/request_id/rotation и
+post-migration backup/isolated restore/encrypted off-host recovery проверены.
+[Полное evidence, hashes и acceptance matrix](operations/T-09_FIRST_PRODUCTION_ROLLOUT.md).
+
+Технические сигналы G5 подтверждены фактическим deployment; это не закрывает весь
+M5 или live Telegram G2/G3/G4. Issues #59/#60 оставлены open для owner acceptance
+и review evidence PR. Новые rollout и live polling требуют отдельных разрешений.
+
+## Исторические срезы до первого rollout
+
+Следующие записи сохраняют состояние на соответствующем этапе; их формулировки
+«не проверено/не запускалось» не описывают текущий production.
+
 ## T-10 — JSON logging, rotation и runbook: реализация для review (02.11.2026)
 
 В feature-ветке T-10 добавлены единый безопасный JSON stdout API/bot/migrate,

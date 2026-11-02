@@ -13,7 +13,7 @@ timeout повторяйте прежние UUID/body: replay возвращае
 
 **O-07N #55 merged PR #57 и L-05 #48 merged PR #54:** защищённый bot-service `POST /internal/settlements/{settlement_id}/notification-claim` выдаёт одноразовое разрешение уведомить получателя (200 server-bound Telegram ID, 204 после claim/terminal/no binding). Alembic 0006 хранит отметку, миграция помечает исторические записи. Бот отправляет одну best-effort private notification **только** после 200 claim, без гарантии доставки и без банковского перевода. [Контракт](docs/contracts/T-08_PENDING_NOTIFICATION.md), [L-05 документация](docs/bot/L-05_SETTLEMENTS.md).
 
-> **M4 завершён по реализации 31.10.2026:** [O-06 #46/PR #51](https://github.com/inte11ectua1/skinulis/pull/51), [O-07 #47/PR #53](https://github.com/inte11ectua1/skinulis/pull/53), [O-07N #55/PR #57](https://github.com/inte11ectua1/skinulis/pull/57), [L-05 #48/PR #54](https://github.com/inte11ectua1/skinulis/pull/54), [T-08 #45/PR #58](https://github.com/inte11ectua1/skinulis/pull/58) merged, Issues closed. [T-08 финальный security review](docs/reviews/T-08_M4_FINAL_SECURITY_REVIEW.md), [CI #58 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41213175596). **Следующий этап M5 Delivery** — назначены T-09 #59, T-10 #60, O-08 #61, L-06 #62. [Handoff](docs/operations/M5_DELIVERY_HANDOFF.md). Live Telegram G2/G3/G4 и production /internal isolation не verified; T-01/G1 по-прежнему open.
+> **M4 завершён по реализации 31.10.2026:** [O-06 #46/PR #51](https://github.com/inte11ectua1/skinulis/pull/51), [O-07 #47/PR #53](https://github.com/inte11ectua1/skinulis/pull/53), [O-07N #55/PR #57](https://github.com/inte11ectua1/skinulis/pull/57), [L-05 #48/PR #54](https://github.com/inte11ectua1/skinulis/pull/54), [T-08 #45/PR #58](https://github.com/inte11ectua1/skinulis/pull/58) merged, Issues closed. [T-08 финальный security review](docs/reviews/T-08_M4_FINAL_SECURITY_REVIEW.md), [CI #58 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41213175596). **Следующий этап M5 Delivery** — назначены T-09 #59, T-10 #60, O-08 #61, L-06 #62. [Handoff](docs/operations/M5_DELIVERY_HANDOFF.md). Live Telegram G2/G3/G4 не verified; production /internal isolation проверена 02.11 (см. evidence ниже); T-01/G1 по-прежнему open.
 
 ## Начало работы
 
@@ -39,7 +39,7 @@ timeout повторяйте прежние UUID/body: replay возвращае
 - **M3 Expenses завершён:** Олег [O-04 #36 / PR #41](https://github.com/inte11ectua1/skinulis/pull/41) и [O-05 #39 / PR #42](https://github.com/inte11ectua1/skinulis/pull/42) — expense CRUD и snapshots; Лера [L-04 #37 / PR #43](https://github.com/inte11ectua1/skinulis/pull/43) — Telegram expense UI; Тимур [T-07 #35 / PR #44](https://github.com/inte11ectua1/skinulis/pull/44) — audit и regression fixes. Issues закрыты, CI #44 зелёный. G3 не verified без отложенного live Telegram E2E.
 - **M4 Balances/Settlements завершён:** O-06/PR #51, O-07/PR #53, O-07N/PR #57, L-05/PR #54 и T-08/PR #58 — merged/closed. Финансовая история, балансы, manual settlement и best-effort notifications через verified bot actor протестированы реальными HTTP/PostgreSQL и mock Telegram, не live polling.
 - **M5 Delivery назначен:** Тимур [T-09 #59](https://github.com/inte11ectua1/skinulis/issues/59) (GHCR/CD/VPS/Caddy/network isolation) и [T-10 #60](https://github.com/inte11ectua1/skinulis/issues/60) (JSON логи/runbook); Олег [O-08 #61](https://github.com/inte11ectua1/skinulis/issues/61) (PG races/load 100 clients/p95), Лера [L-06 #62](https://github.com/inte11ectua1/skinulis/issues/62) (mock Telegram → HTTP/PG UX regression). O-08/L-06 могут стартовать параллельно, T-10 после T-09 infrastructure.
-- **Границы:** T-01/G1 открыта, G2/G3/G4 formally not verified из-за отложенного live Telegram; G5 ещё не verified. Нет автоматического SSH/VPS/production actions без разрешения, PR jobs не получают secrets. Новые задачи: отдельная ветка → PR → CI 5/5 → independent human review → merge, полный PR body Closes #N. [Roadmap](docs/roadmaps/MASTER_ROADMAP.md), [STATUS](docs/STATUS.md).
+- **Границы:** T-01/G1 открыта, G2/G3/G4 formally not verified из-за отложенного live Telegram; технические сигналы G5 проверены первым rollout; приёмка M5 отдельно. Нет автоматического SSH/VPS/production actions без разрешения, PR jobs не получают secrets. Новые задачи: отдельная ветка → PR → CI 5/5 → independent human review → merge, полный PR body Closes #N. [Roadmap](docs/roadmaps/MASTER_ROADMAP.md), [STATUS](docs/STATUS.md).
 
 
 ## Telegram-бот: онбординг и группы (L-03)
@@ -202,7 +202,8 @@ curl http://localhost:8000/version
 Версия задана в `app/__init__.py` и соответствует `project.version`. SHA не
 вычисляется из отсутствующего в образе `.git`: при необходимости задайте настоящий
 40-символьный `APP_COMMIT_SHA` в `.env` **до сборки**. После смены SHA пересоберите
-образ. Пока это явный ввод разработчика, гарантий production provenance и CI нет.
+образ. Это инструкция local build; production Release отдельно проверяет trusted
+main CI и OCI revision/digest (см. T-09 ниже).
 Dockerfile фиксирует Python 3.12.15 и uv 0.13.5 по версии и digest; runtime работает
 с UID 10001. БД PostgreSQL 17.11 приватна, порт API опубликован только на loopback.
 Локальный Compose сохраняет API/DB без polling. Runtime-образ также содержит `bot/`;
@@ -452,12 +453,15 @@ branch protection; применённые настройки и доказате
 
 [Deployment runbook](docs/operations/DEPLOYMENT.md) описывает общий API/bot image,
 отдельный production Compose, Caddy HTTPS и публичный отказ `/internal`.
-Локальный compose.yaml сохранён. На 01.11.2026 подготовлен новый EC2 в Sydney:
-20GiB encrypted gp3, Docker/SSM, fresh keys/secrets, настоящий pinned SSH-over-SSM
-и dry-run проверены. [Новый AWS evidence](docs/operations/T-09_NEW_AWS_EC2.md).
-Изолированные PG/TLS/backup tests из предыдущего этапа относятся к старому EC2.
-Публичный production rollout/ACME **ещё не выполнен**; Issue #59/G5 открыты.
-[Исторические проверки старого EC2](docs/operations/T-09_EC2_PREFLIGHT.md).
+Локальный compose.yaml сохранён. **02.11.2026 первый production API запущен:**
+https://3-25-53-31.sslip.io. [Approved Release41428440222](https://github.com/inte11ectua1/skinulis/actions/runs/41428440222)
+развернул exact main SHA `f7020cda3908d7e0c40c0b0f840e322b3d6cfda5` после approval
+pylinolg-max. Trusted HTTPS, health с PostgreSQL, version SHA, docs/OpenAPI,
+26 raw /internal probes, private actor, logs/privacy/rotation и post-migration
+backup/isolated restore/encrypted off-host copy проверены.
+[Evidence и acceptance matrix](docs/operations/T-09_FIRST_PRODUCTION_ROLLOUT.md).
+PostgreSQL/API/Caddy healthy, migrate exited0; Telegram polling не запускался.
+Rollout flag возвращён false, Issues #59/#60 остаются open для owner acceptance.
 
 [deploy.yml](.github/workflows/deploy.yml) публикует SHA-tag только после trusted
 main CI, проверяет происхождение image и передаёт deploy **digest**. Rollout выключен
@@ -471,15 +475,10 @@ PR pipeline не получает этих secrets/permissions.
 проверены по JSON из main, destination Environment обновлён с сохранением защиты.
 Protected `operation=check-transport` проверяет только
 подключение и Docker version с rollout flag=false; controller не запускается.
-Его [реальный запуск](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056)
-прошёл independent approval, но installer SSM plugin получил HTTP 503;
-OIDC connection пока не verified.
-Production rollout/HTTPS и live Telegram остаются отдельной приёмкой.
-
-[Исторический AWS readiness старого аккаунта](docs/operations/T-09_AWS_READINESS.md): PR #66/#67/#68
-merged, main CI/GHCR и local SSM SSH проверены. В старом аккаунте GitHub OIDC блокировался Organizations SCP; в новом аккаунте
-provider/role созданы и проверены. [Новый EC2 и readiness](docs/operations/T-09_NEW_AWS_EC2.md).
-Rollout flag=false; публичный HTTPS/G5 ещё не подтверждены.
+Его [реальный успешный запуск](https://github.com/inte11ectua1/skinulis/actions/runs/41401010599)
+подтвердил protected OIDC/SSM/SSH. Первый public deployment также прошёл этот transport.
+Исторический отказ SCP старого AWS и прежний installer503 не являются текущими
+блокерами. Новый rollout и live Telegram требуют отдельных разрешений.
 
 ```sh
 actionlint
@@ -605,14 +604,15 @@ API, мигратор и бот используют стандартный logg
 Production Compose ограничивает json-file логи всех пяти services: 5m ×3,
 compress=true, около75MB на текущие контейнеры. Это не лимит всей DB/images/backups.
 Caddy runtime filter удаляет request/error fields; PostgreSQL не пишет обычные
-SQL ошибки/параметры. Изменения действуют после разрешённого release с этим SHA;
-на EC2 в рамках T-10 ничего не пересоздавалось.
+SQL ошибки/параметры. Настройки действуют в approved production release f7020cd: фактические drivers,
+JSON/privacy/correlation проверены без вызова production outage или live Telegram.
 
 [Incident/rollback runbook и чеклист первого rollout](docs/operations/INCIDENTS_AND_ROLLBACK.md)
 содержит поиск по request_id, диагностику HTTP/DB/OIDC/SSM/SSH/Caddy, безопасный
 immutable image rollback без DB downgrade и отдельную проверку restore.
-T-09 public HTTPS/deployment и T-10 production validation остаются незавершёнными.
-Новое AWS preparation evidence — в [PR #70](https://github.com/inte11ectua1/skinulis/pull/70).
+[Production evidence](docs/operations/T-09_FIRST_PRODUCTION_ROLLOUT.md) фиксирует
+успешный API rollout и проверки логов; bot runtime не запускался. Owner acceptance
+и независимый review evidence остаются до закрытия #59/#60.
 
 ```sh
 uv run pytest tests/unit/test_logging.py tests/unit/test_bot_runtime.py
