@@ -7,12 +7,16 @@ backup/restore реально проверены; [evidence и ограниче�
 изменения EC2 разрешены Тимуром; rollout и live polling требуют отдельных
 подтверждений. Частичный follow-up использует `Refs #59`, Issue остаётся открытой.
 
-**Дополнение 01.11.2026:** подготовлен [AWS OIDC + SSH-over-SSM transport](AWS_SSM_CD.md).
-Владелец подтвердил encrypted EBS и работающий EC2 SSM agent/profile/session.
-PR #66/#67/#68 merged; EC2/backup и local SSM проверены. Runner IAM role ещё нет;
-OIDC provider inventory запрещён Organizations SCP. IAM writes требуют отдельного
-разрешения; rollout остаётся false.
-[Текущие AWS/CI/GHCR/DNS/preflight evidence и blocker](T-09_AWS_READINESS.md).
+**Текущий destination 01.11.2026:** новый AWS account/EC2 в Sydney,
+[подробное evidence](T-09_NEW_AWS_EC2.md). Старый сервер/account не менялись.
+Новый EC2/Docker/SSM, fresh env/keys/volumes и минимальная GitHub OIDC role готовы;
+политики из main прочитаны обратно. Environment обновлён с сохранением защиты.
+[Protected check-transport](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056)
+получил independent approval, но шаг установки SSM plugin завершился HTTP 503;
+OIDC/SSH не выполнялись. Rollout=false; production не запускался.
+PR #67/#68 merged; PG/TLS/backup evidence старого EC2 не переносится на новый.
+Исторический отказ SCP в старом AWS-аккаунте описан в
+[AWS readiness](T-09_AWS_READINESS.md).
 
 ## Архитектура и образы
 
@@ -176,7 +180,8 @@ SSH-over-SSM transport передаёт только allowlisted compose/Caddy/c
 проверенного checkout в `root/releases/SHA`. Production env/key не передаются.
 StrictHostKeyChecking=yes, BatchMode, без agent forwarding, без чужого SSH config.
 AWS CLI + Session Manager plugin открывают AWS-StartSSHSession к instance ID,
-порт22. HostKeyAlias сохраняет старый host-key pin; direct TCP fallback отсутствует.
+порт22. HostKeyAlias использует pin **текущего** сервера; при новом EC2 его заново
+проверяют через AWS Console и обновляют. Direct TCP fallback отсутствует.
 `operation=check-transport` — protected read-only проверка, работает с flag=false:
 без отправки bundle/вызова controller. Для `operation=deploy` нужен flag=true и
 отдельное разрешение. Полные IAM policies, инструкции и evidence boundary — в
@@ -186,16 +191,14 @@ AWS CLI + Session Manager plugin открывают AWS-StartSSHSession к insta
 
 IP административного ноутбука и исходящий IP GitHub-hosted runner различаются.
 Не открывать22 для0.0.0.0/0 и не добавлять все широкие Actions ranges.
-Существующий transport использует прямой SSH: пока безопасный runner path не
-настроен, deploy остаётся выключенным даже при готовом Environment.
-
-Предложение на согласование: SSH поверх AWS SSM + OIDC, с trust только production
-Environment, минимальной StartSession policy и pin того же SSH host key. SSM Agent и EC2 instance profile уже настроены; реальная Session Manager сессия проверена. Нужны разрешение Тимура на IAM/transport
-изменения, отдельный PR и human review. Session Manager для EC2 не имеет отдельной
+Принятый в PR #68 transport — SSH поверх AWS SSM + OIDC, с exact production
+trust, минимальной StartSession policy и проверкой host key. На новом EC2 нет
+inbound22 вообще; для Mac administration также используется SSH-over-SSM.
+Instance profile/Online agent и реальный Mac SSH проверены, отдельная GitHub role
+создана по main policies. До protected check-transport после independent approval
+GitHub → SSM не считать verified. Session Manager для EC2 не имеет отдельной
 платы согласно [AWS pricing](https://aws.amazon.com/systems-manager/pricing/);
-новые платные endpoints/runners не заказывались. Альтернатива — временный /32
-SSH ingress на IP job, но роль получает права SG и требуется надёжная очистка.
-SSH-over-SSM transport подготовлен в PR #68, но AWS OIDC role ещё не настроена, GitHub → SSM не проверен. Текущий Mac SSH не меняли.
+paid JIT node access/endpoints/runners не включались. Старый Mac SSH/EC2 не меняли.
 
 ### Ручной backup перед релизом
 

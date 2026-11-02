@@ -452,28 +452,33 @@ branch protection; применённые настройки и доказате
 
 [Deployment runbook](docs/operations/DEPLOYMENT.md) описывает общий API/bot image,
 отдельный production Compose, Caddy HTTPS и публичный отказ `/internal`.
-Локальный compose.yaml сохранён. На 01.11.2026 EC2 подготовлен, main image скачан
-из GHCR по digest, изолированный серверный smoke и backup/restore прошли.
+Локальный compose.yaml сохранён. На 01.11.2026 подготовлен новый EC2 в Sydney:
+20GiB encrypted gp3, Docker/SSM, fresh keys/secrets, настоящий pinned SSH-over-SSM
+и dry-run проверены. [Новый AWS evidence](docs/operations/T-09_NEW_AWS_EC2.md).
+Изолированные PG/TLS/backup tests из предыдущего этапа относятся к старому EC2.
 Публичный production rollout/ACME **ещё не выполнен**; Issue #59/G5 открыты.
-[Фактические результаты и блокеры](docs/operations/T-09_EC2_PREFLIGHT.md).
+[Исторические проверки старого EC2](docs/operations/T-09_EC2_PREFLIGHT.md).
 
 [deploy.yml](.github/workflows/deploy.yml) публикует SHA-tag только после trusted
-main CI, проверяет происхождение image и передаёт deploy **digest**. SSH выключен
+main CI, проверяет происхождение image и передаёт deploy **digest**. Rollout выключен
 по умолчанию: нужен manual operation=deploy, repository flag и protected
 production Environment с независимым approval. Polling требует отдельного флага.
 PR pipeline не получает этих secrets/permissions.
 
 Для AWS подготовлен [OIDC + SSH-over-SSM transport](docs/operations/AWS_SSM_CD.md):
 временные AWS credentials, pinned ED25519 host key, отдельный deployment user,
-без открытия SSH GitHub runner в интернет. IAM provider/role создаёт владелец по
-JSON policies после review. Protected `operation=check-transport` проверяет только
+без открытия SSH GitHub runner в интернет. Provider и отдельная role нового account
+проверены по JSON из main, destination Environment обновлён с сохранением защиты.
+Protected `operation=check-transport` проверяет только
 подключение и Docker version с rollout flag=false; controller не запускается.
+Его [реальный запуск](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056)
+прошёл independent approval, но installer SSM plugin получил HTTP 503;
+OIDC connection пока не verified.
 Production rollout/HTTPS и live Telegram остаются отдельной приёмкой.
 
-[Актуальный AWS readiness](docs/operations/T-09_AWS_READINESS.md): PR #66/#67/#68
-merged, main CI/GHCR и local SSM SSH проверены. GitHub OIDC ожидает устранения
-Organizations SCP Deny на IAM provider inventory/creation. Тимур разрешил минимальное
-создание, но реальный CreateOpenIDConnectProvider отклонён AWS; IAM не изменён.
+[Исторический AWS readiness старого аккаунта](docs/operations/T-09_AWS_READINESS.md): PR #66/#67/#68
+merged, main CI/GHCR и local SSM SSH проверены. В старом аккаунте GitHub OIDC блокировался Organizations SCP; в новом аккаунте
+provider/role созданы и проверены. [Новый EC2 и readiness](docs/operations/T-09_NEW_AWS_EC2.md).
 Rollout flag=false; публичный HTTPS/G5 ещё не подтверждены.
 
 ```sh
