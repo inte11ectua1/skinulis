@@ -15,10 +15,35 @@ Read-only аудит T-09 подтвердил new-account Environment/OIDC targ
 80/443, активные Docker/SSM, RAM/swap/disk; подробное new-EC2 evidence уже в
 [PR #70](https://github.com/inte11ectua1/skinulis/pull/70), не дублируется здесь.
 [check-transport](https://github.com/inte11ectua1/skinulis/actions/runs/41346841056)
-пока waiting independent approval. PRODUCTION_ROLLOUT_ENABLED=false;
+прошёл independent approval, но download SSM plugin получил HTTP 503;
+OIDC/SSH пока не проверены. PRODUCTION_ROLLOUT_ENABLED=false;
 production containers/migrations/polling не запускались. T-09 #59 остаётся open.
 Нижележащие EC2/роль-срезы — исторические; активная конфигурация нового AWS описана
 в #70, документационный #69 относится к отказу IAM в старом аккаунте.
+
+
+
+## Историческая запись: прежний AWS-аккаунт (01.11.2026)
+
+Этот блок относится к старому аккаунту и устаревшему IAM blocker.
+
+### Старый AWS: SSM/IAM readiness до миграции
+
+PR #66/#67/#68 merged; main `dd78027bfdf293568284d36719b5ac1929c337ac`.
+[Main CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41333607302):
+1175 unit +402 PostgreSQL tests, coverage94,76%.
+[Release guard/publish success, deploy skipped](https://github.com/inte11ectua1/skinulis/actions/runs/41334146071).
+[AWS/GHCR/DNS/controller/backup evidence](operations/T-09_AWS_READINESS.md).
+EBS encryption, SG/private ports, SSM Agent и настоящий **локальный** SSM SSH проверены.
+Production AWS variables заполнены; защиты/secrets сохранены, flag=false.
+**Blocker:** OIDC provider Get/List и реальный Create запрещены Organizations SCP
+Deny. После отдельного разрешения Тимура CreateOpenIDConnectProvider отклонён
+01.11.2026 18:53:31 UTC; IAM ресурсы не изменены, CreateRole/PutRolePolicy не
+запускались. Нужны исправление SCP администратором организации, inventory,
+применение уже разрешённого setup и protected GitHub check-transport.
+PUBLIC_DOMAIN проверен только в private test copy; публичного HTTPS,
+production deployment, polling и G5 acceptance нет. Исторические формулировки ниже
+об открытых #67/#68 больше не актуальны.
 
 
 ## T-09 — EC2 preflight выполнен, публичный rollout ожидает (01.11.2026)

@@ -1,9 +1,11 @@
 # T-09: GitHub OIDC → SSM → SSH
 
 01.11.2026 · [Issue #59](https://github.com/inte11ectua1/skinulis/issues/59).
-Это инструкция для владельца AWS account и подготовленный transport. IAM provider,
-роль и настоящий GitHub → SSM connection **ещё не проверены**. Rollout flag остаётся
-`false`; production deployment и Telegram polling не выполнялись.
+Transport принят в merged PR #68. [Актуальный readiness evidence](T-09_AWS_READINESS.md):
+main CI/GHCR и настоящий local SSH-over-SSM проверены; IAM provider inventory и
+разрешённая владельцем реальная creation attempt отклонены Organizations SCP.
+Runner role не создавалась; для продолжения нужен administrator SCP correction.
+Rollout flag=false; production deployment и Telegram polling не выполнялись.
 
 ## Границы доверия
 
