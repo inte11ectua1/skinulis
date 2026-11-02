@@ -628,3 +628,10 @@ Coverage измеряет branch coverage app/, bot/ и нового общег�
 тестовые файлы в процент не входят. Docker smoke использует только UUID test
 resources, проверяет JSON/privacy/correlation, daemon log options, PG/Caddy ошибки,
 TLS и существующую сетевую границу. Тестовый named volume остаётся для оператора.
+
+## Проверка финансов и нагрузки O-08
+
+Изолированный real HTTP runner на100 клиентах, фиксированные профили и методика:
+[LOAD_TEST_M5](docs/operations/LOAD_TEST_M5.md). Только loopback API и новая UUID
+база PostgreSQL17 из TEST_DATABASE_URL; production и настоящий Telegram запрещены.
+Полный load запускается отдельно от pytest; green CI не заменяет измерения latency.

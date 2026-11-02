@@ -1,5 +1,10 @@
 # Фактическое состояние проекта
 
+**O-08 #61: in progress / PR review.** Отдельная ветка test/O-08-finance-security-load;
+финансовые/security/race regressions и безопасный loopback load runner.
+[Методика и фактические измерения](operations/LOAD_TEST_M5.md); не merged,
+не G5/live verification. Production/Telegram и инфраструктура Тимура не меняются.
+
 ## Первый публичный rollout T-09/T-10 выполнен (02.11.2026)
 
 [Production API](https://3-25-53-31.sslip.io), [approved Release41428440222](https://github.com/inte11ectua1/skinulis/actions/runs/41428440222):
