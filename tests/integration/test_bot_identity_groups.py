@@ -64,14 +64,24 @@ async def local_api(database_url: URL) -> AsyncIterator[tuple[str, Settings]]:
 
 
 async def choose(ui: Harness, label: str) -> str:
-    markup = ui.sent[-1].reply_markup
-    assert isinstance(markup, InlineKeyboardMarkup)
-    values = [
-        b.callback_data
-        for row in markup.inline_keyboard
-        for b in row
-        if b.text == label
-    ]
+    # Help/stale-button notices need not have a keyboard. Telegram keeps earlier
+    # messages visible; select ONLY the currently valid screen's button.
+    nonce = (await ui.state.get_data()).get("screen")
+    prefix = f"l3:{nonce}:" if isinstance(nonce, str) else "menu:"
+    values: list[str] = []
+    for sent in reversed(ui.sent):
+        markup = sent.reply_markup
+        if isinstance(markup, InlineKeyboardMarkup):
+            values = [
+                b.callback_data
+                for row in markup.inline_keyboard
+                for b in row
+                if b.text == label
+                and b.callback_data is not None
+                and b.callback_data.startswith(prefix)
+            ]
+            if values:
+                break
     assert len(values) == 1 and values[0] is not None
     await ui.click(values[0])
     return values[0]

@@ -148,7 +148,7 @@ async def save(
             await review(message, state, draft)
             return
         draft.sent_body = body.model_dump_json()
-        if draft.expense_id is None:
+        if draft.expense_id is None and draft.request_key is None:
             draft.request_key = str(uuid4())
         await keep(state, draft)
     await state.set_state(ExpenseFlow.busy)
@@ -163,6 +163,15 @@ async def save(
             result = await api.create_expense(
                 actor, draft.group_id, body, UUID(draft.request_key)
             )
+        if (
+            result.expense.group_id != draft.group_id
+            or (draft.expense_id is not None and result.expense.id != draft.expense_id)
+            or (
+                draft.expense_id is None
+                and result.expense.client_request_id != UUID(str(draft.request_key))
+            )
+        ):
+            raise ApiError(ApiFailure.UNEXPECTED)
     except ApiError as error:
         if draft.expense_id is not None and (
             error.kind in UNCERTAIN_KINDS or error.kind == ApiFailure.CONFLICT
@@ -182,11 +191,20 @@ async def save(
             await screen(
                 message,
                 state,
-                (UNCERTAIN if error.kind in UNCERTAIN_KINDS else expense_error(error))
+                (
+                    UNCERTAIN + " " + expense_error(error)
+                    if error.kind in UNCERTAIN_KINDS
+                    else expense_error(error)
+                )
                 + " Не создавайте дубль. Повтор использует прежний UUID и неизменённый чек, включая порядок позиций. /cancel теряет ключ.",
                 actions,
             )
-        elif error.kind == ApiFailure.INPUT:
+        elif error.kind in {
+            ApiFailure.INPUT,
+            ApiFailure.AUTH,
+            ApiFailure.FORBIDDEN,
+            ApiFailure.MISSING,
+        }:
             await message.answer(expense_error(error))
             await state.update_data(expense_recovery=None)
             await keep(state, draft, changed=True)

@@ -33,6 +33,7 @@ from bot.ui import (
     ready,
     recover_identity,
     safe_error,
+    screen,
 )
 from bot.ui import UNKNOWN as UNKNOWN
 from bot.ui import WELCOME as WELCOME
@@ -169,6 +170,7 @@ async def current_action(
     if (
         len(parts) != 3
         or parts[1] != data.get("screen")
+        or not parts[2].isascii()
         or not parts[2].isdigit()
         or not 0 <= int(parts[2]) < len(actions)
     ):
@@ -189,9 +191,35 @@ async def current_action(
                 action, message, state, api, actor, bot, data, previous
             )
     except ApiError as error:
-        await message.answer(
-            safe_error(error) + " Используйте /cancel или /start для восстановления."
+        # Only reads/preparation may get a retry button here. Financial writes
+        # own their frozen-body recovery; never repeat them from this handler.
+        prefix, _, command = action.partition(":")
+        read = prefix in {"groups", "group", "members", "invites", "issue", "recover"}
+        read = (
+            read
+            or (
+                prefix == "ex"
+                and command.split(":")[0] in {"new", "edit", "edit_begin", "delete"}
+            )
+            or (
+                prefix == "st"
+                and command.split(":")[0] in {"new", "detail", "ask", "find"}
+            )
         )
+        if read:
+            await state.set_state(previous)
+            await screen(
+                message,
+                state,
+                safe_error(error)
+                + " Ввод сохранён. Повторите просмотр или используйте /cancel.",
+                [("Повторить просмотр", action)],
+            )
+        else:
+            await message.answer(
+                safe_error(error)
+                + " Используйте /cancel или /start для восстановления."
+            )
 
 
 async def link_code(message: Message, state: FSMContext, api: BotApi) -> None:

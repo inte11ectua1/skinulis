@@ -106,7 +106,11 @@ class ApiError(Exception):
         status_code: int | None = None,
         detail: ErrorDetail | None = None,
     ) -> None:
-        super().__init__(MESSAGES[kind])
+        super().__init__(
+            "Слишком много запросов. Подождите и повторите действие вручную; автоматических повторов нет."
+            if status_code == 429
+            else MESSAGES[kind]
+        )
         self.kind = kind
         self.status_code = status_code
         self.error_code = detail.code if detail else None
