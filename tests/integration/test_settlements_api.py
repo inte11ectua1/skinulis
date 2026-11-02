@@ -158,7 +158,7 @@ def test_restaurant_lifecycle_replay_and_reverse_debt(
             saved.receiver_id,
             saved.amount_kopecks,
             str(saved.client_request_id),
-            saved.created_at.isoformat().replace("+00:00", "Z"),
+            saved.created_at.astimezone(UTC).isoformat().replace("+00:00", "Z"),
         ) == (h.group, 20, 10, 50000, payload["client_request_id"], row["created_at"])
         assert session.scalar(select(func.count()).select_from(Settlement)) == 1
 
