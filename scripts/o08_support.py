@@ -190,10 +190,11 @@ def serve(port: int) -> None:
     import asyncio
     import threading
     from collections import defaultdict
-    from time import perf_counter
+    from time import perf_counter, process_time
 
     import uvicorn
     from sqlalchemy import event
+    from sqlalchemy.exc import TimeoutError as PoolTimeout
 
     from app.config import Settings
     from app.main import create_app
@@ -206,7 +207,7 @@ def serve(port: int) -> None:
     app = create_app(Settings(_env_file=None))
     stats: dict[str, list[float]] = defaultdict(list)
     lock = threading.Lock()
-    peaks = {"checked_out": 0}
+    peaks = {"checked_out": 0, "pool_timeouts": 0}
     path = Path(os.environ.get("O08_METRICS_PATH", ""))
     # Metrics are diagnostic observers, no change to SQL, pool size or timeouts.
     lifespan = app.router.lifespan_context
@@ -245,7 +246,22 @@ def serve(port: int) -> None:
                     peaks["checked_out"], engine.pool.checkedout()
                 )
 
+        original_connect = engine.pool.connect
+
+        def timed_connect() -> Any:
+            started = perf_counter()
+            try:
+                return original_connect()
+            except PoolTimeout:
+                with lock:
+                    peaks["pool_timeouts"] += 1
+                raise
+            finally:
+                with lock:
+                    stats["pool_connect"].append((perf_counter() - started) * 1000)
+
         if "O08_METRICS_PATH" in os.environ:
+            engine.pool.connect = timed_connect
             event.listen(engine, "before_cursor_execute", before)
             event.listen(engine, "after_cursor_execute", after)
             event.listen(engine, "checkout", checkout)
@@ -260,7 +276,14 @@ def serve(port: int) -> None:
                 yield
         if "O08_METRICS_PATH" in os.environ:
             path.write_text(
-                json.dumps({"sql_ms": stats, "pool_peak": peaks}), encoding="utf-8"
+                json.dumps(
+                    {
+                        "sql_ms": stats,
+                        "pool_peak": peaks,
+                        "api_cpu_seconds": process_time(),
+                    }
+                ),
+                encoding="utf-8",
             )
 
     app.router.lifespan_context = measured

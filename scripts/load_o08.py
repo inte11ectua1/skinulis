@@ -359,6 +359,7 @@ def run(profile: str, warmup: float, duration: float) -> dict[str, Any]:
                 )
                 result["diagnostics_including_warmup"] = {
                     "pool_peak": diagnostics["pool_peak"],
+                    "api_cpu_seconds": diagnostics["api_cpu_seconds"],
                     "sql": {
                         name: summary(times)
                         for name, times in diagnostics["sql_ms"].items()
@@ -402,6 +403,8 @@ def main() -> int:
             ["git", "status", "--porcelain"], cwd=ROOT, text=True
         ).strip()
     )
+    if dirty:
+        raise RuntimeError("Commit source changes before measuring")
     result = run(args.profile, args.warmup, args.duration)
     result.update(
         git_sha=sha,
