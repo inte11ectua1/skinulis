@@ -4,12 +4,11 @@ from typing import Annotated
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.core.errors import ApiError
 from app.core.security import InvalidAccessToken, decode_access_token
-from app.db import get_session
+from app.db import Database, get_database
 from app.models import User
 
 bearer = HTTPBearer(auto_error=False)
@@ -23,7 +22,7 @@ def get_settings(request: Request) -> Settings:
 def get_current_user(
     request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
-    session: Annotated[Session, Depends(get_session)],
+    database: Annotated[Database, Depends(get_database)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> User:
     if "X-Bot-Service-Token" in request.headers or "X-Telegram-ID" in request.headers:
@@ -37,7 +36,11 @@ def get_current_user(
         )
     except InvalidAccessToken:
         raise failure from None
-    user = session.get(User, user_id)
-    if user is None:
-        raise failure
+    # Authentication owns only this read transaction, never the endpoint's work.
+    # Detach the fully loaded scalar User before close/rollback can expire it.
+    with database.sessions() as session:
+        user = session.get(User, user_id)
+        if user is None:
+            raise failure
+        session.expunge(user)
     return user

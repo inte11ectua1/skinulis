@@ -7,12 +7,11 @@ from typing import Annotated
 from fastapi import Depends, Header, Request
 from fastapi.security import APIKeyHeader
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_settings
 from app.config import Settings
 from app.core.errors import ApiError
-from app.db import get_session
+from app.db import Database, get_database
 from app.models import User
 
 service_header = APIKeyHeader(name="X-Bot-Service-Token", auto_error=False)
@@ -55,9 +54,14 @@ def get_telegram_actor(
 
 def get_bot_user(
     telegram_id: Annotated[int, Depends(get_telegram_actor)],
-    session: Annotated[Session, Depends(get_session)],
+    database: Annotated[Database, Depends(get_database)],
 ) -> User:
-    user = session.scalar(select(User).where(User.telegram_id == telegram_id))
-    if user is None:
-        raise ApiError(404, "telegram_profile_not_found", "Telegram profile not found")
+    # Release the auth lease before a financial RR reader or writer needs one.
+    with database.sessions() as session:
+        user = session.scalar(select(User).where(User.telegram_id == telegram_id))
+        if user is None:
+            raise ApiError(
+                404, "telegram_profile_not_found", "Telegram profile not found"
+            )
+        session.expunge(user)
     return user

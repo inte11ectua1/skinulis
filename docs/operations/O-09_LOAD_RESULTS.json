@@ -1,0 +1,1057 @@
+{
+  "issue": 76,
+  "measured_on": "2026-11-03",
+  "timezone": "Europe/Moscow",
+  "baseline_sha": "git:f4a3a11b8f09160d781587b61164dddd921528ca",
+  "implementation_sha": "git:0bf9251aab0c04952ec340b97c08cc74095f44a8",
+  "host": {
+    "os": "macOS15.3.2",
+    "cpu": "Apple M1 Pro",
+    "logical_cpus": 10,
+    "ram_bytes": 17179869184,
+    "python": "3.12.15",
+    "uv": "0.13.5",
+    "docker_desktop": "4.19.0",
+    "docker_engine": "23.0.5",
+    "compose": "2.17.3",
+    "docker_vm_cpus": 5,
+    "docker_vm_memory_bytes": 8232894464,
+    "postgres_platform": "linux/arm64",
+    "postgres_image": "postgres:17.11-bookworm@sha256:858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27",
+    "postgres_storage": "owned tmpfs, loopback random port, no application/production volume"
+  },
+  "comparison_guards": {
+    "identical_workload_seed_pool_worker_postgres_configuration": true,
+    "benchmark_and_rr_reader_byte_identical": true,
+    "database_constructor_ast_identical": true,
+    "financial_modules_byte_identical": [
+      "app/services/settlement_plan.py",
+      "app/services/expense_balances.py",
+      "app/services/expenses.py",
+      "app/services/expense_crud.py",
+      "app/services/settlements.py"
+    ],
+    "simultaneous_pytest_or_build_during_load": false
+  },
+  "runs": [
+    {
+      "phase": "before",
+      "clients_started": 100,
+      "clients_completed_requests": 100,
+      "per_client_min_requests": 3,
+      "peak_inflight": 100,
+      "sampled_inflight_min": 1,
+      "sampled_inflight_max": 100,
+      "sampled_inflight_mean": 96.06163522012578,
+      "samples": 1590,
+      "steady_inflight_min": 1,
+      "steady_inflight_mean": 99.92993630573248,
+      "launch_window_seconds": 30.0,
+      "elapsed_including_drain_seconds": 33.75674133282155,
+      "requests": 463,
+      "successful": 95,
+      "statuses": {
+        "500": 368,
+        "200": 63,
+        "201": 32
+      },
+      "error_codes": {
+        "internal_error": 368
+      },
+      "rps_including_drain": 13.715778885026053,
+      "latency": {
+        "count": 463,
+        "min_ms": 3120.1444580219686,
+        "p50_ms": 6130.381874740124,
+        "p95_ms": 12075.142625253648,
+        "p99_ms": 12169.41220778972,
+        "max_ms": 12232.263249810785
+      },
+      "successful_latency": {
+        "count": 95,
+        "min_ms": 6097.697916440666,
+        "p50_ms": 9145.244707819074,
+        "p95_ms": 12169.411916751415,
+        "p99_ms": 12232.262082863599,
+        "max_ms": 12232.262082863599
+      },
+      "operations": {
+        "balances": {
+          "count": 186,
+          "min_ms": 3120.1444580219686,
+          "p50_ms": 6132.7951666899025,
+          "p95_ms": 12125.370750203729,
+          "p99_ms": 12209.954916965216,
+          "max_ms": 12232.263249810785
+        },
+        "settlements": {
+          "count": 44,
+          "min_ms": 3125.211291015148,
+          "p50_ms": 6109.908333048224,
+          "p95_ms": 9114.907708019018,
+          "p99_ms": 12030.786582734436,
+          "max_ms": 12030.786582734436
+        },
+        "expenses": {
+          "count": 53,
+          "min_ms": 3127.26983288303,
+          "p50_ms": 6120.472208131105,
+          "p95_ms": 9128.110500052571,
+          "p99_ms": 9150.981165934354,
+          "max_ms": 9150.981165934354
+        },
+        "settlement-plan": {
+          "count": 86,
+          "min_ms": 3123.116415925324,
+          "p50_ms": 6105.242167133838,
+          "p95_ms": 12047.401790972799,
+          "p99_ms": 12186.613333877176,
+          "max_ms": 12186.613333877176
+        },
+        "create": {
+          "count": 94,
+          "min_ms": 6069.2451247014105,
+          "p50_ms": 6175.830749794841,
+          "p95_ms": 12003.65237519145,
+          "p99_ms": 12139.143999665976,
+          "max_ms": 12139.143999665976
+        }
+      },
+      "target_pass": false,
+      "diagnostics_including_warmup": {
+        "pool_peak": {
+          "checked_out": 15,
+          "pool_timeouts": 533
+        },
+        "api_cpu_seconds": 3.583744,
+        "sql": {
+          "pool_connect": {
+            "count": 795,
+            "min_ms": 0.5747079849243164,
+            "p50_ms": 3001.8007922917604,
+            "p95_ms": 3017.3397078178823,
+            "p99_ms": 3069.7232503443956,
+            "max_ms": 3084.5481669530272
+          },
+          "other": {
+            "count": 1157,
+            "min_ms": 0.4193331114947796,
+            "p50_ms": 2.235082909464836,
+            "p95_ms": 10.940874926745892,
+            "p99_ms": 17.349124886095524,
+            "max_ms": 59.29954117164016
+          },
+          "group_lock": {
+            "count": 53,
+            "min_ms": 0.8004577830433846,
+            "p50_ms": 1.9421670585870743,
+            "p95_ms": 15.324416104704142,
+            "p99_ms": 24.75687488913536,
+            "max_ms": 24.75687488913536
+          }
+        },
+        "safe_json_log_entries": 1228,
+        "http_server_statuses": {
+          "200": 99,
+          "500": 533,
+          "201": 53
+        },
+        "max_pg_lock_waiters": 0,
+        "max_pg_active": 4,
+        "pg_samples": 286,
+        "pg_wait_event_observations": {
+          "Client/ClientRead": 4219,
+          "None/None": 6
+        }
+      },
+      "warmup": {
+        "clients_started": 100,
+        "clients_completed_requests": 100,
+        "per_client_min_requests": 1,
+        "peak_inflight": 100,
+        "sampled_inflight_min": 1,
+        "sampled_inflight_max": 100,
+        "sampled_inflight_mean": 91.02627939142462,
+        "samples": 723,
+        "steady_inflight_min": 1,
+        "steady_inflight_mean": 99.78936170212766,
+        "launch_window_seconds": 10.0,
+        "elapsed_including_drain_seconds": 15.396744041703641,
+        "requests": 220,
+        "successful": 55,
+        "statuses": {
+          "500": 165,
+          "200": 34,
+          "201": 21
+        },
+        "error_codes": {
+          "internal_error": 165
+        },
+        "rps_including_drain": 14.288735293910694,
+        "latency": {
+          "count": 220,
+          "min_ms": 3099.9032077379525,
+          "p50_ms": 6103.934499900788,
+          "p95_ms": 9187.472916673869,
+          "p99_ms": 12181.201541796327,
+          "max_ms": 12186.80787505582
+        },
+        "successful_latency": {
+          "count": 55,
+          "min_ms": 6086.300833150744,
+          "p50_ms": 9120.526916347444,
+          "p95_ms": 12181.200874969363,
+          "p99_ms": 12186.807333026081,
+          "max_ms": 12186.807333026081
+        },
+        "operations": {
+          "balances": {
+            "count": 93,
+            "min_ms": 3099.9032077379525,
+            "p50_ms": 6095.62633279711,
+            "p95_ms": 9191.560625098646,
+            "p99_ms": 12131.482833065093,
+            "max_ms": 12131.482833065093
+          },
+          "settlements": {
+            "count": 21,
+            "min_ms": 3137.314333114773,
+            "p50_ms": 6082.963875029236,
+            "p95_ms": 9120.5271249637,
+            "p99_ms": 9121.647667139769,
+            "max_ms": 9121.647667139769
+          },
+          "expenses": {
+            "count": 21,
+            "min_ms": 3107.988332863897,
+            "p50_ms": 6103.934499900788,
+            "p95_ms": 6148.149457760155,
+            "p99_ms": 9079.70150001347,
+            "max_ms": 9079.70150001347
+          },
+          "settlement-plan": {
+            "count": 39,
+            "min_ms": 3101.9532498903573,
+            "p50_ms": 6085.8995001763105,
+            "p95_ms": 9185.842958278954,
+            "p99_ms": 9187.472916673869,
+            "max_ms": 9187.472916673869
+          },
+          "create": {
+            "count": 46,
+            "min_ms": 3115.0142080150545,
+            "p50_ms": 6141.238292213529,
+            "p95_ms": 12181.201541796327,
+            "p99_ms": 12186.80787505582,
+            "max_ms": 12186.80787505582
+          }
+        },
+        "target_pass": false
+      },
+      "postgresql": {
+        "server_version": "17.11 (Debian 17.11-1.pgdg12+2)",
+        "max_connections": "100",
+        "shared_buffers": "128MB",
+        "fsync": "on",
+        "synchronous_commit": "on",
+        "full_page_writes": "on",
+        "track_io_timing": "off"
+      },
+      "profile": "mixed",
+      "groups": 20,
+      "git_sha": "git:f4a3a11b8f09160d781587b61164dddd921528ca",
+      "dirty": false,
+      "seed": 6108,
+      "os": "macOS-15.3.2-arm64-arm-64bit",
+      "python": "3.12.15",
+      "logical_cpus": 10,
+      "clients": 100,
+      "profile_schedule": [
+        "balances",
+        "balances",
+        "balances",
+        "balances",
+        "settlement-plan",
+        "settlement-plan",
+        "expenses",
+        "settlements",
+        "create",
+        "create"
+      ],
+      "workload": "closed loop, no think time, no retries, 10k request cap per phase",
+      "http_pool": "100 independent AsyncClients, one connection each, 15s timeout/connect3s, trust_env=False, no redirects",
+      "api": "one Uvicorn worker, default AnyIO40 threads, INFO JSON logging enabled",
+      "db_pool": "unchanged QueuePool size5+overflow10, timeout3s, pre_ping; statement_timeout3s/connect3s",
+      "source_sha256": {
+        "scripts/load_o08.py": "sha256:296a06c89943b513017d249099fb66cf17a149b869f73fa51677257e8bbfb433",
+        "scripts/o08_support.py": "sha256:574e9825ba577ca3bb5237c3c79952dbe1e28c6b105c900a4c537bead8c56586",
+        "app/db.py": "sha256:ad495c4db13882bbadf86e62c26082de79650be88f96f1de1572c68f505c345a",
+        "app/services/settlement_plan.py": "sha256:efd604e40b3848ae03d93585fbb1fbd01fcc52dc49a131f4147b5568b656539c"
+      }
+    },
+    {
+      "phase": "before",
+      "clients_started": 100,
+      "clients_completed_requests": 100,
+      "per_client_min_requests": 3,
+      "peak_inflight": 100,
+      "sampled_inflight_min": 1,
+      "sampled_inflight_max": 100,
+      "sampled_inflight_mean": 95.27746031746032,
+      "samples": 1575,
+      "steady_inflight_min": 1,
+      "steady_inflight_mean": 99.92948717948718,
+      "launch_window_seconds": 30.0,
+      "elapsed_including_drain_seconds": 33.64970791572705,
+      "requests": 441,
+      "successful": 88,
+      "statuses": {
+        "500": 353,
+        "200": 65,
+        "201": 23
+      },
+      "error_codes": {
+        "internal_error": 353
+      },
+      "rps_including_drain": 13.105611528767161,
+      "latency": {
+        "count": 441,
+        "min_ms": 3132.7888341620564,
+        "p50_ms": 6159.248166717589,
+        "p95_ms": 12071.871291846037,
+        "p99_ms": 12164.66520819813,
+        "max_ms": 12229.43775029853
+      },
+      "successful_latency": {
+        "count": 88,
+        "min_ms": 6096.661000046879,
+        "p50_ms": 9133.00016662106,
+        "p95_ms": 12164.665082935244,
+        "p99_ms": 12229.437374975532,
+        "max_ms": 12229.437374975532
+      },
+      "operations": {
+        "create": {
+          "count": 85,
+          "min_ms": 3184.808375313878,
+          "p50_ms": 6167.132209055126,
+          "p95_ms": 12057.401624973863,
+          "p99_ms": 12229.43775029853,
+          "max_ms": 12229.43775029853
+        },
+        "settlements": {
+          "count": 43,
+          "min_ms": 3179.214875213802,
+          "p50_ms": 6172.364792320877,
+          "p95_ms": 9154.179083183408,
+          "p99_ms": 11887.094082776457,
+          "max_ms": 11887.094082776457
+        },
+        "balances": {
+          "count": 182,
+          "min_ms": 3132.7888341620564,
+          "p50_ms": 6157.111249864101,
+          "p95_ms": 12074.584540911019,
+          "p99_ms": 12167.095459066331,
+          "max_ms": 12178.364042192698
+        },
+        "settlement-plan": {
+          "count": 82,
+          "min_ms": 3136.4778326824307,
+          "p50_ms": 6149.646250065416,
+          "p95_ms": 12132.648875005543,
+          "p99_ms": 12164.66520819813,
+          "max_ms": 12164.66520819813
+        },
+        "expenses": {
+          "count": 49,
+          "min_ms": 3135.6013333424926,
+          "p50_ms": 6171.772958245128,
+          "p95_ms": 9155.673333443701,
+          "p99_ms": 11998.204290866852,
+          "max_ms": 11998.204290866852
+        }
+      },
+      "target_pass": false,
+      "diagnostics_including_warmup": {
+        "pool_peak": {
+          "checked_out": 15,
+          "pool_timeouts": 517
+        },
+        "api_cpu_seconds": 3.340265,
+        "sql": {
+          "pool_connect": {
+            "count": 781,
+            "min_ms": 0.45966729521751404,
+            "p50_ms": 3002.1881251595914,
+            "p95_ms": 3010.8644580468535,
+            "p99_ms": 3042.7393331192434,
+            "max_ms": 3054.366124793887
+          },
+          "other": {
+            "count": 1100,
+            "min_ms": 0.4309592768549919,
+            "p50_ms": 1.8055420368909836,
+            "p95_ms": 8.326916955411434,
+            "p99_ms": 21.792250219732523,
+            "max_ms": 60.40875008329749
+          },
+          "group_lock": {
+            "count": 40,
+            "min_ms": 0.7306248880922794,
+            "p50_ms": 12.672333046793938,
+            "p95_ms": 42.616458144038916,
+            "p99_ms": 58.0637501552701,
+            "max_ms": 58.0637501552701
+          }
+        },
+        "safe_json_log_entries": 1193,
+        "http_server_statuses": {
+          "200": 109,
+          "500": 517,
+          "201": 40
+        },
+        "max_pg_lock_waiters": 1,
+        "max_pg_active": 2,
+        "pg_samples": 285,
+        "pg_wait_event_observations": {
+          "Client/ClientRead": 4193,
+          "None/None": 7,
+          "Lock/transactionid": 1
+        }
+      },
+      "warmup": {
+        "clients_started": 100,
+        "clients_completed_requests": 100,
+        "per_client_min_requests": 1,
+        "peak_inflight": 100,
+        "sampled_inflight_min": 1,
+        "sampled_inflight_max": 100,
+        "sampled_inflight_mean": 91.37864077669903,
+        "samples": 721,
+        "steady_inflight_min": 1,
+        "steady_inflight_mean": 99.78755364806867,
+        "launch_window_seconds": 10.0,
+        "elapsed_including_drain_seconds": 15.434352083131671,
+        "requests": 223,
+        "successful": 59,
+        "statuses": {
+          "500": 164,
+          "200": 42,
+          "201": 17
+        },
+        "error_codes": {
+          "internal_error": 164
+        },
+        "rps_including_drain": 14.448290333075823,
+        "latency": {
+          "count": 223,
+          "min_ms": 3099.92991713807,
+          "p50_ms": 6100.150874815881,
+          "p95_ms": 9224.212667439133,
+          "p99_ms": 12175.54987501353,
+          "max_ms": 12190.900458954275
+        },
+        "successful_latency": {
+          "count": 59,
+          "min_ms": 6036.915333010256,
+          "p50_ms": 9070.825499948114,
+          "p95_ms": 12175.549374893308,
+          "p99_ms": 12190.900125075132,
+          "max_ms": 12190.900125075132
+        },
+        "operations": {
+          "create": {
+            "count": 45,
+            "min_ms": 6055.977750103921,
+            "p50_ms": 6159.284833818674,
+            "p95_ms": 12175.54987501353,
+            "p99_ms": 12190.900458954275,
+            "max_ms": 12190.900458954275
+          },
+          "settlements": {
+            "count": 25,
+            "min_ms": 3100.5309158936143,
+            "p50_ms": 6082.379166968167,
+            "p95_ms": 8965.419083833694,
+            "p99_ms": 9000.933667179197,
+            "max_ms": 9000.933667179197
+          },
+          "balances": {
+            "count": 92,
+            "min_ms": 3099.92991713807,
+            "p50_ms": 6095.91754199937,
+            "p95_ms": 9208.907542284578,
+            "p99_ms": 12104.293666779995,
+            "max_ms": 12104.293666779995
+          },
+          "settlement-plan": {
+            "count": 41,
+            "min_ms": 3105.093500111252,
+            "p50_ms": 6100.150874815881,
+            "p95_ms": 9224.212667439133,
+            "p99_ms": 12122.870624996722,
+            "max_ms": 12122.870624996722
+          },
+          "expenses": {
+            "count": 20,
+            "min_ms": 3105.9010419994593,
+            "p50_ms": 6095.944833941758,
+            "p95_ms": 9100.12691700831,
+            "p99_ms": 9107.887708116323,
+            "max_ms": 9107.887708116323
+          }
+        },
+        "target_pass": false
+      },
+      "postgresql": {
+        "server_version": "17.11 (Debian 17.11-1.pgdg12+2)",
+        "max_connections": "100",
+        "shared_buffers": "128MB",
+        "fsync": "on",
+        "synchronous_commit": "on",
+        "full_page_writes": "on",
+        "track_io_timing": "off"
+      },
+      "profile": "contention",
+      "groups": 1,
+      "git_sha": "git:f4a3a11b8f09160d781587b61164dddd921528ca",
+      "dirty": false,
+      "seed": 6108,
+      "os": "macOS-15.3.2-arm64-arm-64bit",
+      "python": "3.12.15",
+      "logical_cpus": 10,
+      "clients": 100,
+      "profile_schedule": [
+        "balances",
+        "balances",
+        "balances",
+        "balances",
+        "settlement-plan",
+        "settlement-plan",
+        "expenses",
+        "settlements",
+        "create",
+        "create"
+      ],
+      "workload": "closed loop, no think time, no retries, 10k request cap per phase",
+      "http_pool": "100 independent AsyncClients, one connection each, 15s timeout/connect3s, trust_env=False, no redirects",
+      "api": "one Uvicorn worker, default AnyIO40 threads, INFO JSON logging enabled",
+      "db_pool": "unchanged QueuePool size5+overflow10, timeout3s, pre_ping; statement_timeout3s/connect3s",
+      "source_sha256": {
+        "scripts/load_o08.py": "sha256:296a06c89943b513017d249099fb66cf17a149b869f73fa51677257e8bbfb433",
+        "scripts/o08_support.py": "sha256:574e9825ba577ca3bb5237c3c79952dbe1e28c6b105c900a4c537bead8c56586",
+        "app/db.py": "sha256:ad495c4db13882bbadf86e62c26082de79650be88f96f1de1572c68f505c345a",
+        "app/services/settlement_plan.py": "sha256:efd604e40b3848ae03d93585fbb1fbd01fcc52dc49a131f4147b5568b656539c"
+      }
+    },
+    {
+      "phase": "after",
+      "clients_started": 100,
+      "clients_completed_requests": 100,
+      "per_client_min_requests": 37,
+      "peak_inflight": 100,
+      "sampled_inflight_min": 1,
+      "sampled_inflight_max": 100,
+      "sampled_inflight_mean": 99.14180107526882,
+      "samples": 1488,
+      "steady_inflight_min": 1,
+      "steady_inflight_mean": 99.93228454172366,
+      "launch_window_seconds": 30.0,
+      "elapsed_including_drain_seconds": 30.538266291376203,
+      "requests": 3876,
+      "successful": 3876,
+      "statuses": {
+        "200": 3096,
+        "201": 780
+      },
+      "error_codes": {},
+      "rps_including_drain": 126.92272583576742,
+      "latency": {
+        "count": 3876,
+        "min_ms": 443.2330410927534,
+        "p50_ms": 777.4127093143761,
+        "p95_ms": 956.0510418377817,
+        "p99_ms": 1067.574709188193,
+        "max_ms": 1245.318291708827
+      },
+      "successful_latency": {
+        "count": 3876,
+        "min_ms": 443.232583347708,
+        "p50_ms": 777.4123749695718,
+        "p95_ms": 956.0506250709295,
+        "p99_ms": 1067.5741252489388,
+        "max_ms": 1245.318042114377
+      },
+      "operations": {
+        "create": {
+          "count": 780,
+          "min_ms": 482.7572498470545,
+          "p50_ms": 818.3526247739792,
+          "p95_ms": 977.8527920134366,
+          "p99_ms": 1069.641667418182,
+          "max_ms": 1147.1585831604898
+        },
+        "settlements": {
+          "count": 391,
+          "min_ms": 443.2330410927534,
+          "p50_ms": 720.3721674159169,
+          "p95_ms": 924.2547499015927,
+          "p99_ms": 1031.0832913964987,
+          "max_ms": 1158.37666625157
+        },
+        "balances": {
+          "count": 1537,
+          "min_ms": 464.55962490290403,
+          "p50_ms": 776.1686248704791,
+          "p95_ms": 955.1115422509611,
+          "p99_ms": 1070.6061250530183,
+          "max_ms": 1245.318291708827
+        },
+        "settlement-plan": {
+          "count": 782,
+          "min_ms": 464.1679171472788,
+          "p50_ms": 779.4979582540691,
+          "p95_ms": 949.305749963969,
+          "p99_ms": 1067.6482920534909,
+          "max_ms": 1191.150292288512
+        },
+        "expenses": {
+          "count": 386,
+          "min_ms": 450.2481250092387,
+          "p50_ms": 750.3150831907988,
+          "p95_ms": 901.8175001256168,
+          "p99_ms": 1073.374791070819,
+          "max_ms": 1137.3837501741946
+        }
+      },
+      "target_pass": false,
+      "diagnostics_including_warmup": {
+        "pool_peak": {
+          "checked_out": 15,
+          "pool_timeouts": 0
+        },
+        "api_cpu_seconds": 52.381848,
+        "sql": {
+          "pool_connect": {
+            "count": 10537,
+            "min_ms": 0.5256249569356441,
+            "p50_ms": 79.74837487563491,
+            "p95_ms": 208.40345788747072,
+            "p99_ms": 309.6152078360319,
+            "max_ms": 516.2550839595497
+          },
+          "other": {
+            "count": 38960,
+            "min_ms": 0.5292082205414772,
+            "p50_ms": 6.66054105386138,
+            "p95_ms": 21.41720801591873,
+            "p99_ms": 44.7434582747519,
+            "max_ms": 79.60333302617073
+          },
+          "group_lock": {
+            "count": 1059,
+            "min_ms": 2.036959398537874,
+            "p50_ms": 10.676125064492226,
+            "p95_ms": 45.916959177702665,
+            "p99_ms": 87.05512480810285,
+            "max_ms": 137.55624974146485
+          }
+        },
+        "safe_json_log_entries": 5280,
+        "http_server_statuses": {
+          "200": 4211,
+          "201": 1059
+        },
+        "max_pg_lock_waiters": 2,
+        "max_pg_active": 3,
+        "pg_samples": 295,
+        "pg_wait_event_observations": {
+          "Client/ClientRead": 4247,
+          "None/None": 91,
+          "IO/DataFileExtend": 1,
+          "Lock/transactionid": 27,
+          "IO/WalWrite": 1
+        }
+      },
+      "warmup": {
+        "clients_started": 100,
+        "clients_completed_requests": 100,
+        "per_client_min_requests": 13,
+        "peak_inflight": 100,
+        "sampled_inflight_min": 1,
+        "sampled_inflight_max": 100,
+        "sampled_inflight_mean": 97.66279069767442,
+        "samples": 516,
+        "steady_inflight_min": 1,
+        "steady_inflight_mean": 99.79754601226993,
+        "launch_window_seconds": 10.0,
+        "elapsed_including_drain_seconds": 10.559209374710917,
+        "requests": 1392,
+        "successful": 1392,
+        "statuses": {
+          "200": 1113,
+          "201": 279
+        },
+        "error_codes": {},
+        "rps_including_drain": 131.82805176056178,
+        "latency": {
+          "count": 1392,
+          "min_ms": 463.8062920421362,
+          "p50_ms": 737.9055419005454,
+          "p95_ms": 926.1274160817266,
+          "p99_ms": 1005.7401251979172,
+          "max_ms": 1188.105707988143
+        },
+        "successful_latency": {
+          "count": 1392,
+          "min_ms": 463.8055842369795,
+          "p50_ms": 737.9046250134706,
+          "p95_ms": 926.1270412243903,
+          "p99_ms": 1005.7397503405809,
+          "max_ms": 1188.1053331308067
+        },
+        "operations": {
+          "create": {
+            "count": 279,
+            "min_ms": 550.9649999439716,
+            "p50_ms": 779.046124778688,
+            "p95_ms": 955.0110418349504,
+            "p99_ms": 1004.8196660354733,
+            "max_ms": 1188.105707988143
+          },
+          "settlements": {
+            "count": 142,
+            "min_ms": 477.4747919291258,
+            "p50_ms": 678.0586671084166,
+            "p95_ms": 835.4517910629511,
+            "p99_ms": 953.2092502340674,
+            "max_ms": 1143.0817497894168
+          },
+          "balances": {
+            "count": 558,
+            "min_ms": 482.49154165387154,
+            "p50_ms": 735.011916141957,
+            "p95_ms": 925.6900837644935,
+            "p99_ms": 1023.7589590251446,
+            "max_ms": 1117.7988750860095
+          },
+          "settlement-plan": {
+            "count": 271,
+            "min_ms": 494.78079192340374,
+            "p50_ms": 738.0784582346678,
+            "p95_ms": 914.8686253465712,
+            "p99_ms": 1002.6262081228197,
+            "max_ms": 1043.7135831452906
+          },
+          "expenses": {
+            "count": 142,
+            "min_ms": 463.8062920421362,
+            "p50_ms": 715.7457079738379,
+            "p95_ms": 906.8350829184055,
+            "p99_ms": 989.8503329604864,
+            "max_ms": 1006.1726248823106
+          }
+        },
+        "target_pass": false
+      },
+      "postgresql": {
+        "server_version": "17.11 (Debian 17.11-1.pgdg12+2)",
+        "max_connections": "100",
+        "shared_buffers": "128MB",
+        "fsync": "on",
+        "synchronous_commit": "on",
+        "full_page_writes": "on",
+        "track_io_timing": "off"
+      },
+      "profile": "mixed",
+      "groups": 20,
+      "git_sha": "git:0bf9251aab0c04952ec340b97c08cc74095f44a8",
+      "dirty": false,
+      "seed": 6108,
+      "os": "macOS-15.3.2-arm64-arm-64bit",
+      "python": "3.12.15",
+      "logical_cpus": 10,
+      "clients": 100,
+      "profile_schedule": [
+        "balances",
+        "balances",
+        "balances",
+        "balances",
+        "settlement-plan",
+        "settlement-plan",
+        "expenses",
+        "settlements",
+        "create",
+        "create"
+      ],
+      "workload": "closed loop, no think time, no retries, 10k request cap per phase",
+      "http_pool": "100 independent AsyncClients, one connection each, 15s timeout/connect3s, trust_env=False, no redirects",
+      "api": "one Uvicorn worker, default AnyIO40 threads, INFO JSON logging enabled",
+      "db_pool": "unchanged QueuePool size5+overflow10, timeout3s, pre_ping; statement_timeout3s/connect3s",
+      "source_sha256": {
+        "scripts/load_o08.py": "sha256:296a06c89943b513017d249099fb66cf17a149b869f73fa51677257e8bbfb433",
+        "scripts/o08_support.py": "sha256:574e9825ba577ca3bb5237c3c79952dbe1e28c6b105c900a4c537bead8c56586",
+        "app/db.py": "sha256:171bcaaaddeb30105ee74fb6cbe9c1b328c36851d175a928ffea62ffe2aaeb32",
+        "app/services/settlement_plan.py": "sha256:efd604e40b3848ae03d93585fbb1fbd01fcc52dc49a131f4147b5568b656539c"
+      }
+    },
+    {
+      "phase": "after",
+      "clients_started": 100,
+      "clients_completed_requests": 100,
+      "per_client_min_requests": 35,
+      "peak_inflight": 100,
+      "sampled_inflight_min": 1,
+      "sampled_inflight_max": 100,
+      "sampled_inflight_mean": 98.99397590361446,
+      "samples": 1494,
+      "steady_inflight_min": 1,
+      "steady_inflight_mean": 99.93242320819112,
+      "launch_window_seconds": 30.0,
+      "elapsed_including_drain_seconds": 30.60611345944926,
+      "requests": 3680,
+      "successful": 3680,
+      "statuses": {
+        "200": 2937,
+        "201": 743
+      },
+      "error_codes": {},
+      "rps_including_drain": 120.23741612523642,
+      "latency": {
+        "count": 3680,
+        "min_ms": 419.0150420181453,
+        "p50_ms": 796.9567500986159,
+        "p95_ms": 1098.4569997526705,
+        "p99_ms": 1215.0020827539265,
+        "max_ms": 1447.733458597213
+      },
+      "successful_latency": {
+        "count": 3680,
+        "min_ms": 419.01466716080904,
+        "p50_ms": 796.9563333317637,
+        "p95_ms": 1098.456542007625,
+        "p99_ms": 1215.0017078965902,
+        "max_ms": 1447.7330837398767
+      },
+      "operations": {
+        "settlement-plan": {
+          "count": 739,
+          "min_ms": 433.0870839767158,
+          "p50_ms": 781.1997500248253,
+          "p95_ms": 963.9885420911014,
+          "p99_ms": 1040.5065407976508,
+          "max_ms": 1172.715584281832
+        },
+        "create": {
+          "count": 743,
+          "min_ms": 565.7551251351833,
+          "p50_ms": 1022.6240837946534,
+          "p95_ms": 1198.154958896339,
+          "p99_ms": 1308.026332873851,
+          "max_ms": 1447.733458597213
+        },
+        "settlements": {
+          "count": 368,
+          "min_ms": 419.0150420181453,
+          "p50_ms": 745.8093748427927,
+          "p95_ms": 917.5589173100889,
+          "p99_ms": 1063.3639167062938,
+          "max_ms": 1183.4802078083158
+        },
+        "expenses": {
+          "count": 366,
+          "min_ms": 419.7554998099804,
+          "p50_ms": 753.1597907654941,
+          "p95_ms": 919.709041249007,
+          "p99_ms": 1006.8438751623034,
+          "max_ms": 1162.1070001274347
+        },
+        "balances": {
+          "count": 1464,
+          "min_ms": 440.1927082799375,
+          "p50_ms": 778.6190831102431,
+          "p95_ms": 976.2980421073735,
+          "p99_ms": 1096.9319590367377,
+          "max_ms": 1285.9142501838505
+        }
+      },
+      "target_pass": false,
+      "diagnostics_including_warmup": {
+        "pool_peak": {
+          "checked_out": 15,
+          "pool_timeouts": 0
+        },
+        "api_cpu_seconds": 50.483057,
+        "sql": {
+          "pool_connect": {
+            "count": 9985,
+            "min_ms": 0.5163331516087055,
+            "p50_ms": 97.05145796760917,
+            "p95_ms": 222.95899968594313,
+            "p99_ms": 313.80983255803585,
+            "max_ms": 566.8877498246729
+          },
+          "other": {
+            "count": 36952,
+            "min_ms": 0.4670419730246067,
+            "p50_ms": 3.9989170618355274,
+            "p95_ms": 13.364667072892189,
+            "p99_ms": 34.415415953844786,
+            "max_ms": 68.3734999038279
+          },
+          "group_lock": {
+            "count": 1007,
+            "min_ms": 1.8050000071525574,
+            "p50_ms": 219.15325010195374,
+            "p95_ms": 336.0504163429141,
+            "p99_ms": 369.8133327998221,
+            "max_ms": 390.74720814824104
+          }
+        },
+        "safe_json_log_entries": 5004,
+        "http_server_statuses": {
+          "200": 3987,
+          "201": 1007
+        },
+        "max_pg_lock_waiters": 10,
+        "max_pg_active": 11,
+        "pg_samples": 296,
+        "pg_wait_event_observations": {
+          "Client/ClientRead": 2673,
+          "None/None": 147,
+          "Lock/transactionid": 286,
+          "Lock/tuple": 1271
+        }
+      },
+      "warmup": {
+        "clients_started": 100,
+        "clients_completed_requests": 100,
+        "per_client_min_requests": 12,
+        "peak_inflight": 100,
+        "sampled_inflight_min": 1,
+        "sampled_inflight_max": 100,
+        "sampled_inflight_mean": 97.0038535645472,
+        "samples": 519,
+        "steady_inflight_min": 1,
+        "steady_inflight_mean": 99.79754601226993,
+        "launch_window_seconds": 10.0,
+        "elapsed_including_drain_seconds": 10.618984542321414,
+        "requests": 1312,
+        "successful": 1312,
+        "statuses": {
+          "200": 1048,
+          "201": 264
+        },
+        "error_codes": {},
+        "rps_including_drain": 123.55230340256094,
+        "latency": {
+          "count": 1312,
+          "min_ms": 410.06349958479404,
+          "p50_ms": 764.9264158681035,
+          "p95_ms": 1062.0336253196,
+          "p99_ms": 1199.068000074476,
+          "max_ms": 1340.5389171093702
+        },
+        "successful_latency": {
+          "count": 1312,
+          "min_ms": 410.06312472745776,
+          "p50_ms": 764.9260000325739,
+          "p95_ms": 1062.0333752594888,
+          "p99_ms": 1199.0675837732852,
+          "max_ms": 1340.538625139743
+        },
+        "operations": {
+          "settlement-plan": {
+            "count": 258,
+            "min_ms": 456.3954579643905,
+            "p50_ms": 752.2353339008987,
+            "p95_ms": 964.1363751143217,
+            "p99_ms": 1079.7404157929122,
+            "max_ms": 1096.2053341791034
+          },
+          "create": {
+            "count": 264,
+            "min_ms": 522.4573747254908,
+            "p50_ms": 965.5193751677871,
+            "p95_ms": 1191.3903332315385,
+            "p99_ms": 1324.6609582565725,
+            "max_ms": 1340.5389171093702
+          },
+          "settlements": {
+            "count": 131,
+            "min_ms": 410.06349958479404,
+            "p50_ms": 730.0959997810423,
+            "p95_ms": 883.9669162407517,
+            "p99_ms": 933.6214167997241,
+            "max_ms": 945.7458341494203
+          },
+          "expenses": {
+            "count": 133,
+            "min_ms": 429.20791590586305,
+            "p50_ms": 728.637000080198,
+            "p95_ms": 905.2478750236332,
+            "p99_ms": 944.2558330483735,
+            "max_ms": 1016.2345841526985
+          },
+          "balances": {
+            "count": 526,
+            "min_ms": 441.75354205071926,
+            "p50_ms": 742.4291246570647,
+            "p95_ms": 934.2900421470404,
+            "p99_ms": 1016.5142081677914,
+            "max_ms": 1230.602374766022
+          }
+        },
+        "target_pass": false
+      },
+      "postgresql": {
+        "server_version": "17.11 (Debian 17.11-1.pgdg12+2)",
+        "max_connections": "100",
+        "shared_buffers": "128MB",
+        "fsync": "on",
+        "synchronous_commit": "on",
+        "full_page_writes": "on",
+        "track_io_timing": "off"
+      },
+      "profile": "contention",
+      "groups": 1,
+      "git_sha": "git:0bf9251aab0c04952ec340b97c08cc74095f44a8",
+      "dirty": false,
+      "seed": 6108,
+      "os": "macOS-15.3.2-arm64-arm-64bit",
+      "python": "3.12.15",
+      "logical_cpus": 10,
+      "clients": 100,
+      "profile_schedule": [
+        "balances",
+        "balances",
+        "balances",
+        "balances",
+        "settlement-plan",
+        "settlement-plan",
+        "expenses",
+        "settlements",
+        "create",
+        "create"
+      ],
+      "workload": "closed loop, no think time, no retries, 10k request cap per phase",
+      "http_pool": "100 independent AsyncClients, one connection each, 15s timeout/connect3s, trust_env=False, no redirects",
+      "api": "one Uvicorn worker, default AnyIO40 threads, INFO JSON logging enabled",
+      "db_pool": "unchanged QueuePool size5+overflow10, timeout3s, pre_ping; statement_timeout3s/connect3s",
+      "source_sha256": {
+        "scripts/load_o08.py": "sha256:296a06c89943b513017d249099fb66cf17a149b869f73fa51677257e8bbfb433",
+        "scripts/o08_support.py": "sha256:574e9825ba577ca3bb5237c3c79952dbe1e28c6b105c900a4c537bead8c56586",
+        "app/db.py": "sha256:171bcaaaddeb30105ee74fb6cbe9c1b328c36851d175a928ffea62ffe2aaeb32",
+        "app/services/settlement_plan.py": "sha256:efd604e40b3848ae03d93585fbb1fbd01fcc52dc49a131f4147b5568b656539c"
+      }
+    }
+  ],
+  "outcome": {
+    "pool_exhaustion_fixed_in_measured_runs": true,
+    "p95_le_500ms": false,
+    "overall_performance_pass": false,
+    "issue_should_auto_close": false
+  },
+  "hash_encoding": "Public commit references use git:<40hex>; file digests use sha256:<64hex>, as in O-08 evidence."
+}

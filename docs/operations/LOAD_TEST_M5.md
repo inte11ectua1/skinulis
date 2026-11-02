@@ -1,6 +1,12 @@
 # O-08 — финансовая безопасность и нагрузка M5
 
-Issue #61; реализация в отдельной ветке, PR review, не merged и не release gate.
+**Follow-up O-09 #76 (03.11.2026):** минимальный auth-lifecycle fix прошёл
+новые pool regressions;100-client before/after устранил pool500, но p95≤500ms
+пока не достигнут. [Отдельный раздел O-09 ниже](#o-09-76--исправление-lifecycle-и-beforeafter-03112026),
+[машинные агрегаты](O-09_LOAD_RESULTS.json). Исходные результаты Олега не заменены.
+
+Исторический отчёт O-08: Issue #61 / PR #74 уже merged. Ниже сохранён срез
+измерений Олега; изменения и отдельная оценка O-09 находятся в конце документа.
 
 ## Матрица до реализации и принятый профиль
 
@@ -48,8 +54,8 @@ seeded непосредственно через ORM/approved expense service п
 
 ```sh
 # TEST_DATABASE_URL заранее настроен на разрешённый локальный тестовый PG17
-uv run python scripts/load_o08.py --profile mixed --warmup 10 --duration 30 --output mixed.json
-uv run python scripts/load_o08.py --profile contention --warmup 10 --duration 30 --output contention.json
+uv run python -m scripts.load_o08 --profile mixed --warmup 10 --duration 30 --output mixed.json
+uv run python -m scripts.load_o08 --profile contention --warmup 10 --duration 30 --output contention.json
 ```
 
 Нагрузочный runner не входит в обычный pytest. CI проверяет guards/процентили и
@@ -127,7 +133,7 @@ contention90/444(20.27%)/87/442(19.68%). Все counts/warmup в JSON. Clients �
 новую БД. Success-p95 diagnostic mixed=9572.86/12150.87ms,
 contention=12250.63/12172.06ms; вывод не является следствием включения500.
 
-## Finding O08-P01 — исчерпание connection pool, OPEN
+## Исходный finding O08-P01 — состояние на завершении O-08
 
 [Передан Тимуру](https://github.com/inte11ectua1/skinulis/issues/61#issuecomment-6584139938).
 
@@ -168,7 +174,7 @@ pool не доказывает исправление: двойной checkout �
 Finding не закрыт,500ms не достигнуты; O-08 поставляет аудит/измерения, не обещание
 готовности к production.
 
-## Новые проверки и доказательства
+## Новые проверки и доказательства O-08
 
 23 новых unit и11 PG/HTTP cases. Property loops:3seeds×60 чеков и3seeds×100 больших
 векторов(не отдельные pytest cases). Две HTTP ledger истории по24расхода сравниваются
@@ -228,3 +234,119 @@ Telegram; closed-loop без think time — интенсивный профил�
 100clients contention используют5actors.30s не soak test. Pool errors ограничили
 рост ledger; bottlenecks большой исторической БД ещё не оценены. Результат нельзя
 переносить на AWS или объявлять G4/G5 verified. Remediation/новая оценка500ms открыты.
+
+## O-09 #76 — исправление lifecycle и before/after (03.11.2026)
+
+Это отдельные измерения Тимура; исходные Windows результаты Олега выше сохранены.
+[Машинные агрегаты O-09](O-09_LOAD_RESULTS.json) содержат четыре полных результата,
+source hashes, условия и явный `overall_performance_pass=false`. Никаких AWS,
+production DB/volumes/flags, CD или live Telegram действий в O-09 не выполнялось.
+
+### Исправление и доказательство причины
+
+Baseline — чистая main `f4a3a11b8f09160d781587b61164dddd921528ca` после PR74/75.
+Measured fix — чистый `0bf9251aab0c04952ec340b97c08cc74095f44a8`.
+На старом коде auth SELECT начинал request Session transaction; финансовый reader
+пытался одновременно checkout второго connection из того же Engine. Новый PG
+regression со строго одним pool slot воспроизвёл HTTP500 примерно через3s **до**
+исправления; после него balances/plan работают через оба actor channels, в том
+числе12 одновременных запросов к одному slot. Это детерминированный correctness
+regression, его маленький pool не используется для benchmark.
+
+JWT/get_bot_user теперь читают User в собственной короткой `database.sessions()`
+Session. После успешного lookup полностью загруженный scalar User expunge-ится,
+затем context manager закрывает только собственную read transaction и возвращает
+lease. Endpoint получает detached User с загруженными id/email/telegram_id/created_at;
+ему не нужны lazy/expired атрибуты. Сессия endpoint не закрывается и не rollback-ится
+авторизацией. Неподписанный JWT/неверный service token/mixed channels остаются denied;
+существование аккаунта проверяется каждым запросом, кэш не добавлялся.
+
+Общая проверка охватывает все текущие consumers: business routes читают user.id,
+а public/internal /users/me сериализуют загруженные scalar fields. Регрессии
+проверяют DTO при занятом единственном pool slot, detached/unloaded/expired state,
+отказ чужому/несуществующему actor, cleanup после auth-query exception и сохранность
+незавершённой caller transaction. Unit fixtures получили отдельную override factory.
+
+`read_balances` и финансовые модули не менялись: membership + integrity + ledger
+читаются в одной READ ONLY REPEATABLE READ transaction без group FOR UPDATE.
+Новый PG test проверяет isolation/read-only/одинаковую transaction + pg_current_snapshot
+на membership и ledger SELECTs; прежние MVCC writer-overlap/race/security/UUID tests
+и L-06 запускаются полным suite. Записи по-прежнему берут group lock и явно
+commit/rollback в сервисе. В transactions.py исправлен только устаревший комментарий.
+ORM-модели, миграции, публичные DTO, финансовая математика и бот не изменялись.
+[SQLAlchemy Session close](https://docs.sqlalchemy.org/en/20/orm/session_basics.html#closing),
+[detached objects](https://docs.sqlalchemy.org/en/20/orm/session_state_management.html#quickie-intro-to-object-states).
+
+### Стенд и воспроизведение
+
+Один Mac: macOS15.3.2, Apple M1 Pro10logical CPU,16GiB RAM; Python3.12.15/uv0.13.5.
+PostgreSQL17.11-bookworm pinned digest в Docker Desktop4.19/Engine23.0.5/Compose2.17.3,
+linux/arm64 VM5vCPU/~7.67GiB RAM. Свой UUID Compose test project из compose.test.yaml,
+PGDATA tmpfs, только127.0.0.1:random-port, без persistent volumes; project штатно
+остановлен после четырёх runs. fsync/synchronous_commit/full_page_writes ON;
+прочие SHOW-параметры записаны в JSON. Docker tmpfs/VM и macOS отличаются от исходного
+Windows portable PG стенда Олега: сравнение before/after здесь только внутри Mac,
+а не сравнение абсолютных результатов двух компьютеров и не оценка AWS.
+
+Тот же100-client O-08 runner, seed6108, mixed20groups×5members/contention1×5,
+исходные10расходов/group,80%reads/20%writes, warmup10s/measurement30s, один worker,
+AnyIO40, INFO JSON logs; QueuePool5+10/timeout3s/pre_ping/connect+statement_timeout3s.
+Конструктор Database.__init__ AST и hashes runner/support/RR reader совпали между
+before/after. Параметры, duration, pool, worker, isolation и guards не подгонялись.
+В каждом run100clients started/completed, peak_inflight100; ошибки включены в latency,
+RPS включает drain; diagnostics/checkout/SQL/CPU включают warmup. Под нагрузкой
+pytest/build не выполнялись. Каждый run создаёт и удаляет только собственную UUID DB.
+
+```sh
+# Только явная разрешённая loopback TEST_DATABASE_URL c *_test, PostgreSQL17.
+uv run python -m scripts.load_o08 --profile mixed --warmup 10 --duration 30 --output /absolute/path/mixed.json
+uv run python -m scripts.load_o08 --profile contention --warmup 10 --duration 30 --output /absolute/path/contention.json
+```
+
+Запуск через `-m scripts.load_o08` нужен для корректного repository import path на
+чистом Mac; direct `python scripts/load_o08.py` дал ModuleNotFoundError до любых
+измерений. Workload code не изменялся. Для нового сравнения checkout baseline/fix
+commit в чистой ветке, тот же test server/settings и отсутствие параллельной нагрузки;
+runner сам проверяет clean tree и exact /version. Результаты сохранять вне Git tree,
+затем добавлять агрегаты отдельным документационным коммитом.
+
+### Результат: pool starvation устранён, p95 цель пока FAIL
+
+Все latency в ms; каждое значение — отдельный полный run, одна пара на профиль.
+
+| Run | Requests | 2xx | HTTP500 | RPS | p50 | p95 | p99 | Pool timeouts* | Checkout p95 ms* |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| before mixed | 463 | 95 | 368 | 13.72 | 6130.38 | 12075.14 | 12169.41 | 533 | 3017.34 |
+| before contention | 441 | 88 | 353 | 13.11 | 6159.25 | 12071.87 | 12164.67 | 517 | 3010.86 |
+| after mixed | 3876 | 3876 | 0 | 126.92 | 777.41 | 956.05 | 1067.57 | 0 | 208.40 |
+| after contention | 3680 | 3680 | 0 | 120.24 | 796.96 | 1098.46 | 1215.00 | 0 | 222.96 |
+
+*Pool metrics включают warmup, поэтому before timeouts533/517 не следует сравнивать
+только с measured500368/353. Они точно совпали с **всеми** server500 вместе с warmup.
+After zero timeouts и zero HTTP500 — и в warmup, и в measurement. Нет client timeout,
+network error или409. Во всех четырёх runs overall target_pass=false: threshold
+500ms не уменьшался, никакого PASS по ускорению относительно baseline не вводилось.
+
+### Остаточное ограничение и следующий шаг
+
+Double checkout больше не объясняет latency: одно-slot regression проходит, pool
+returns to0 после success/error, в full100-client runs timeouts исчезли. Но pool
+по-прежнему достигает15/15; checkout p95 after≈208/223ms, API CPU≈52.38/50.48s
+за startup+warmup+run (это не CPU utilization profiler). SQL other p95≈21.42/13.36ms.
+В contention group-lock p95 вырос до≈336.05ms, observer видел до10 Lock waiters:
+после устранения starvation стало возможно значительно больше настоящих записей
+в одной группе. Ledger растёт по прежнему workload; успешных creates теперь больше.
+В mixed group-lock p95≈45.92ms, поэтому одним group lock mixed latency не объясняется.
+
+Наблюдаются измеримая очередь к ограниченному пулу и реальная сериализация writer
+на hot group; точный вклад AnyIO scheduling, Python/ORM, количества SQL round trips,
+Docker bridge и клиентского event loop этим агрегатным harness **не разделён**.
+Нельзя объявлять CPU/GIL/PG hardware единственной доказанной причиной.
+Следующий шаг — отдельный phase/CPU/SQL-roundtrip профиль при том же100-client
+workload, затем оценка сокращения round trips/объёма validated ledger в рамках
+согласованного RR snapshot и group-lock semantics. Не увеличивать pool/timeout/workers,
+не ослаблять integrity/изоляцию, не вводить cache и не переносить расчёты в бот.
+
+Issue76 остаётся open, PR использует **Refs #76**, поскольку p95≤500ms не достигнут.
+Независимое review Олега/Леры требуется. Fix ещё не merged и не deployed;
+готовность production по этим локальным измерениям не объявляется.

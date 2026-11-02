@@ -1,4 +1,4 @@
-"""Write services own the whole request transaction, including auth's autobegin."""
+"""Write services own the endpoint transaction; authentication has its own scope."""
 
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 @contextmanager
 def write_transaction(session: Session) -> Iterator[None]:
-    # Auth has already SELECTed in this same Session. Do not nest session.begin().
+    # Preliminary service reads may have autobegun. Do not nest session.begin().
     # A service is one top-level operation, never called inside another write service.
     try:
         yield

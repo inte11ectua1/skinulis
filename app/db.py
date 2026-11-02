@@ -24,8 +24,13 @@ class Database:
         self.engine.dispose()
 
 
-def get_session(request: Request) -> Iterator[Session]:
+def get_database(request: Request) -> Database:
     database: Database = request.app.state.database
+    return database
+
+
+def get_session(request: Request) -> Iterator[Session]:
+    database = get_database(request)
     with database.sessions() as session:
         # No implicit commit: session.close rolls back uncommitted work.
         yield session
