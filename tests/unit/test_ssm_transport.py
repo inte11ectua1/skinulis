@@ -131,5 +131,7 @@ def test_ssm_plugin_install_retries_transient_failures_with_pinned_digest() -> N
     assert "--connect-timeout 15 --max-time 45" in installer
     assert "--proto '=https' --tlsv1.2" in installer
     assert "sha256sum --check --status" in installer
-    assert "53f51fcc67314a4bf85888a38a3967cd41f8d0f28a60a9469a63acf935ba713e" in installer
+    assert (
+        "53f51fcc67314a4bf85888a38a3967cd41f8d0f28a60a9469a63acf935ba713e" in installer
+    )
     assert "plugin/1.2.896.0/ubuntu_64bit/session-manager-plugin.deb" in installer
