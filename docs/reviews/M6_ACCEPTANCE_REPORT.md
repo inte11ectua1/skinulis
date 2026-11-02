@@ -49,131 +49,131 @@ Docker Engine23.0.5/Compose2.17.3. PostgreSQL17.11 из закреплённог
 
 | DoD / строка | Проверяемый критерий | Статус | Evidence / оставшееся действие |
 |---|---|---|---|
-| 1 L13 | Публичность репозитория | PASS | REST repo `private=false`, GitHub доступен анонимно |
-| 1 L14 | Качество истории в целом | FAIL | Change commits осмысленные, но literal Conventional не выполнен для начального seed, см. L15 |
-| 1 L15 | Conventional сообщения | FAIL | Все non-merge кроме начального `Initial commit` имеют тип; seed не Conventional. Историю не переписывали, formal оценка у преподавателя; merge messages GitHub системные |
-| 1 L16 | Отсутствие пустых wip/fix/test сообщений | PASS | Проверен `git log --no-merges`; таких сообщений нет |
-| 1 L17 | История без секретов/мусора | PASS |655UTF-8 blobs main (9.38MB) проверены detect-secrets без network verification;3сигнала — public SSM package SHA256, подтверждены installer. По путям нет .env/.venv/cache/key; current hooks чисты |
-| 1 L18 | Реальная стратегия веток | PASS | ADR001, CONTRIBUTING, feature→PR→main, история first-parent |
-| 1 L19 | В main только PR | PASS | Все47 изменений first-parent после initial seed сопоставлены merged PR; это факт истории, не технический запрет admin push |
-| 1 L20 | Независимый APPROVED каждого merged PR | FAIL | **37/48** merged PR без pre-merge human APPROVED; реестр по каждому PR ниже/в отдельном файле |
-| 1 L21 | Правильный ignore | PASS | .gitignore + git path audit; env/cache/coverage/local evidence не tracked |
-| 1 L22 | CONTRIBUTING | PASS | GitFlow/review/commit/test/contact правила присутствуют |
-| 2 L26 | Config отделён от поведения | PASS | app/config.py, bot/config.py, pydantic Settings; тесты secrets/config |
-| 2 L27 | Runtime-настройки через env | PASS | Settings + Compose interpolation; замена тестовых env и clean start |
-| 2 L28 | Валидирующий settings layer | PASS | pydantic-settings, SecretStr, hide_input_in_errors; negative tests |
-| 2 L29 | Секреты вне Git | PASS | Current hooks +655historical text blobs; credential findings нет после разбора3public digest false positives. Это результат эвристического сканирования, не математическое доказательство |
-| 2 L30 | Безопасный env template | PASS | .env.example, пустые credentials, новые случайные значения в тестах |
-| 2 L31 | Dev и prod конфигурации | PASS | compose.yaml отдельно от deploy/compose.production.yaml, environment-schema |
-| 2 L32 | Автоматический secret hook | PASS | .pre-commit-config.yaml detect-secrets; all-files и CI lint |
-| 3 L36 | Рабочий Dockerfile | PASS | Настоящий build в clean Compose, image imports non-root |
-| 3 L37 | Оптимизация image | PASS | Следующие три строки + Docker build evidence |
-| 3 L38 | Multi-stage | PASS | uv/builder/runtime stages, dev зависимости не устанавливаются в runtime |
-| 3 L39 | Слои зависимостей | PASS | Lock/config COPY до исходников, BuildKit uv cache |
-| 3 L40 | Non-root процесс | PASS | UID10001, проверка Docker image import smoke |
-| 3 L41 | Local Compose | PASS | Проверен compose.yaml; новый уникальный project и volume |
-| 3 L42–44 | Состав: API + PostgreSQL | PASS | API/Uvicorn и PostgreSQL17.11 реально запущены, migrate отдельный |
-| 3 L45 | Необязательные дополнительные сервисы | PASS | Redis/прочие не нужны, стек не расширялся |
-| 3 L46 | Cold start одной Compose-командой | PASS | `up --build -d`, пустая db, startup migration exit0, затем API; без ручного create_all |
-| 3 L47 | Доступный loopback API | PASS | Случайный свободный 127.0.0.1 порт, реальные HTTP/auth/финансовые запросы |
-| 3 L48 | Первичная миграция БД | PASS | `0006_settlement_notification_claim`; integration повтор upgrade, check, один head |
-| 4 L52 | GitHub Actions pipeline | PASS | .github/workflows/ci.yml и живой main run |
-| 4 L53 | Каждый PR в main запускает CI | PASS | pull_request main + synchronize по умолчанию; текущий M6 PR отдельно проверяется |
-| 4 L54 | Все категории CI | PASS | lint/types/tests/docker-build/ci, trusted Release отдельно |
-| 4 L57 | Lint | PASS | Ruff check, local и main CI |
-| 4 L58 | Format | PASS | Ruff format --check, сохранён согласованный аналог black |
-| 4 L59 | Types | PASS | mypy strict на всём проекте, включая bot/tests/scripts |
-| 4 L61 | Автотесты | PASS | pytest unit и явный `-m integration` |
-| 4 L62 | Изолированные тесты | PASS | UUID-БД fixture, disposable Docker project, synthetic env |
-| 4 L63 | Настоящий PostgreSQL service | PASS | CI service PG17.11; локальный runner с тем же pinned image, не SQLite |
-| 4 L64 | Coverage минимум60% | PASS | Combined branch app/bot/skinulis_logging, tests исключены; exact результаты в §3 |
-| 4 L67 | Сборка контейнера | PASS | CI docker-build и локальный Compose build |
-| 4 L68 | Реальная registry publication | PASS | GHCR anonymous metadata/digest audit, trusted main Release success |
-| 4 L69 | Версионный image tag | PASS | Полный40hex SHA tag, immutable deploy digest и OCI revision проверены |
-| 4 L70 | Green pipeline | PASS | Main CI5/5, publish success; CI M6 PR по ссылке в его описании |
-| 4 L71 | Red CI запрещает merge | FAIL | Required5 checks strict/app_id15368 есть, но enforce_admins=false и rulesets=[]; универсальной блокировки нет |
-| 5 L76 | Серверное приложение | PASS | Public API отвечает; первичный approved EC2 deployment evidence02.11 |
-| 5 L77 | Публичная доступность | PASS | Свежие HTTPS GET health/version/docs/OpenAPI |
-| 5 L78 | Reverse proxy | PASS | Caddy deployment evidence + свежие proxy404 на internal |
-| 5 L79 | Доверенный HTTPS | PASS | Default CA verification, TLS1.3, LE YE2/SAN hostname; срок в §5 |
-| 5 L80 | Server env вне кода | PASS | Protected production.env в rollout evidence; содержимое заново не читали/не меняли |
-| 5 L81 | Автоматизированный deploy | PASS | Существующие release guard/controller + successful protected rollout, не новый запуск M6 |
-| 5 L82 | Restart policy | PASS | production Compose unless-stopped; restart/persistence smoke в изоляции. Свежий reboot production не выполнялся |
-| 6 L86 | Структурированные логи / выбранная библиотека | BLOCKED | JSON stdout проверен; реализован stdlib logging вместо перечисленных structlog/loguru. Нужно явное подтверждение преподавателя об эквивалентности либо отдельно согласованная правка |
-| 6 L87 | Состав событий | FAIL | Timestamp/level/request_id/route есть; user context отсутствует намеренно, см. L91 |
-| 6 L88 | Время события | PASS | UTC ISO Z, unit/integration logging и live response correlation |
-| 6 L89 | Уровень | PASS | JSON level, тесты нормализации уровней |
-| 6 L90 | Correlation ID | PASS | Server-generated request_id, X-Request-ID, безопасная error envelope |
-| 6 L91 | Контекст endpoint и пользователя | FAIL | Route template есть; actor/user поля запрещены нынешним privacy allowlist. Не добавлять IDs без согласования; Тимур + преподаватель решают формальную приемку |
-| 6 L92 | Health endpoint | PASS | GET /health реально выполняет SELECT1 |
-| 6 L93 | Healthy HTTP200 | PASS | Local Compose и внешняя production проверка |
-| 6 L94 | Проверка DB connection | PASS | Real PG и unavailable→503 integration; production database=ok |
-| 6 L95 | Сбор/сохранение логов | PASS | Docker json-file, max-size5m/max-file3/compress=true; реальный delivery smoke |
-| 6 L96 | Базовый просмотр событий | PASS | Incident runbook docker compose logs, JSON privacy/rotation tests; historical server audit |
-| 7 L102 | README: суть продукта | PASS | README начало |
-| 7 L103 | README: стек | PASS | Требования, версии Python/uv/PostgreSQL и архитектура |
-| 7 L104 | README: local startup | PASS | Команды реально повторены на отдельном project |
-| 7 L105 | README: deployment | PASS | Ссылка на DEPLOYMENT/runbook и оговорки protected rollout |
-| 7 L106 | README: API usage | PASS | Swagger/OpenAPI + JSON examples/контракты |
-| 7 L107 | README: участники | PASS | Тимур/Олег/Лера, ответственность |
-| 7 L110 | CONTRIBUTING: Git | PASS | GitHub Flow, feature branch, PR |
-| 7 L111 | CONTRIBUTING: сообщения | PASS | Conventional Commits |
-| 7 L112 | CONTRIBUTING: review | PASS | Independent approval и явно раскрытый admin bypass, не доказательство всех approvals |
-| 7 L113 | CONTRIBUTING: тестирование | PASS | uv/Ruff/mypy/pytest/PG/coverage/build команды |
-| 7 L114 | CONTRIBUTING: связь с командой | PASS | Прямые GitHub handles/роли и issue/PR каналы в CONTRIBUTING (дополнено M6) |
-| 7 L116 | Генерация OpenAPI | PASS | /docs + /openapi.json200, FastAPI explicit DTO |
-| 7 L117 | Все операции описаны | PASS |53 operations, summary/typed params; M6 исправляет отсутствующие schema examples, regression test |
-| 7 L118 | Примеры входов/выходов | PASS | M6: запросы и success examples разрешаются через refs для53operations; money DTO примеры валидируются без изменения wire behavior |
-| 7 L121 | Минимум два ADR | PASS | ADR001 GitHub Flow и ADR002 uv, оба accepted через PR |
-| 7 L122 | Полная структура ADR | PASS | Следующие4строки проверены в обоих файлах |
-| 7 L123 | ADR: проблема | PASS | Разделы контекста |
-| 7 L124 | ADR: принятое решение | PASS | Отдельные решения с границами |
-| 7 L125 | ADR: причины | PASS | Альтернативы, обоснование выбора |
-| 7 L126 | ADR: последствия | PASS | Плюсы/минусы/риски; исторические open чекбоксы не подменяют acceptance |
+| 1 L16 | Публичность репозитория | PASS | REST repo `private=false`, GitHub доступен анонимно |
+| 1 L17 | Качество истории в целом | FAIL | Change commits осмысленные, но literal Conventional не выполнен для начального seed, см. L18 |
+| 1 L18 | Conventional сообщения | FAIL | Все non-merge кроме начального `Initial commit` имеют тип; seed не Conventional. Историю не переписывали, formal оценка у преподавателя; merge messages GitHub системные |
+| 1 L19 | Отсутствие пустых wip/fix/test сообщений | PASS | Проверен `git log --no-merges`; таких сообщений нет |
+| 1 L20 | История без секретов/мусора | PASS |655UTF-8 blobs main (9.38MB) проверены detect-secrets без network verification;3сигнала — public SSM package SHA256, подтверждены installer. По путям нет .env/.venv/cache/key; current hooks чисты |
+| 1 L21 | Реальная стратегия веток | PASS | ADR001, CONTRIBUTING, feature→PR→main, история first-parent |
+| 1 L22 | В main только PR | PASS | Все47 изменений first-parent после initial seed сопоставлены merged PR; это факт истории, не технический запрет admin push |
+| 1 L23 | Независимый APPROVED каждого merged PR | FAIL | **37/48** merged PR без pre-merge human APPROVED; реестр по каждому PR ниже/в отдельном файле |
+| 1 L24 | Правильный ignore | PASS | .gitignore + git path audit; env/cache/coverage/local evidence не tracked |
+| 1 L25 | CONTRIBUTING | PASS | GitFlow/review/commit/test/contact правила присутствуют |
+| 2 L31 | Config отделён от поведения | PASS | app/config.py, bot/config.py, pydantic Settings; тесты secrets/config |
+| 2 L32 | Runtime-настройки через env | PASS | Settings + Compose interpolation; замена тестовых env и clean start |
+| 2 L33 | Валидирующий settings layer | PASS | pydantic-settings, SecretStr, hide_input_in_errors; negative tests |
+| 2 L34 | Секреты вне Git | PASS | Current hooks +655historical text blobs; credential findings нет после разбора3public digest false positives. Это результат эвристического сканирования, не математическое доказательство |
+| 2 L35 | Безопасный env template | PASS | .env.example, пустые credentials, новые случайные значения в тестах |
+| 2 L36 | Dev и prod конфигурации | PASS | compose.yaml отдельно от deploy/compose.production.yaml, environment-schema |
+| 2 L37 | Автоматический secret hook | PASS | .pre-commit-config.yaml detect-secrets; all-files и CI lint |
+| 3 L43 | Рабочий Dockerfile | PASS | Настоящий build в clean Compose, image imports non-root |
+| 3 L44 | Оптимизация image | PASS | Следующие три строки + Docker build evidence |
+| 3 L45 | Multi-stage | PASS | uv/builder/runtime stages, dev зависимости не устанавливаются в runtime |
+| 3 L46 | Слои зависимостей | PASS | Lock/config COPY до исходников, BuildKit uv cache |
+| 3 L47 | Non-root процесс | PASS | UID10001, проверка Docker image import smoke |
+| 3 L48 | Local Compose | PASS | Проверен compose.yaml; новый уникальный project и volume |
+| 3 L49–51 | Состав: API + PostgreSQL | PASS | API/Uvicorn и PostgreSQL20.11 реально запущены, migrate отдельный |
+| 3 L52 | Необязательные дополнительные сервисы | PASS | Redis/прочие не нужны, стек не расширялся |
+| 3 L53 | Cold start одной Compose-командой | PASS | `up --build -d`, пустая db, startup migration exit0, затем API; без ручного create_all |
+| 3 L54 | Доступный loopback API | PASS | Случайный свободный 127.0.0.1 порт, реальные HTTP/auth/финансовые запросы |
+| 3 L55 | Первичная миграция БД | PASS | `0006_settlement_notification_claim`; integration повтор upgrade, check, один head |
+| 4 L61 | GitHub Actions pipeline | PASS | .github/workflows/ci.yml и живой main run |
+| 4 L62 | Каждый PR в main запускает CI | PASS | pull_request main + synchronize по умолчанию; текущий M6 PR отдельно проверяется |
+| 4 L63 | Все категории CI | PASS | lint/types/tests/docker-build/ci, trusted Release отдельно |
+| 4 L66 | Lint | PASS | Ruff check, local и main CI |
+| 4 L67 | Format | PASS | Ruff format --check, сохранён согласованный аналог black |
+| 4 L68 | Types | PASS | mypy strict на всём проекте, включая bot/tests/scripts |
+| 4 L70 | Автотесты | PASS | pytest unit и явный `-m integration` |
+| 4 L71 | Изолированные тесты | PASS | UUID-БД fixture, disposable Docker project, synthetic env |
+| 4 L72 | Настоящий PostgreSQL service | PASS | CI service PG17.11; локальный runner с тем же pinned image, не SQLite |
+| 4 L73 | Coverage минимум60% | PASS | Combined branch app/bot/skinulis_logging, tests исключены; exact результаты в §3 |
+| 4 L76 | Сборка контейнера | PASS | CI docker-build и локальный Compose build |
+| 4 L77 | Реальная registry publication | PASS | GHCR anonymous metadata/digest audit, trusted main Release success |
+| 4 L78 | Версионный image tag | PASS | Полный40hex SHA tag, immutable deploy digest и OCI revision проверены |
+| 4 L81 | Green pipeline | PASS | Main CI5/5, publish success; CI M6 PR по ссылке в его описании |
+| 4 L82 | Red CI запрещает merge | FAIL | Required5 checks strict/app_id15368 есть, но enforce_admins=false и rulesets=[]; универсальной блокировки нет |
+| 5 L88 | Серверное приложение | PASS | Public API отвечает; первичный approved EC2 deployment evidence02.11 |
+| 5 L89 | Публичная доступность | PASS | Свежие HTTPS GET health/version/docs/OpenAPI |
+| 5 L90 | Reverse proxy | PASS | Caddy deployment evidence + свежие proxy404 на internal |
+| 5 L91 | Доверенный HTTPS | PASS | Default CA verification, TLS1.3, LE YE2/SAN hostname; срок в §5 |
+| 5 L92 | Server env вне кода | PASS | Protected production.env в rollout evidence; содержимое заново не читали/не меняли |
+| 5 L93 | Автоматизированный deploy | PASS | Существующие release guard/controller + successful protected rollout, не новый запуск M6 |
+| 5 L94 | Restart policy | PASS | production Compose unless-stopped; restart/persistence smoke в изоляции. Свежий reboot production не выполнялся |
+| 6 L100 | Структурированные логи / выбранная библиотека | BLOCKED | JSON stdout проверен; реализован stdlib logging вместо перечисленных structlog/loguru. Нужно явное подтверждение преподавателя об эквивалентности либо отдельно согласованная правка |
+| 6 L101 | Состав событий | FAIL | Timestamp/level/request_id/route есть; user context отсутствует намеренно, см. L105 |
+| 6 L102 | Время события | PASS | UTC ISO Z, unit/integration logging и live response correlation |
+| 6 L103 | Уровень | PASS | JSON level, тесты нормализации уровней |
+| 6 L104 | Correlation ID | PASS | Server-generated request_id, X-Request-ID, безопасная error envelope |
+| 6 L105 | Контекст endpoint и пользователя | FAIL | Route template есть; actor/user поля запрещены нынешним privacy allowlist. Не добавлять IDs без согласования; Тимур + преподаватель решают формальную приемку |
+| 6 L106 | Health endpoint | PASS | GET /health реально выполняет SELECT1 |
+| 6 L107 | Healthy HTTP200 | PASS | Local Compose и внешняя production проверка |
+| 6 L108 | Проверка DB connection | PASS | Real PG и unavailable→503 integration; production database=ok |
+| 6 L109 | Сбор/сохранение логов | PASS | Docker json-file, max-size5m/max-file3/compress=true; реальный delivery smoke |
+| 6 L110 | Базовый просмотр событий | PASS | Incident runbook docker compose logs, JSON privacy/rotation tests; historical server audit |
+| 7 L117 | README: суть продукта | PASS | README начало |
+| 7 L118 | README: стек | PASS | Требования, версии Python/uv/PostgreSQL и архитектура |
+| 7 L119 | README: local startup | PASS | Команды реально повторены на отдельном project |
+| 7 L120 | README: deployment | PASS | Ссылка на DEPLOYMENT/runbook и оговорки protected rollout |
+| 7 L121 | README: API usage | PASS | Swagger/OpenAPI + JSON examples/контракты |
+| 7 L122 | README: участники | PASS | Тимур/Олег/Лера, ответственность |
+| 7 L125 | CONTRIBUTING: Git | PASS | GitHub Flow, feature branch, PR |
+| 7 L126 | CONTRIBUTING: сообщения | PASS | Conventional Commits |
+| 7 L127 | CONTRIBUTING: review | PASS | Independent approval и явно раскрытый admin bypass, не доказательство всех approvals |
+| 7 L128 | CONTRIBUTING: тестирование | PASS | uv/Ruff/mypy/pytest/PG/coverage/build команды |
+| 7 L129 | CONTRIBUTING: связь с командой | PASS | Прямые GitHub handles/роли и issue/PR каналы в CONTRIBUTING (дополнено M6) |
+| 7 L132 | Генерация OpenAPI | PASS | /docs + /openapi.json200, FastAPI explicit DTO |
+| 7 L133 | Все операции описаны | PASS |53 operations, summary/typed params; M6 исправляет отсутствующие schema examples, regression test |
+| 7 L134 | Примеры входов/выходов | PASS | M6: запросы и success examples разрешаются через refs для53operations; money DTO примеры валидируются без изменения wire behavior |
+| 7 L137 | Минимум два ADR | PASS | ADR001 GitHub Flow и ADR002 uv, оба accepted через PR |
+| 7 L138 | Полная структура ADR | PASS | Следующие4строки проверены в обоих файлах |
+| 7 L139 | ADR: проблема | PASS | Разделы контекста |
+| 7 L140 | ADR: принятое решение | PASS | Отдельные решения с границами |
+| 7 L141 | ADR: причины | PASS | Альтернативы, обоснование выбора |
+| 7 L142 | ADR: последствия | PASS | Плюсы/минусы/риски; исторические open чекбоксы не подменяют acceptance |
 
 ### Дополнительный обязательный defense checklist
 
 | Строка | Контроль | Статус | Evidence / что ещё нужно |
 |---|---|---|---|
-| L137 | Cold Compose | PASS | §3 и isolated smoke |
-| L138 | Полный test suite | PASS | §3, main и M6 CI |
-| L139 |60% в test job | PASS | main `tests`94.98%; имя tests, а не переименование ради текста курса |
-| L140 | Green CI/CD | PASS | CI/publish links §1; rollout отдельно approved исторически |
-| L141 | Public URL | PASS | Свежий read-only HTTPS200 |
-| L142 | Healthy endpoint | PASS |200 с database=ok |
-| L143 | Полнота README | PASS | Матрица7 + исправление устаревшей M6 очереди |
-| L144 | ADR count | PASS |2 принятых ADR |
-| L145 | Презентация7мин | NOT VERIFIED | M7 #80, не создана в M6 |
-| L146 | Пятиминутный demo script | PASS | M6_THREE_USER_DEMO; live rehearsal/доступность bot отдельно не проверены |
-| L147 | Готовность отвечать всей команды | NOT VERIFIED | Нужна репетиция Тимура/Олега/Леры в M7 |
+| L156 | Cold Compose | PASS | §3 и isolated smoke |
+| L157 | Полный test suite | PASS | §3, main и M6 CI |
+| L158 |60% в test job | PASS | main `tests`94.98%; имя tests, а не переименование ради текста курса |
+| L159 | Green CI/CD | PASS | CI/publish links §1; rollout отдельно approved исторически |
+| L160 | Public URL | PASS | Свежий read-only HTTPS200 |
+| L161 | Healthy endpoint | PASS |200 с database=ok |
+| L162 | Полнота README | PASS | Матрица7 + исправление устаревшей M6 очереди |
+| L163 | ADR count | PASS |2 принятых ADR |
+| L164 | Презентация7мин | NOT VERIFIED | M7 #80, не создана в M6 |
+| L165 | Пятиминутный demo script | PASS | M6_THREE_USER_DEMO; live rehearsal/доступность bot отдельно не проверены |
+| L166 | Готовность отвечать всей команды | NOT VERIFIED | Нужна репетиция Тимура/Олега/Леры в M7 |
 
 ### Дополнительная сверка обязательного ТЗ курса
 
 [project-requirements.md, тот же immutable срез](https://github.com/andrey-limasov/app-conf/blob/8bff1a6f4d01f5417aeae4fa424e3f577085105c/project-requirements.md)
 тоже является официальным источником. **Расхождение с M5 handoff:** там waiver500ms
-назван внутренним, но строки134–135 ТЗ прямо задают эту latency/concurrency норму.
+назван внутренним, но строки148–149 ТЗ прямо задают эту latency/concurrency норму.
 По иерархии START_HERE решение владельца о закрытии #76 не изменяет требование курса.
 Это не повод переписывать исторические измерения или объявлять waiver преподавательским.
 
 | ТЗ / строки | Проверка | Статус | Evidence / граница |
 |---|---|---|---|
-| L23–29 / L275 | Бизнес CRUD | PASS | Expense POST/list/detail/PUT/soft-DELETE, real HTTP/PG + Compose |
-| L42–48 / L276 | Auth/permissions | PASS | Register/login/JWT, owner/author/receiver; admin-edit-all лишь опциональный пример курса |
-| L53–56 / L277 | Validation/uniqueness/FK | PASS | Pydantic400, email/group uniqueness, PG FK/restrict/race tests |
-| L61–65 / L278 | PG/ORM/migrations/связи/индексы | PASS | PG17, sync SQLAlchemy,6Alembic revisions,11таблиц и PK/FK/index tests |
-| L70–77 / L279 | Ошибки и logging | PASS | Глобальная error envelope400/401/403/404/409/500, privacy/correlation tests; formal actor logging gap отдельно |
-| L84–94 | Стек | PASS | Python3.12/FastAPI/PG17/Alembic/Docker/Actions/pytest/Ruff/mypy |
-| L124–126 | OpenAPI/docs/examples | PASS |53operations после M6 regression fix |
-| L134 |95% запросов ≤500ms | **FAIL** | O09 p95 956.05/1098.46ms; нужно исправление с повторным измерением либо явное решение преподавателя |
-| L135 |100concurrent connections | PASS |100independent clients, peak100,0HTTP500 после O09; ограниченный локальный тест, не AWS-SLA |
-| L136 | Default pagination20 | PASS | DTO/query defaults, tests lists/filter/offset |
-| L139–142 | Password hash/JWT/env/SQL safety | PASS | Argon2id, exp/HS256/claims, SecretStr, parameterized ORM; security regressions |
-| L143 | CORS | PASS | CORSMiddleware не включён, cross-origin browser access по умолчанию не разрешён; Swagger same-origin, bot не браузер. Не заявляем поддержку стороннего web frontend |
-| L147–151 / L294–295 | Test isolation/coverage/quality | PASS | Полный unit/PG набор, combined branch>60%, Ruff/mypy |
-| L154–156 | Конфигурация и значимое состояние | PASS | Env Settings, финансовая история в PG; transient draft в bot memory не считается ledger |
-| L282–288 | Инфраструктурный checklist | FAIL | Детальная DoD matrix выше: history/reviews/protection/logging formal gaps не закрыты общим greenCI |
-| L292–293 | Структура/антипаттерны | PASS | Bounded review + тесты: routers/services/DTO, sync request Sessions, integer money, bot толькоHTTP; не абсолютное доказательство отсутствия всех дефектов |
-| L298–300 | Live demo/команда/ADR | NOT VERIFIED |2ADRесть, offline script готов; live rehearsal и Q&A пока не подтверждены |
+| L27–33 / L300 | Бизнес CRUD | PASS | Expense POST/list/detail/PUT/soft-DELETE, real HTTP/PG + Compose |
+| L48–54 / L301 | Auth/permissions | PASS | Register/login/JWT, owner/author/receiver; admin-edit-all лишь опциональный пример курса |
+| L60–63 / L302 | Validation/uniqueness/FK | PASS | Pydantic400, email/group uniqueness, PG FK/restrict/race tests |
+| L69–73 / L303 | PG/ORM/migrations/связи/индексы | PASS | PG17, sync SQLAlchemy,6Alembic revisions,11таблиц и PK/FK/index tests |
+| L79–86 / L304 | Ошибки и logging | PASS | Глобальная error envelope400/401/403/404/409/500, privacy/correlation tests; formal actor logging gap отдельно |
+| L96–104 | Стек | PASS | Python3.12/FastAPI/PG17/Alembic/Docker/Actions/pytest/Ruff/mypy |
+| L138–140 | OpenAPI/docs/examples | PASS |53operations после M6 regression fix |
+| L148 |95% запросов ≤500ms | **FAIL** | O09 p95 956.05/1098.46ms; нужно исправление с повторным измерением либо явное решение преподавателя |
+| L149 |100concurrent connections | PASS |100independent clients, peak100,0HTTP500 после O09; ограниченный локальный тест, не AWS-SLA |
+| L150 | Default pagination20 | PASS | DTO/query defaults, tests lists/filter/offset |
+| L154–157 | Password hash/JWT/env/SQL safety | PASS | Argon2id, exp/HS256/claims, SecretStr, parameterized ORM; security regressions |
+| L158 | CORS | PASS | CORSMiddleware не включён, cross-origin browser access по умолчанию не разрешён; Swagger same-origin, bot не браузер. Не заявляем поддержку стороннего web frontend |
+| L162–166 / L320–321 | Test isolation/coverage/quality | PASS | Полный unit/PG набор, combined branch>60%, Ruff/mypy |
+| L170–172 | Конфигурация и значимое состояние | PASS | Env Settings, финансовая история в PG; transient draft в bot memory не считается ledger |
+| L308–314 | Инфраструктурный checklist | FAIL | Детальная DoD matrix выше: history/reviews/protection/logging formal gaps не закрыты общим greenCI |
+| L318–319 | Структура/антипаттерны | PASS | Bounded review + тесты: routers/services/DTO, sync request Sessions, integer money, bot толькоHTTP; не абсолютное доказательство отсутствия всех дефектов |
+| L325–327 | Live demo/команда/ADR | NOT VERIFIED |2ADRесть, offline script готов; live rehearsal и Q&A пока не подтверждены |
 
 Указанные в учебных этапах ADR003/межкомандные практики не объявляются выполненными
 наличием только ADR001/002; если преподаватель принимает также каждый учебный артефакт,
@@ -307,7 +307,7 @@ metrics включают warmup, их нельзя сравнивать толь
 Same-host O09 после lifecycle fix: mixed3876/3876success,126.92RPS,p95**956.05ms**;
 contention3680/3680success,120.24RPS,p95**1098.46ms**; HTTP500/pooltimeouts=0.
 **Performance500ms FAIL**, владелец снял blocker закрытия #76, однако норма есть
-в официальном ТЗ курса L134. Преподавательского исключения нет; это не AWS capacity claim. Baseline Олега на Windows и
+в официальном ТЗ курса L148. Преподавательского исключения нет; это не AWS capacity claim. Baseline Олега на Windows и
 same-host Mac before/after — разные стенды, их absolute latencies не смешиваются.
 Не измерялись Argon2/register, все UX и открытая arrival-rate нагрузка; один worker,
 растущие данные и локальная VM ограничивают переносимость. Новая production нагрузка
@@ -364,7 +364,7 @@ review/CI; само выполнение остаётся отдельным д�
 | Рассмотреть37historical missing approvals и initial commit format | Тимур + преподаватель | Новый review не превращается в review до исторического merge; seed не Conventional. Нужна честная formal оценка, без rewrite истории |
 | Устранить/согласовать admin bypass | Тимур | Branch protection менять запрещено задачей; действующий bypass опровергает универсальную CI-блокировку |
 | Проверить red-check merge box у non-admin | Олег/Лера + Тимур | Исторический BLOCKED одновременно имел REVIEW_REQUIRED; UI причина не доказана. Без изменения правил и без merge failing PR |
-| Performance500ms: устранение или преподавательское решение | Тимур + преподаватель | Официальное ТЗ L134; внутренний waiver M5 не отменяет эту норму |
+| Performance500ms: устранение или преподавательское решение | Тимур + преподаватель | Официальное ТЗ L148; внутренний waiver M5 не отменяет эту норму |
 | Решение о logging backend/user context | Тимур + преподаватель | JSON технически работает, но literal library/user-context требования не подтверждены; privacy не ослаблялся |
 | Independent approval M6 PR | Олег или Лера | Запрос review не равно submitted APPROVED; merge агент не выполняет |
 | Один финальный API rollout и smoke exactSHA | Тимур + Environment reviewer | Нужны отдельное разрешение и штатный protected CD |
