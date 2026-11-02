@@ -8,7 +8,7 @@
 - **Тимур T-10 #60 (closed completed):** [PR #71](https://github.com/inte11ectua1/skinulis/pull/71), [#73](https://github.com/inte11ectua1/skinulis/pull/73), JSON logs/request_id/privacy/rotation/incident runbook; живой API, не live Telegram.
 - **Олег O-08 #61 (closed completed):** [PR #74](https://github.com/inte11ectua1/skinulis/pull/74), finance/security/PG races и честный первоначальный FAIL нагрузки 100 клиентов.
 - **Лера L-06 #62 (closed completed):** [PR #75](https://github.com/inte11ectua1/skinulis/pull/75), UX/UUID/error recovery, mock Telegram + real local FastAPI/PostgreSQL17 E2E; без реального polling.
-- **Тимур O-09 #76 (closed completed, решением владельца):** [PR #77](https://github.com/inte11ectua1/skinulis/pull/77) уже merged; auth session освобождает соединение перед RR financial snapshot, 19 PG regressions. [CI head PR #77](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706) 5/5, **1724 теста**, branch coverage **94.98%**. Post-merge CI `main` (run #41536084636) на момент среза **ещё выполнялся**; не утверждать его PASS без нового запроса.
+- **Тимур O-09 #76 (closed completed, решением владельца):** [PR #77](https://github.com/inte11ectua1/skinulis/pull/77) уже merged; auth session освобождает соединение перед RR financial snapshot, 19 PG regressions. [CI head PR #77](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706) 5/5, **1724 теста**, branch coverage **94.98%**. [Post-merge CI `main` #41536084636](https://github.com/inte11ectua1/skinulis/actions/runs/41536084636) **5/5 success**; [Release #41537783167](https://github.com/inte11ectua1/skinulis/actions/runs/41537783167) completed success (trusted publish; **не подтверждение нового production rollout**).
 
 ## Performance O-09: принятые границы
 

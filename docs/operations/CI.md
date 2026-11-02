@@ -2,7 +2,7 @@
 
 ## Актуальный M5 closeout / CI срез (03.11.2026)
 
-M5 задачи #59/#60/#61/#62/#76 закрыты по принятому объёму; последняя O-09 [PR #77](https://github.com/inte11ectua1/skinulis/pull/77) merged с head [5/5 CI success](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706) (1278 unit +446 PostgreSQL =1724 tests, coverage94.98%). Сборка `main` после merge `0de89b3`: [run #41536084636](https://github.com/inte11ectua1/skinulis/actions/runs/41536084636) **выполнялся на момент снимка**, не объявлять его прошедшим без проверки. **Human APPROVED для PR #77 не зарегистрирован**; эта проблема не исчезает от зелёного CI. T-01 #2 закрыта `not_planned`, без полного branch protection DoD evidence; [M5→M6 handoff](M5_CLOSEOUT_M6_HANDOFF.md). Production deploy после merge не автоматический.
+M5 задачи #59/#60/#61/#62/#76 закрыты по принятому объёму; последняя O-09 [PR #77](https://github.com/inte11ectua1/skinulis/pull/77) merged с head [5/5 CI success](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706) (1278 unit +446 PostgreSQL =1724 tests, coverage94.98%). Сборка `main` после merge `0de89b3`: [run #41536084636](https://github.com/inte11ectua1/skinulis/actions/runs/41536084636) **5/5 success**. [Release #41537783167](https://github.com/inte11ectua1/skinulis/actions/runs/41537783167) также success (trusted publish, не deployment). **Human APPROVED для PR #77 не зарегистрирован**; эта проблема не исчезает от зелёного CI. T-01 #2 закрыта `not_planned`, без полного branch protection DoD evidence; [M5→M6 handoff](M5_CLOSEOUT_M6_HANDOFF.md). Production deploy после merge не автоматический.
 
 ## Исторический M4 closeout / назначение M5 (31.10.2026)
 

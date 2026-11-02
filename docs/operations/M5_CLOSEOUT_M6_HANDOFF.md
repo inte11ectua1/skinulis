@@ -1,6 +1,6 @@
 # M5 Delivery → M6 Acceptance: закрытие и handoff (03.11.2026)
 
-**Решение владельца (Тимур): M5 завершён и принят по согласованному объёму разработки и первичного deployment.** Это **не** означает, что полный DoD курса, все release gates или live Telegram demo приняты. Срез к GitHub `main` `0de89b3a5f47522fe4932551d746fe1eb839e463` (merge PR #77); при подготовке документации CI на этом merge commit ещё выполнялся. Проверенный PR #77 CI — [5/5 success](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706).
+**Решение владельца (Тимур): M5 завершён и принят по согласованному объёму разработки и первичного deployment.** Это **не** означает, что полный DoD курса, все release gates или live Telegram demo приняты. Срез к GitHub `main` `0de89b3a5f47522fe4932551d746fe1eb839e463` (merge PR #77); [post-merge main CI #41536084636](https://github.com/inte11ectua1/skinulis/actions/runs/41536084636) **5/5 success**, [Release #41537783167](https://github.com/inte11ectua1/skinulis/actions/runs/41537783167) **success** (trusted publication, не deployment). [PR #77 CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706).
 
 ## 1. Что завершено
 
