@@ -5,7 +5,9 @@ set -euo pipefail
 aws --version 2>&1 | grep -q '^aws-cli/2\.'
 temporary=$(mktemp -d)
 trap 'rm -rf "$temporary"' EXIT
+# Retry only transient download failures (e.g. AWS S3 HTTP 503); never bypass TLS or digest pin.
 curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+  --retry 5 --retry-delay 2 --retry-max-time 120 --connect-timeout 15 --max-time 45 \
   https://s3.amazonaws.com/session-manager-downloads/plugin/1.2.896.0/ubuntu_64bit/session-manager-plugin.deb \
   --output "$temporary/plugin.deb"
 printf '%s  %s\n' \
