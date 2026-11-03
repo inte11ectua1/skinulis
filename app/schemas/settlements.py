@@ -53,7 +53,24 @@ class SettlementCreate(Input):
 
 
 class SettlementProfile(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "examples": [
+                {
+                    "id": 123,
+                    "group_id": 10,
+                    "sender_id": 20,
+                    "receiver_id": 10,
+                    "amount": "500.00",
+                    "status": "pending",
+                    "client_request_id": "00000000-0000-4000-8000-000000000001",
+                    "created_at": "2026-11-03T00:00:00Z",
+                    "resolved_at": None,
+                }
+            ]
+        },
+    )
     id: UserId
     group_id: UserId
     sender_id: UserId

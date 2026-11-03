@@ -9,6 +9,7 @@ from pydantic import (
     BeforeValidator,
     ConfigDict,
     Field,
+    JsonValue,
     field_validator,
     model_validator,
 )
@@ -29,6 +30,34 @@ from app.services.expenses import (
 Money = Annotated[
     str, Field(strict=True, max_length=10, pattern=r"^(0|[1-9][0-9]*)\.[0-9]{2}$")
 ]
+
+# Synthetic wire examples, shared only by documentation (never business defaults).
+_PREVIEW_EXAMPLE: dict[str, JsonValue] = {
+    "group_id": 10,
+    "payer_id": 1,
+    "title": "Обед",
+    "amount": "100.00",
+    "split_mode": "equal",
+    "shares": [{"user_id": 1, "amount": "50.00"}, {"user_id": 2, "amount": "50.00"}],
+}
+_RECEIPT_EXAMPLE: dict[str, JsonValue] = _PREVIEW_EXAMPLE | {
+    "split_mode": "by_items",
+    "items": [
+        {
+            "position": 1,
+            "title": "Пицца",
+            "amount": "100.00",
+            "shares": _PREVIEW_EXAMPLE["shares"],
+        }
+    ],
+}
+_SAVED_EXAMPLE: dict[str, JsonValue] = {
+    "id": 100,
+    "client_request_id": "00000000-0000-4000-8000-000000000001",
+    "created_at": "2026-11-03T00:00:00Z",
+    "deleted_at": None,
+    "version": 1,
+}
 Version = Annotated[int, Field(strict=True, ge=1, le=2**63 - 1)]
 
 
@@ -177,10 +206,12 @@ class ItemProfile(BaseModel):
 
 
 class PreviewProfile(_PreviewFields):
+    model_config = ConfigDict(json_schema_extra={"examples": [_PREVIEW_EXAMPLE]})
     split_mode: Literal["equal", "custom"]
 
 
 class ReceiptPreviewProfile(_PreviewFields):
+    model_config = ConfigDict(json_schema_extra={"examples": [_RECEIPT_EXAMPLE]})
     split_mode: Literal["by_items"]
     items: list[ItemProfile] = Field(min_length=1, max_length=50)
 
@@ -204,10 +235,16 @@ class _ExpenseFields(BaseModel):
 
 
 class ExpenseProfile(_ExpenseFields):
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [_PREVIEW_EXAMPLE | _SAVED_EXAMPLE]}
+    )
     split_mode: Literal["equal", "custom"]
 
 
 class ReceiptExpenseProfile(_ExpenseFields):
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [_RECEIPT_EXAMPLE | _SAVED_EXAMPLE]}
+    )
     split_mode: Literal["by_items"]
     items: list[ItemProfile] = Field(min_length=1, max_length=50)
 

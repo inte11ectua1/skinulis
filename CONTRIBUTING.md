@@ -45,3 +45,11 @@ uv audit --locked
 GitHub Actions run для текущего head; до завершения workflow задача не готова.
 CI не заменяет review бизнес-логики и ручные проверки ещё не реализованных E2E.
 
+## Связь с командой
+
+- Тимур — [inte11ectua1](https://github.com/inte11ectua1): платформа, безопасность, CI/CD и интеграция.
+- Олег — [pylinolg-max](https://github.com/pylinolg-max): финансовая логика, PostgreSQL и транзакции.
+- Лера — [Valeria18-new](https://github.com/Valeria18-new): Telegram-клиент и пользовательские сценарии.
+
+Технические вопросы фиксируем в соответствующей Issue, review запрашиваем на PR.
+Секреты и реальные пользовательские данные в обсуждения не отправляем.

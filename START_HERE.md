@@ -1,19 +1,24 @@
 # «Скинулись» — стартовая точка команды
 
-**Актуализация 03.11.2026 · GitHub main `0de89b3`. M1–M5 завершены по согласованному объёму разработки; текущая следующая фаза — M6 Acceptance (план, Issues ещё не заведены).** [Статус](docs/STATUS.md) · [M5 closeout / M6 handoff](docs/operations/M5_CLOSEOUT_M6_HANDOFF.md).
+**Актуализация: 03.11.2026.** M1–M5 приняты владельцем по объёму реализации.
+Текущая работа — **единая M6 Acceptance [#79](https://github.com/inte11ectua1/skinulis/issues/79)**,
+ответственный Тимур. Финансовый QA, user guide и demo входят в неё; отдельных задач
+для Олега/Леры не создавать. M7 подготовлена как [#80](https://github.com/inte11ectua1/skinulis/issues/80),
+её реализация не входит в M6.
 
-## M5: закрытие и ограничения
+[Отчёт M6](docs/reviews/M6_ACCEPTANCE_REPORT.md) · [USER_GUIDE](docs/USER_GUIDE.md) ·
+[3-user smoke/demo](docs/reviews/M6_THREE_USER_DEMO.md) · [STATUS](docs/STATUS.md).
+Основной GitHub baseline M6 — `638a976`; production по read-only проверке всё ещё
+`f7020cd`, публикация GHCR не означает deployment. Исторический
+[M5 closeout](docs/operations/M5_CLOSEOUT_M6_HANDOFF.md) сохраняется как датированный
+handoff, его фразы о не созданных M6 Issues больше не описывают текущую очередь.
 
-- **Тимур:** T-09 [#59](https://github.com/inte11ectua1/skinulis/issues/59), T-10 [#60](https://github.com/inte11ectua1/skinulis/issues/60) — closed completed; первый approved API rollout на AWS/HTTPS, GHCR, private DB, JSON logs/runbook. API production проверялся на deployed SHA `f7020cd`, не на последнем `main`.
-- **Олег:** O-08 [#61](https://github.com/inte11ectua1/skinulis/issues/61) / [PR #74](https://github.com/inte11ectua1/skinulis/pull/74) — security/finance/races и нагрузка.
-- **Лера:** L-06 [#62](https://github.com/inte11ectua1/skinulis/issues/62) / [PR #75](https://github.com/inte11ectua1/skinulis/pull/75) — mock Telegram + local HTTP/PostgreSQL E2E, без live polling.
-- **Тимур:** O-09 [#76](https://github.com/inte11ectua1/skinulis/issues/76) / [PR #77](https://github.com/inte11ectua1/skinulis/pull/77) — исправлен PostgreSQL double checkout; 100-client HTTP500 → 0, p95≈0.96/1.10s. **Цель p95≤500ms не достигнута**, но принята владельцем как необязательная для закрытия O-09. [Полный отчёт](docs/operations/LOAD_TEST_M5.md).
-- После PR #77 [CI PR 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706); post-merge main CI на момент среза выполнялся. Все задачи M5 закрыты и соответствующие PR merged; документационный [PR #78](https://github.com/inte11ectua1/skinulis/pull/78) проходит ревью. **Не придумывать уже назначенные M6 issues**.
-- **G5** имеет evidence первого rollout; **G1** не полностью принят (T-01 #2 закрыта `not_planned`); **G2/G3/G4** без live Telegram. Не все исторические PR имеют независимый GitHub APPROVED. Полный DoD/защита ещё впереди.
-
-## M6: дальнейшая работа
-
-Тимур — T-11 audit DoD/чистый запуск/demo readiness; Олег — финальная financial/PG QA без повторного ID O-09; Лера — L-07 user guide + сценарий для трёх пользователей. Сначала согласовать отдельные Issues и acceptance; live Telegram и новый AWS rollout требуют отдельной команды Тимура. М5 → M6 [handoff](docs/operations/M5_CLOSEOUT_M6_HANDOFF.md).
+**G6 не закрыт:** недостающие исторические APPROVED, admin bypass, формальная
+приёмка логирования и live Telegram остаются открыты. p95≤500ms — FAIL с внутренним
+решением владельца для M5; эта норма есть в ТЗ курса, исключение преподавателем не согласовано.
+В M6 разрешены изолированные локальные тесты и read-only public/GitHub проверки.
+Не менять AWS/production/branch protection и не запускать deploy, миграции production,
+polling или нагрузку production без отдельного разрешения.
 
 ## Команда
 - **Тимур** — technical lead, платформа, безопасность, DevOps и интеграция.

@@ -1,6 +1,25 @@
 # Фактическое состояние проекта
 
-**Актуализация 03.11.2026 (срез GitHub): `main` `0de89b3a5f47522fe4932551d746fe1eb839e463`. M5 Delivery завершён и принят владельцем по согласованному объёму.** [M5 closeout → M6 handoff](operations/M5_CLOSEOUT_M6_HANDOFF.md) содержит критерии, факты и ограничения. Все **M5 Issues** закрыты, соответствующие feature PR замержены; текущее обновление документации оформлено отдельным [PR #78](https://github.com/inte11ectua1/skinulis/pull/78). Новые M6 Issues **пока не созданы**.
+**03.11.2026: M6 Acceptance [#79](https://github.com/inte11ectua1/skinulis/issues/79) выполняется Тимуром.**
+Единая задача включает DoD, finance QA, offline Telegram, user guide и demo.
+[Итоговый отчёт и полная матрица](reviews/M6_ACCEPTANCE_REPORT.md),
+[инструкция](USER_GUIDE.md), [3-user smoke](reviews/M6_THREE_USER_DEMO.md).
+Baseline main `638a976`: CI5/5 и trusted GHCR publish success. Public HTTPS/health200
+проверены заново; `/version` всё ещё `f7020cd`. Новый main не deployed.
+
+**G6 / полное закрытие M6 — PARTIALLY:** локальная техническая приёмка и offline E2E
+подтверждаются отчётом; formal human approvals отсутствуют у37/48 merged PR,
+защита main допускает admin bypass. ТЗ курса прямо требует p95≤500ms,
+поэтому внутренний waiver M5 не закрывает performance FAIL для преподавателя.
+Live G2/G3/G4 не проверены. Формальный выбор
+stdlib logging без actor context требует решения относительно требований курса.
+Исторические approvals нельзя дописать как evidence до merge. Настройки GitHub/AWS,
+production deployment и polling в M6 не менялись.
+
+M5 принят владельцем; [closeout/handoff](operations/M5_CLOSEOUT_M6_HANDOFF.md)
+сохраняет исторический срез до создания #79. M7 [#80](https://github.com/inte11ectua1/skinulis/issues/80)
+может использовать готовые артефакты для подготовки; заявление о полной готовности
+к защите требует оставшихся подтверждений. Открыты только #79/#80 на начале аудита.
 
 ## M5 — завершённый объём и доказательства
 
@@ -16,19 +35,19 @@
 
 ## G1/G2/G3/G4/G5/DoD
 
-- **G5:** технические признаки **первого** production rollout (HTTPS/health/version/GHCR/migrations/private DB, blocked /internal) подтверждены 02.11. Проверка после новых merge/deploy отсутствует; production не обновлялся автоматически.
+- **G5:** первый production rollout подтверждён02.11; M6 повторно проверил внешний HTTPS/health/version/internal deny. Развёрнутый SHA всё ещё `f7020cd`; новый main не deployed.
 - **G1/T-01 #2:** закрыта `not_planned`, но direct-push/admin-bypass evidence и полноценная приемка не получены. Есть формальный процессный риск.
 - **G2/G3/G4:** реализации/автотесты есть, **живой Telegram E2E не проведён**, polling off. [#38](https://github.com/inte11ectua1/skinulis/issues/38) закрыта `not_planned`, не `verified`.
 - **Официальный DoD:** зелёный CI, покрытие, инфраструктура и docs — лишь часть критериев. Independent human APPROVED требуется на каждом PR; у ряда исторических PR, включая #77, его нет. Не утверждать весь DoD без отдельного M6 audit и согласования с преподавателем при исключениях.
-- [Production API](https://3-25-53-31.sslip.io) и его действительность проверялись во время первого rollout (02.11), **не** текущим запросом. Развёрнутый код `f7020cd` отличается от `main` `0de89b3`; rollout flag false; live bot off. Новый deploy/Telegram polling только после отдельного разрешения.
+- [Production API](https://3-25-53-31.sslip.io): в M6 подтверждены trusted HTTPS, health200/databaseok и version=`f7020cd`, отличный от baseline main=`638a976`. Flag прочитан false; EC2 процессы заново не инспектировались, по последнему server evidence bot off. Новый deploy/polling только по отдельному разрешению.
 - Бэкапы/escrow/домен/Elastic IP не расширять без явной новой задачи: это не закреплённые отдельные требования преподавательского DoD. Не путать `Stop` с `Terminate` EC2.
 
-## Следующий этап — M6 Acceptance (план, задачи не назначены)
+## Текущий этап — M6 Acceptance
 
-- **Тимур / T-11:** независимая сверка DoD, чистый Docker Compose запуск, evidence protection/reviews, release/demo checklist.
-- **Олег / финальный QA:** проверка финансовых invariants и отчёта O-09, explanation/report к защите; **ID O-09 уже занят #76** — следующий scope оформлять отдельно.
-- **Лера / L-07:** user guide и 3-user demo/smoke script; live Telegram только по разрешению Тимура.
-- **M7:** подготовка презентации 7 минут, демо 5 минут и Q&A. Новые GitHub Issues не создавались в рамках обновления документации.
+Исполнитель единой #79 — Тимур; консультации и независимое review команды не
+меняют ownership. Проверки/команды/ошибки/остаточные риски — в отчёте выше.
+M7 #80 — презентация7мин, репетиция demo5мин и Q&A; live Telegram и финальный
+rollout требуют отдельных разрешений. Новые дублирующие M6 Issues не создавались.
 
 ## Исторические срезы до закрытия M5
 

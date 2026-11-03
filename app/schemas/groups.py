@@ -16,7 +16,7 @@ class Input(BaseModel):
 
 
 class EmptyInput(Input):
-    pass
+    model_config = ConfigDict(json_schema_extra={"examples": [{}]})
 
 
 class GroupCreate(Input):
@@ -100,6 +100,13 @@ class GroupProfile(BaseModel):
 
 
 class MemberProfile(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {"user_id": 1, "joined_at": "2026-11-03T00:00:00Z", "is_owner": True}
+            ]
+        }
+    )
     user_id: UserId
     joined_at: UTCDateTime
     is_owner: bool
@@ -158,6 +165,13 @@ class InviteIssued(InviteProfile):
 
 
 class LinkIssued(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {"code": "<one-time-code>", "expires_at": "2026-11-03T00:10:00Z"}
+            ]
+        }
+    )
     code: str = Field(repr=False)
     expires_at: UTCDateTime
 
