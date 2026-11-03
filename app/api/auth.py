@@ -8,9 +8,16 @@ from app.config import Settings
 from app.core.security import create_access_token
 from app.db import get_session
 from app.models import User
-from app.schemas.auth import LoginInput, RegisterInput, TokenResponse, UserProfile
+from app.schemas.auth import (
+    LoginInput,
+    ProfileUpdate,
+    RegisterInput,
+    TokenResponse,
+    UserProfile,
+)
 from app.schemas.system import ErrorResponse
 from app.services.auth import authenticate_user, register_user
+from app.services.profiles import update_profile
 
 router = APIRouter(
     tags=["identity"],
@@ -68,3 +75,16 @@ def login(
 )
 def me(user: Annotated[User, Depends(get_current_user)]) -> UserProfile:
     return UserProfile.model_validate(user)
+
+
+@router.patch(
+    "/users/me", response_model=UserProfile, responses={400: {"model": ErrorResponse}}
+)
+def rename_me(
+    payload: ProfileUpdate,
+    user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> UserProfile:
+    return UserProfile.model_validate(
+        update_profile(session, user, payload.display_name)
+    )

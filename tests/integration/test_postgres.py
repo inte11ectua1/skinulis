@@ -41,7 +41,7 @@ def test_migrations_on_empty_database_are_repeatable(database_url: URL) -> None:
                 connection.execute(
                     text("SELECT version_num FROM alembic_version")
                 ).scalar_one()
-                == "0006_settlement_notification_claim"
+                == "0007_user_display_name"
             )
         command.check(Config(str(Path("alembic.ini").resolve())))
     finally:

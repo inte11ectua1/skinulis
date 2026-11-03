@@ -668,3 +668,17 @@ commit, после restart сначала проверьте сохранённ�
 ради зелёного результата. Для локальной диагностики доступны bot unit tests,
 strict mypy --platform linux и integration-каталог через отдельный TEST_DATABASE_URL;
 это не заменяет обязательный полный Linux CI. Подробности — в матрице L-06.
+
+
+### Редизайн Telegram #84 (на ревью)
+
+Имена вместо технических ID, русские карточки, один редактируемый экран,
+выбор нескольких участников без новых сообщений. [Галерея и приёмка](docs/ux/84_TELEGRAM_REDESIGN.md),
+[контракт имён / миграция](docs/contracts/84_DISPLAY_NAMES.md).
+
+Для отдельного `@skinulis_testing_bot`: [локальный Mac runbook](docs/operations/LOCAL_TELEGRAM_UX.md).
+`uv run python scripts/local_ux.py init`, затем `up` и `check` готовят только
+изолированные PostgreSQL/API. Токен заполняет владелец в частном 0600-файле вне Git.
+`start-bot --allow-test-polling` выполняется только после отдельного разрешения;
+`stop-bot` останавливает локальный polling, `stop` — локальный стек без удаления volumes.
+AWS/production не используются. Live и визуальная приёмка пока не подтверждены.

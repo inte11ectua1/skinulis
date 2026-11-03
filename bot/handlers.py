@@ -12,14 +12,23 @@ from pydantic import SecretStr
 
 from bot.actions import dispatch_action
 from bot.api_client import ApiError, ApiFailure, BotApi
-from bot.dto import valid_capability
+from bot.dto import telegram_name, valid_capability
 from bot.expense_actions import dispatch_expense
 from bot.expense_wizard import text_input
 from bot.group_views import begin_group, group_name, show_groups
 from bot.keyboards import main_menu
+from bot.presentation import html_card
+from bot.profile_views import profile_screen, rename_input
 from bot.settlement_actions import amount_message, dispatch_settlement
 from bot.settlement_views import pending_groups
-from bot.states import ExpenseFlow, GroupFlow, Navigation, Onboarding, SettlementFlow
+from bot.states import (
+    ExpenseFlow,
+    GroupFlow,
+    Navigation,
+    Onboarding,
+    ProfileFlow,
+    SettlementFlow,
+)
 from bot.ui import ACTIVE as ACTIVE
 from bot.ui import FAILED as FAILED
 from bot.ui import HELP as HELP
@@ -32,6 +41,7 @@ from bot.ui import (
     offer_onboarding,
     ready,
     recover_identity,
+    reset,
     safe_error,
     screen,
 )
@@ -48,7 +58,8 @@ async def start(
         return
     if message.from_user is None or message.from_user.id != message.chat.id:
         return
-    await state.clear()
+    await reset(state)
+    await state.update_data(telegram_name=telegram_name(message.from_user.full_name))
     if command.args:
         payload = command.args
         if not payload.startswith("i_") or not valid_capability(payload[2:]):
@@ -60,12 +71,15 @@ async def start(
     await check_profile(message, state, api, message.from_user.id)
 
 
-async def help_command(message: Message) -> None:
-    await message.answer(HELP)
+async def help_command(message: Message, state: FSMContext) -> None:
+    if await state.get_state() not in (None, Navigation.menu.state):
+        await message.answer(html_card(HELP), parse_mode="HTML")
+    else:
+        await screen(message, state, HELP, [("← Главное меню", "home")])
 
 
 async def cancel(message: Message, state: FSMContext, api: BotApi) -> None:
-    await state.clear()
+    await reset(state)
     await message.answer(
         "Незавершённый ввод очищен. Сохранённые записи не отменяются. Если ответ на запись был потерян, её результат остаётся неизвестным: сначала проверьте свои данные."
     )
@@ -83,7 +97,9 @@ async def unknown_message(message: Message) -> None:
     )
 
 
-async def callback_message(callback: CallbackQuery) -> Message | None:
+async def callback_message(
+    callback: CallbackQuery, *, acknowledge: bool = True
+) -> Message | None:
     message = callback.message
     if (
         not isinstance(message, Message)
@@ -92,14 +108,15 @@ async def callback_message(callback: CallbackQuery) -> Message | None:
     ):
         await callback.answer(PRIVATE, show_alert=True)
         return None
-    await callback.answer()
+    if acknowledge:
+        await callback.answer()
     return message
 
 
-async def menu_help(callback: CallbackQuery) -> None:
+async def menu_help(callback: CallbackQuery, state: FSMContext) -> None:
     message = await callback_message(callback)
     if message is not None:
-        await help_command(message)
+        await help_command(message, state)
 
 
 async def check_health(callback: CallbackQuery, state: FSMContext, api: BotApi) -> None:
@@ -127,7 +144,7 @@ async def menu_action(callback: CallbackQuery, state: FSMContext, api: BotApi) -
         return
     actor = callback.from_user.id
     try:
-        profile = await api.profile(actor)
+        await api.profile(actor)
     except ApiError as error:
         if (
             error.error_code == "telegram_profile_not_found"
@@ -146,12 +163,7 @@ async def menu_action(callback: CallbackQuery, state: FSMContext, api: BotApi) -
         elif action == "pending":
             await pending_groups(message, state, api, actor)
         elif action == "profile":
-            kind = "Telegram + API" if profile.email else "Telegram-only"
-            await message.answer(
-                f"Ваш профиль #{profile.id}\nТип: {kind}\nEmail: {profile.email or 'не указан'}\nСлияние/перепривязка аккаунтов не поддерживается.",
-                parse_mode=None,
-                reply_markup=main_menu(),
-            )
+            await profile_screen(message, state, api, actor)
         else:
             await message.answer(UNAVAILABLE, reply_markup=main_menu())
     except ApiError as error:
@@ -161,9 +173,10 @@ async def menu_action(callback: CallbackQuery, state: FSMContext, api: BotApi) -
 async def current_action(
     callback: CallbackQuery, state: FSMContext, api: BotApi, bot: Bot
 ) -> None:
-    message = await callback_message(callback)
+    message = await callback_message(callback, acknowledge=False)
     if message is None:
         return
+    await state.update_data(telegram_name=telegram_name(callback.from_user.full_name))
     data = await state.get_data()
     parts = (callback.data or "").split(":")
     actions = data.get("actions", [])
@@ -174,15 +187,26 @@ async def current_action(
         or not parts[2].isdigit()
         or not 0 <= int(parts[2]) < len(actions)
     ):
-        await message.answer(UNKNOWN)
+        await callback.answer(
+            "Этот экран уже обновлён. Используйте последние кнопки.", show_alert=True
+        )
         return
+    await callback.answer()
     action = str(actions[int(parts[2])])
     # Invalidate before dispatch, including errors or Telegram delivery failures.
     await state.update_data(screen=None, actions=[])
     previous = await state.get_state()
     actor = callback.from_user.id
     try:
-        if action.startswith("ex:"):
+        if action.startswith("ui:page:"):
+            await screen(
+                message,
+                state,
+                data["view_text"],
+                data["view_actions"],
+                page=int(action.rsplit(":", 1)[1]),
+            )
+        elif action.startswith("ex:"):
             await dispatch_expense(action, message, state, api, actor, previous)
         elif action.startswith("st:"):
             await dispatch_settlement(action, message, state, api, actor, previous)
@@ -194,12 +218,21 @@ async def current_action(
         # Only reads/preparation may get a retry button here. Financial writes
         # own their frozen-body recovery; never repeat them from this handler.
         prefix, _, command = action.partition(":")
-        read = prefix in {"groups", "group", "members", "invites", "issue", "recover"}
+        read = prefix in {
+            "groups",
+            "group",
+            "members",
+            "invites",
+            "issue",
+            "recover",
+            "profile",
+        }
         read = (
             read
             or (
                 prefix == "ex"
-                and command.split(":")[0] in {"new", "edit", "edit_begin", "delete"}
+                and command.split(":")[0]
+                in {"new", "edit", "edit_begin", "delete", "receipt", "detail", "list"}
             )
             or (
                 prefix == "st"
@@ -226,7 +259,7 @@ async def link_code(message: Message, state: FSMContext, api: BotApi) -> None:
     raw = message.text or ""
     if not valid_capability(raw):
         await message.answer(
-            "Нужен только одноразовый код из API (43 URL-safe символа). Пароль и JWT сюда не отправляйте. /cancel — отмена."
+            "Код не подошёл. Скопируйте целиком одноразовый код подключения. Пароль и ключ доступа не отправляйте."
         )
         return
     if message.from_user is None:
@@ -245,7 +278,7 @@ async def link_code(message: Message, state: FSMContext, api: BotApi) -> None:
             await state.set_state(Onboarding.link_code)
             await message.answer(safe_error(error) + " Пришлите новый код или /cancel.")
     else:
-        await message.answer("API подтвердил привязку аккаунта.")
+        await message.answer("Аккаунт привязан.")
         await ready(message, state)
 
 
@@ -277,6 +310,9 @@ def create_router() -> Router:
     router.message.register(help_command, Command("help"))
     router.message.register(cancel, Command("cancel"))
     router.message.register(link_code, Onboarding.link_code, ~F.text.startswith("/"))
+    router.message.register(
+        rename_input, ProfileFlow.name, F.text, ~F.text.startswith("/")
+    )
     router.message.register(group_name, GroupFlow.name, ~F.text.startswith("/"))
     router.message.register(
         amount_message, SettlementFlow.amount, F.text, ~F.text.startswith("/")

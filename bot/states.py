@@ -51,3 +51,7 @@ class SettlementFlow(StatesGroup):
     create_unknown = State()
     transition_confirm = State()
     transition_unknown = State()
+
+
+class ProfileFlow(StatesGroup):
+    name = State()

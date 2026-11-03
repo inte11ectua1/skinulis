@@ -167,7 +167,11 @@ class BotApi(HealthApi, Protocol):
         self, actor: int, expense_id: int, version: int
     ) -> ExpenseMutation: ...
     async def profile(self, actor: int) -> UserProfile: ...
-    async def bootstrap(self, actor: int) -> UserProfile: ...
+    async def bootstrap(
+        self, actor: int, display_name: str | None = None
+    ) -> UserProfile: ...
+    async def rename_profile(self, actor: int, display_name: str) -> UserProfile: ...
+
     async def link(self, actor: int, code: SecretStr) -> UserProfile: ...
     async def groups(self, actor: int, *, offset: int = 0) -> Page[GroupProfile]: ...
     async def create_group(self, actor: int, draft: GroupDraft) -> GroupProfile: ...
@@ -493,9 +497,24 @@ class ApiClient:
             version=version,
         )
 
-    async def bootstrap(self, actor: int) -> UserProfile:
+    async def bootstrap(
+        self, actor: int, display_name: str | None = None
+    ) -> UserProfile:
         return await self._request(
-            "POST", "/internal/users/bootstrap", UserProfile, actor=actor, body={}
+            "POST",
+            "/internal/users/bootstrap",
+            UserProfile,
+            actor=actor,
+            body={"display_name": display_name} if display_name is not None else {},
+        )
+
+    async def rename_profile(self, actor: int, display_name: str) -> UserProfile:
+        return await self._request(
+            "PATCH",
+            "/internal/users/me",
+            UserProfile,
+            actor=actor,
+            body={"display_name": display_name},
         )
 
     async def link(self, actor: int, code: SecretStr) -> UserProfile:

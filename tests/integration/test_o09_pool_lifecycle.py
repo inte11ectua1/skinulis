@@ -135,7 +135,13 @@ def test_actor_is_loaded_detached_before_endpoint_needs_connection(
     response = client.get("/_o09/actor", headers=headers(h, internal))
     assert response.status_code == 200
     assert response.json()["id"] == 10
-    assert set(response.json()) == {"id", "email", "telegram_id", "created_at"}
+    assert set(response.json()) == {
+        "id",
+        "email",
+        "telegram_id",
+        "created_at",
+        "display_name",
+    }
     assert pool(engine).checkedout() == 0
 
 

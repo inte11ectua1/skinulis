@@ -150,7 +150,13 @@ def test_register_login_me_and_no_actor_spoofing(
         assert response.status_code == 201
         profile = response.json()
         profiles.append(profile)
-        assert set(profile) == {"id", "email", "telegram_id", "created_at"}
+        assert set(profile) == {
+            "id",
+            "email",
+            "telegram_id",
+            "created_at",
+            "display_name",
+        }
         login = client.post(
             "/auth/login", json={"email": email.lower(), "password": password}
         )

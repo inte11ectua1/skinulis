@@ -19,9 +19,10 @@ from pydantic import SecretStr
 
 from bot.api_client import ApiClient
 from bot.main import create_dispatcher
+from bot.presentation import STATUSES
 from bot.settlement_state import load
 from bot.states import SettlementFlow
-from tests.unit.test_bot_handlers import Harness
+from tests.unit.test_bot_handlers import Harness, business_state
 from tests.unit.test_bot_onboarding_groups import ContractFixture, error
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -221,6 +222,8 @@ class SettlementJourney:
     server: SettlementServer
 
     def button(self, label: str) -> str:
+        if label.startswith("@"):
+            return self.ui.action(label[1:])
         for sent in reversed(self.ui.sent):
             markup = sent.reply_markup
             if isinstance(markup, InlineKeyboardMarkup):
@@ -236,6 +239,26 @@ class SettlementJourney:
         raise AssertionError((label, self.ui.sent[-1].text))
 
     async def choose(self, label: str) -> str:
+        await self.ui.sync_screen()
+        if label == "Я перевёл деньги" and "st:new:10" not in self.ui.last_actions:
+            await self.ui.click(self.ui.action("st:list:10:all:all:0"))
+        for _ in range(60):
+            try:
+                self.button(label)
+                break
+            except (AssertionError, ValueError):
+                forward = next(
+                    (
+                        a
+                        for a in self.ui.last_actions
+                        if a.startswith("ui:page:")
+                        and int(a.rsplit(":", 1)[1]) > self.ui.last_page
+                    ),
+                    None,
+                )
+                if forward is None:
+                    raise
+                await self.ui.click(self.ui.action(forward))
         button = self.button(label)
         await self.ui.click(button)
         return button
@@ -254,19 +277,20 @@ class SettlementJourney:
         self.server.groups = [self.server.group()]
         await self.ui.send("/start")
         await self.ui.click("menu:groups")
-        await self.choose("Группа 10 · #10")
+        await self.choose("Группа 10")
 
     async def draft(self, amount: str = "500.00") -> None:
         await self.group()
+        await self.choose("@st:list:10:all:all:0")
         await self.choose("Я перевёл деньги")
-        await self.choose("Участник #10")
+        await self.choose("@st:receiver:10")
         await self.ui.send(amount)
 
     async def open(self, status: str = "pending") -> None:
         self.server.saved[123] = self.server.record(status)
         await self.group()
-        await self.choose("История переводов")
-        await self.choose("Открыть перевод #123")
+        await self.choose("@st:list:10:all:all:0")
+        await self.choose("@st:detail:10:123")
 
 
 @pytest.fixture
@@ -297,18 +321,18 @@ async def test_balances_plan_are_exact_read_only_and_refresh(
     j = settlement_journey
     j.server.balances_data["balances"].append({"user_id": 40, "balance": "0.00"})
     await j.group()
-    await j.choose("Балансы")
-    assert "2200.00 ₽ — участнику должны" in j.text
-    assert "-1400.00 ₽ — участник должен" in j.text
-    assert "0.00 ₽ — долгов нет" in j.text
-    await j.choose("Обновить балансы")
+    await j.choose("💰 Кто кому должен")
+    assert "Должны вернуть 2 200 ₽" in j.text
+    assert "Нужно вернуть 1 400 ₽" in j.text
+    assert "Долгов нет" in j.text
+    await j.choose("Обновить")
     assert len(j.calls("GET", "/internal/groups/10/balances")) == 2
     await j.choose("План переводов")
-    assert "#20 → Участник #10: 1400.00 ₽" in j.text
-    assert "Минимальное число переводов не обещается" in j.text
+    assert "Без имени · Б → Без имени · А\n<b>1 400 ₽</b>" in j.text
+    assert "Это рекомендации" in j.text
     j.server.plan_data["transfers"] = []
-    await j.choose("Обновить план")
-    assert "По текущему плану переводов нет" in j.text
+    await j.choose("Обновить")
+    assert "Все рассчитались" in j.text
     assert not j.server.saved and all(r.method == "GET" for r in j.server.requests)
 
 
@@ -319,7 +343,7 @@ async def test_pending_partial_and_no_expense_cap(
 ) -> None:
     j = settlement_journey
     await j.draft(amount)
-    assert not j.server.saved and "уже отправили" in j.text
+    assert not j.server.saved and "Деньги уже отправлены" in j.text
     before = copy.deepcopy(j.server.balances_data)
     old = await j.choose("Да, я уже перевёл деньги")
     await j.ui.click(old)
@@ -327,7 +351,7 @@ async def test_pending_partial_and_no_expense_cap(
     assert j.server.balances_data == before
     calls = j.calls("POST", "/internal/groups/10/settlements")
     assert len(calls) == 1 and json.loads(calls[0].content)["amount"] == amount
-    assert "Актуальный статус API: pending" in j.text
+    assert "Баланс изменится после подтверждения" in j.text
     assert (
         j.calls("GET", "/internal/groups/10/settlements")[-1].url.params["direction"]
         == "outgoing"
@@ -350,7 +374,7 @@ async def test_role_transition_with_warning_and_current_server_response(
         "cancel": "Отменить заявку",
     }[operation]
     await j.choose(label)
-    assert "реально полученные деньги" in j.ui.sent[-1].text
+    assert "действительно получили" in j.ui.sent[-1].text
     confirm = {
         "confirm": "Да, деньги получены",
         "reject": "Да, отклонить",
@@ -363,13 +387,14 @@ async def test_role_transition_with_warning_and_current_server_response(
         operation
     ]
     assert j.server.saved[123]["status"] == target
-    assert f"Актуальный статус API: {target}" in j.text
+    assert STATUSES[target] in j.text
     assert label not in str(j.ui.sent[-2].reply_markup)
     if operation == "confirm":
-        assert j.calls("GET", "/internal/groups/10/balances") and j.calls(
-            "GET", "/internal/groups/10/settlement-plan"
-        )
-        assert "1700.00" in j.text and "-900.00" in j.text
+        assert "Кто кому должен" in str(
+            j.ui.sent[-1].reply_markup
+        ) and "План переводов" in str(j.ui.sent[-1].reply_markup)
+        await j.choose("Кто кому должен")
+        assert "1 700 ₽" in j.text and "Нужно вернуть 900 ₽" in j.text
 
 
 @pytest.mark.anyio
@@ -414,10 +439,10 @@ async def test_lost_create_response_then_terminal_original_replay_reads_current(
     frozen = (await load(j.ui.state)).frozen
     j.server.saved[123]["status"] = "confirmed"
     j.server.saved[123]["resolved_at"] = "2026-10-30T12:01:00Z"
-    await j.choose("История переводов")
+    await j.choose("@st:list:10:all:all:0")
     assert (await load(j.ui.state)).frozen == frozen
     assert "Я перевёл деньги" not in str(j.ui.sent[-1].reply_markup)
-    await j.choose("К восстановлению заявки")
+    await j.choose("К восстановлению")
     await j.choose("Повторить исходную заявку")
     posts = j.calls("POST", "/internal/groups/10/settlements")
     assert len(posts) == 2 and posts[0].content == posts[1].content
@@ -425,8 +450,8 @@ async def test_lost_create_response_then_terminal_original_replay_reads_current(
         j.server.history[next(iter(j.server.history))]["settlement"]["status"]
         == "pending"
     )
-    assert "Актуальный статус API: confirmed" in j.text
-    assert "Актуальный статус API: pending" not in j.text
+    assert "Получатель подтвердил получение" in j.text
+    assert "Баланс изменится после подтверждения" not in j.text
     assert len(j.server.saved) == 1
 
 
@@ -460,7 +485,7 @@ async def test_transition_lost_response_uses_list_not_fake_success(
     target = {"confirm": "confirmed", "reject": "rejected", "cancel": "cancelled"}[
         operation
     ]
-    assert f"Актуальный статус API: {target}" in j.text
+    assert STATUSES[target] in j.text
     assert len(j.calls("POST", f"/internal/settlements/123/{operation}")) == 1
 
 
@@ -501,7 +526,7 @@ async def test_balance_conflict_does_not_rewrite_pending_or_amount(
         j.server.saved[123]["status"] == "pending"
         and j.server.saved[123]["amount"] == "500.00"
     )
-    assert "Долг или доступный кредит изменился" in j.text
+    assert "Долг изменился" in j.text
     assert "Отклонить" in str(j.ui.sent[-1].reply_markup)
 
 
@@ -519,9 +544,11 @@ async def test_filters_pagination_empty_and_current_record_search(
         for i in range(1, 22)
     }
     await j.group()
-    await j.choose("История переводов")
-    await j.choose("Статус: confirmed")
-    await j.choose("Направление: исходящие")
+    await j.choose("@st:list:10:all:all:0")
+    await j.choose("Фильтры")
+    await j.choose("Подтверждено")
+    await j.choose("Фильтры")
+    await j.choose("От меня")
     await j.choose("Далее")
     assert dict(j.calls("GET", "/internal/groups/10/settlements")[-1].url.params) == {
         "limit": "20",
@@ -529,12 +556,12 @@ async def test_filters_pagination_empty_and_current_record_search(
         "direction": "outgoing",
         "status": "confirmed",
     }
-    await j.choose("Открыть перевод #21")
-    assert "На проверенной странице запись не найдена" in j.ui.sent[-1].text
+    await j.choose("@st:detail:10:21")
+    assert "На этой странице запись не найдена" in j.ui.sent[-1].text
     await j.choose("Следующая страница поиска")
-    assert "Актуальный статус API: confirmed" in j.text
+    assert "Получатель подтвердил получение" in j.text
     await j.choose("Ожидают подтверждения")
-    assert "На этой странице переводов нет" in j.ui.sent[-1].text
+    assert "Здесь пока нет переводов" in j.ui.sent[-1].text
     assert dict(j.calls("GET", "/internal/groups/10/settlements")[-1].url.params) == {
         "limit": "20",
         "offset": "0",
@@ -566,7 +593,7 @@ async def test_bad_amount_stays_at_input(
     j = settlement_journey
     await j.group()
     await j.choose("Я перевёл деньги")
-    await j.choose("Участник #10")
+    await j.choose("@st:receiver:10")
     await j.ui.send(bad)
     assert (
         await j.ui.state.get_state() == SettlementFlow.amount.state
@@ -597,13 +624,13 @@ async def test_start_help_cancel_restart_and_stale_callbacks(
     before = await j.ui.state.get_data()
     await j.ui.send("/start")
     await j.ui.send("/help")
-    assert await j.ui.state.get_data() == before
+    assert business_state(await j.ui.state.get_data()) == business_state(before)
     await j.ui.send("/cancel")
     assert (
         not j.server.saved and "settlement_session" not in await j.ui.state.get_data()
     )
     await j.ui.click(stale)
-    assert "черновик потерян" in j.ui.sent[-1].text
+    assert j.ui.alerts[-1].show_alert
 
 
 @pytest.mark.anyio
@@ -637,14 +664,14 @@ async def test_main_pending_menu_dedup_and_foreign_callback(
     j = settlement_journey
     await j.group()
     await j.ui.click("menu:pending")
-    await j.choose("Группа 10 · #10")
+    await j.choose("Группа 10")
     assert (
         j.calls("GET", "/internal/groups/10/settlements")[-1].url.params["direction"]
         == "incoming"
     )
     await j.choose("Я перевёл деньги")
     assert "Участник #20" not in str(j.ui.sent[-1].reply_markup)
-    await j.choose("Участник #10")
+    await j.choose("@st:receiver:10")
     await j.ui.send("500.00")
     button = j.button("Да, я уже перевёл деньги")
     await j.ui.click(button, user_id=456)
@@ -668,10 +695,10 @@ async def test_creation_ack_with_failed_read_has_no_fake_current_pending(
         error(503, "internal_error")
     ]
     await j.choose("Да, я уже перевёл деньги")
-    assert "Актуальный статус API: pending" not in j.text
+    assert "Баланс изменится после подтверждения" not in j.text
     assert (await load(j.ui.state)).frozen
     await j.choose("Повторить чтение статуса")
-    assert "Актуальный статус API: pending" in j.text
+    assert "Баланс изменится после подтверждения" in j.text
     assert len(j.calls("POST", "/internal/groups/10/settlements")) == 1
 
 
@@ -700,7 +727,11 @@ async def test_wrong_group_success_payload_not_disclosed(
             "group_id": 999,
             "amount": "9876.54",
         }
-    await j.choose(screen_name)
+    await j.choose(
+        {"Балансы": "💰 Кто кому должен", "История переводов": "Переводы"}.get(
+            screen_name, screen_name
+        )
+    )
     assert "9876.54" not in j.text and "#999" not in j.text
 
 
@@ -714,7 +745,7 @@ async def test_read_failures_offer_safe_repeat(
     j.server.overrides["GET", "/internal/groups/10/balances"] = [
         error(status, "unknown")
     ]
-    await j.choose("Балансы")
+    await j.choose("💰 Кто кому должен")
     assert "Балансы группы #10 (API)" not in j.text
-    await j.choose("Обновить балансы")
-    assert "2200.00" in j.text
+    await j.choose("Обновить")
+    assert "2 200 ₽" in j.text

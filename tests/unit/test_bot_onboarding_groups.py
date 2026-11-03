@@ -18,10 +18,10 @@ from aiogram.types import InlineKeyboardMarkup, Update, User
 from pydantic import SecretStr
 
 from bot.api_client import ApiClient
-from bot.handlers import ACTIVE, UNKNOWN
+from bot.handlers import ACTIVE
 from bot.main import create_dispatcher
 from bot.states import GroupFlow, Navigation, Onboarding
-from tests.unit.test_bot_handlers import Harness
+from tests.unit.test_bot_handlers import Harness, business_state
 
 
 @pytest.fixture
@@ -96,6 +96,10 @@ class ContractFixture:
             return result
         path = request.url.path
         if path == "/internal/users/me":
+            if request.method == "PATCH" and self.profile is not None:
+                body = json.loads(request.content)
+                assert set(body) == {"display_name"}
+                self.profile = {**self.profile, "display_name": body["display_name"]}
             return (
                 httpx.Response(200, json=self.profile)
                 if self.profile
@@ -103,8 +107,8 @@ class ContractFixture:
             )
         body = json.loads(request.content) if request.content else {}
         if path == "/internal/users/bootstrap":
-            assert body == {}
-            self.profile = self.user()
+            assert set(body) <= {"display_name"}
+            self.profile = {**self.user(), "display_name": body.get("display_name")}
             return httpx.Response(200, json=self.profile)
         if path == "/internal/users/telegram-link":
             assert body == {"code": self.token}
@@ -154,6 +158,8 @@ class Journey:
     server: ContractFixture
 
     def button(self, label: str) -> str:
+        if label.startswith("@"):
+            return self.ui.action(label[1:])
         markup = self.ui.sent[-1].reply_markup
         assert isinstance(markup, InlineKeyboardMarkup)
         matches = [
@@ -166,6 +172,24 @@ class Journey:
         return matches[0]
 
     async def choose(self, label: str) -> None:
+        await self.ui.sync_screen()
+        for _ in range(60):
+            try:
+                self.button(label)
+                break
+            except (AssertionError, ValueError):
+                forward = next(
+                    (
+                        a
+                        for a in self.ui.last_actions
+                        if a.startswith("ui:page:")
+                        and int(a.rsplit(":", 1)[1]) > self.ui.last_page
+                    ),
+                    None,
+                )
+                if forward is None:
+                    raise
+                await self.ui.click(self.ui.action(forward))
         await self.ui.click(self.button(label))
 
     @property
@@ -181,11 +205,11 @@ class Journey:
         self.server.profile = self.server.user()
         self.server.groups = [self.server.group()]
         await self.ui.click("menu:groups")
-        await self.choose("Группа 1 · #1")
+        await self.choose("Группа 1")
 
     async def invite_confirmation(self) -> None:
         await self.open_group()
-        await self.choose("Приглашения")
+        await self.choose("Пригласить друзей")
         await self.choose("Создать приглашение")
 
 
@@ -232,7 +256,7 @@ async def test_new_user_requires_consent_and_stale_double_click_cannot_write(
     await ui.click(confirm)
     assert len(journey.writes("/internal/users/bootstrap")) == 1
     assert await ui.state.get_state() == Navigation.menu.state
-    assert ui.sent[-1].text == UNKNOWN
+    assert ui.alerts[-1].show_alert
 
 
 @pytest.mark.anyio
@@ -240,11 +264,11 @@ async def test_existing_user_read_only_and_decline_no_write(journey: Journey) ->
     await journey.ui.send("/start")
     await journey.choose("Не сейчас")
     assert all(r.method == "GET" for r in journey.server.requests)
-    assert await journey.ui.state.get_data() == {}
+    assert business_state(await journey.ui.state.get_data()) == {}
     journey.server.profile = journey.server.user()
     for _ in range(2):
         await journey.ui.send("/start")
-        assert journey.ui.sent[-1].text == "Что хотите сделать?"
+        assert "<b>Скинулись</b>" in journey.ui.sent[-1].text
     assert all(r.method == "GET" for r in journey.server.requests)
 
 
@@ -254,12 +278,12 @@ async def test_link_success_clears_code_and_profile_screen(
 ) -> None:
     await journey.ui.send("/start")
     await journey.choose("Привязать существующий аккаунт")
-    assert "POST /users/me/telegram-link-code" in journey.ui.sent[-1].text
+    assert "Получите одноразовый код" in journey.ui.sent[-1].text
     with caplog.at_level(logging.DEBUG):
         await journey.ui.send(journey.server.token)
     await journey.ui.click("menu:profile")
-    assert "Telegram + API" in journey.ui.sent[-1].text
-    assert "подтвердил привязку" in journey.text
+    assert "Telegram и аккаунт по почте связаны" in journey.ui.sent[-1].text
+    assert "Аккаунт привязан" in journey.text
     assert journey.server.token not in journey.text + caplog.text + repr(
         await journey.ui.state.get_data()
     )
@@ -280,7 +304,7 @@ async def test_link_invalid_capability_recovery(journey: Journey, reason: str) -
         journey.server.token
         not in repr(await journey.ui.state.get_data()) + journey.text
     )
-    assert "подтвердил привязку" not in journey.text
+    assert "Аккаунт привязан" not in journey.text
 
 
 @pytest.mark.anyio
@@ -298,7 +322,7 @@ async def test_link_conflict_never_merges_or_reports_success(
     await journey.choose("Привязать существующий аккаунт")
     await journey.ui.send(journey.server.token)
     assert await journey.ui.state.get_state() == Onboarding.uncertain.state
-    assert "подтвердил привязку" not in journey.text
+    assert "Аккаунт привязан" not in journey.text
     await journey.choose("Проверить профиль")
     assert len(journey.writes("/internal/users/telegram-link")) == 1
 
@@ -317,8 +341,8 @@ async def test_group_create_normalization_and_same_uuid_retry(journey: Journey) 
     writes = journey.writes("/internal/groups")
     assert len(writes) == 2 and writes[0].content == writes[1].content
     assert json.loads(writes[0].content)["name"] == "Café"
-    assert "Группа: Café" in journey.ui.sent[-1].text
-    assert "Владелец: участник #1" in journey.ui.sent[-1].text
+    assert "<b>Café</b>" in journey.ui.sent[-1].text
+    assert "вы · владелец" in journey.ui.sent[-1].text
 
 
 @pytest.mark.anyio
@@ -332,11 +356,11 @@ async def test_empty_groups_pagination_and_members(journey: Journey) -> None:
     assert "На этой странице групп нет" in journey.ui.sent[-1].text
     assert journey.server.requests[-1].url.params["offset"] == "20"
     await journey.choose("Назад по списку")
-    await journey.choose("Группа 1 · #1")
-    await journey.choose("Все участники")
-    assert "#1 — владелец" in journey.ui.sent[-1].text
+    await journey.choose("Группа 1")
+    await journey.choose("Участники")
+    assert "вы · владелец" in journey.ui.sent[-1].text
     await journey.choose("К группе")
-    assert "Группа: Группа 1" in journey.ui.sent[-1].text
+    assert "<b>Группа 1</b>" in journey.ui.sent[-1].text
 
 
 @pytest.mark.anyio
@@ -352,14 +376,14 @@ async def test_invite_issue_list_revoke_and_double_click(journey: Journey) -> No
     )
     assert journey.server.token not in repr(await journey.ui.state.get_data())
     await journey.ui.click("menu:groups")
-    await journey.choose("Группа 1 · #1")
-    await journey.choose("Приглашения")
-    await journey.choose("Отозвать #1")
+    await journey.choose("Группа 1")
+    await journey.choose("Пригласить друзей")
+    await journey.choose("Отозвать ссылку 1")
     confirm = journey.button("Да, отозвать")
     await journey.ui.click(confirm)
     await journey.ui.click(confirm)
     assert len(journey.writes("/internal/groups/1/invites/1")) == 1
-    assert "подтвердил отзыв" in journey.text
+    assert "Ссылка отозвана" in journey.text
 
 
 @pytest.mark.anyio
@@ -368,7 +392,7 @@ async def test_invite_replay_null_never_restores_secret_or_issues_another(
 ) -> None:
     await journey.invite_confirmation()
     await journey.choose("Создать приглашение")
-    assert "секрет уже выдавался" in journey.text
+    assert "Ссылка уже была выдана" in journey.text
     assert "https://t.me" not in journey.text
     assert len(journey.writes("/internal/groups/1/invites")) == 1
 
@@ -384,7 +408,7 @@ async def test_invite_timeout_reads_metadata_then_explicit_revoke(
         httpx.ReadTimeout("secret")
     ]
     await journey.choose("Создать приглашение")
-    assert "Секрет потерян" in journey.ui.sent[-1].text
+    assert "ссылка не сохранилась" in journey.ui.sent[-1].text
     assert "https://t.me" not in journey.text
     await journey.choose("Отозвать потерянное приглашение")
     await journey.choose("Да, отозвать")
@@ -413,7 +437,7 @@ async def test_deep_link_onboarding_then_voluntary_join_and_repeat_update(
     await update(journey.ui.bot, repeated, api=journey.ui.api)
     await journey.ui.click(confirm)
     assert len(journey.writes("/internal/group-invites/join")) == 1
-    assert "подтвердил: вы вступили" in journey.text
+    assert "Вы в группе" in journey.text
     assert journey.server.token not in journey.text + repr(
         await journey.ui.state.get_data()
     )
@@ -433,7 +457,7 @@ async def test_join_safe_errors_and_no_group_disclosure(
     ]
     await journey.ui.send("/start i_" + journey.server.token)
     await journey.choose("Вступить")
-    assert "подтвердил: вы вступили" not in journey.text
+    assert "Вы в группе" not in journey.text
     assert "Группа 1" not in journey.text
     assert not any("members" in r.url.path for r in journey.server.requests)
     assert journey.server.token not in journey.text + repr(
@@ -455,7 +479,7 @@ async def test_join_timeout_reads_groups_without_blind_post_retry(
     await journey.choose("Обновить")
     await journey.ui.click(confirm)
     assert "Результат пока неизвестен" in journey.text
-    assert "подтвердил: вы вступили" not in journey.text
+    assert "Вы в группе" not in journey.text
     assert len(journey.writes("/internal/group-invites/join")) == 1
     assert any(r.url.path == "/internal/groups" for r in journey.server.requests)
 
@@ -465,7 +489,7 @@ async def test_member_cannot_see_owner_action_and_api_rechecks_stale_owner(
     journey: Journey,
 ) -> None:
     await journey.open_group()
-    owner_button = journey.button("Приглашения")
+    owner_button = journey.button("Пригласить друзей")
     journey.server.overrides[("GET", "/internal/groups/1/invites")] = [
         error(403, "owner_required")
     ]
@@ -475,7 +499,7 @@ async def test_member_cannot_see_owner_action_and_api_rechecks_stale_owner(
     journey.server.owner = 2
     journey.server.profile = journey.server.user()
     await journey.ui.click("menu:groups")
-    await journey.choose("Группа 1 · #1")
+    await journey.choose("Группа 1")
     markup = journey.ui.sent[-1].reply_markup
     assert isinstance(markup, InlineKeyboardMarkup)
     assert "Приглашения" not in [b.text for row in markup.inline_keyboard for b in row]
@@ -507,11 +531,11 @@ async def test_cancel_each_step_and_repeated_start_preserve_draft(
         await journey.invite_confirmation()
         if stage == "revoke":
             await journey.choose("Создать приглашение")
-            await journey.choose("Отозвать #1")
+            await journey.choose("Отозвать ссылку 1")
     before = await journey.ui.state.get_data()
     await journey.ui.send("/start")
     assert journey.ui.sent[-1].text == ACTIVE
-    assert await journey.ui.state.get_data() == before
+    assert business_state(await journey.ui.state.get_data()) == business_state(before)
     writes_before = sum(r.method != "GET" for r in journey.server.requests)
     await journey.ui.send("/cancel")
     assert sum(r.method != "GET" for r in journey.server.requests) == writes_before
@@ -576,14 +600,14 @@ async def test_bad_name_code_stale_callback_restart_and_unexpected_text(
     stale = journey.button("Создать профиль")
     await journey.choose("Привязать существующий аккаунт")
     await journey.ui.send("some password or JWT")
-    assert "Нужен только одноразовый код" in journey.ui.sent[-1].text
+    assert "Код не подошёл" in journey.ui.sent[-1].text
     await journey.ui.click(stale)
-    assert journey.ui.sent[-1].text == UNKNOWN
+    assert journey.ui.alerts[-1].show_alert
     await journey.ui.send("/unknown")
     assert "текущем экране" in journey.ui.sent[-1].text
     await journey.ui.state.clear()  # restart loses MemoryStorage draft
     await journey.ui.click(stale)
-    assert journey.ui.sent[-1].text == UNKNOWN
+    assert journey.ui.alerts[-1].show_alert
     journey.server.profile = journey.server.user()
     await journey.ui.click("menu:create")
     for invalid in [" ", "x" * 121, "a\u200db", "a\x00b"]:
@@ -636,10 +660,10 @@ async def test_invite_unknown_result_can_read_next_page_after_api_recovery(
         error(503, "internal_error")
     ]
     await journey.choose("Создать приглашение")
-    await journey.choose("Проверить metadata")
+    await journey.choose("Проверить приглашения")
     assert "остаётся неизвестным" in journey.ui.sent[-1].text
     await journey.choose("Проверить следующую страницу")
-    assert "Найдена запись приглашения #1" in journey.ui.sent[-1].text
+    assert "Приглашение создано" in journey.ui.sent[-1].text
     assert len(journey.writes("/internal/groups/1/invites")) == 1
     assert "https://t.me" not in journey.text
 
@@ -650,7 +674,7 @@ async def test_revoke_timeout_retries_same_target_and_consumed_conflict(
 ) -> None:
     await journey.invite_confirmation()
     await journey.choose("Создать приглашение")
-    await journey.choose("Отозвать #1")
+    await journey.choose("Отозвать ссылку 1")
     journey.server.overrides[("DELETE", "/internal/groups/1/invites/1")] = [
         httpx.ReadTimeout("private"),
         error(409, "invite_consumed"),

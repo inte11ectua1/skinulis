@@ -12,9 +12,8 @@ from bot.expense_dto import DRAFT, ReceiptItem
 from bot.expense_views import (
     WARNING,
     expense_detail,
+    expense_items,
     expense_list,
-    lines,
-    mutation_balances,
     snapshot,
 )
 from bot.expense_wizard import (
@@ -27,8 +26,9 @@ from bot.expense_wizard import (
     review,
     select,
 )
+from bot.presentation import money
 from bot.states import ExpenseFlow, Navigation
-from bot.ui import UNCERTAIN, UNCERTAIN_KINDS, UNKNOWN, safe_error, screen
+from bot.ui import UNCERTAIN, UNCERTAIN_KINDS, UNKNOWN, reset, safe_error, screen
 
 
 async def preview(
@@ -38,7 +38,7 @@ async def preview(
         body = draft.business()
     except ValidationError:
         await message.answer(
-            "Заполните название, сумму, непустой состав/доли или 1–50 полных позиций. Итоги и совпадение долей проверит API."
+            "Заполните название, сумму и участников. Для чека добавьте хотя бы одну позицию."
         )
         await review(message, state, draft)
         return
@@ -56,8 +56,12 @@ async def preview(
         await review(message, state, draft)
         return
     # Do not enable save until every server row has been delivered successfully.
-    await lines(
-        message, ["Серверный предпросмотр — ещё не сохранено."] + snapshot(result)
+    preview_text = "\n".join(
+        ["Проверка расхода · ещё не сохранено", *snapshot(result, draft.names)]
+    )
+    await state.update_data(
+        preview_summary=preview_text,
+        preview_details="\n".join(snapshot(result, draft.names, include_items=True)),
     )
     draft.preview_body = body.model_dump_json()
     await keep(state, draft)
@@ -65,12 +69,18 @@ async def preview(
     await screen(
         message,
         state,
-        "Сохранить? API заново проверит данные и участников. Предпросмотр ничего не резервирует."
+        preview_text
+        + "\n\nВсё верно? Сохраним только после подтверждения."
         + ("\n" + WARNING if draft.expense_id else ""),
         [
             (
                 "Сохранить изменения" if draft.expense_id else "Подтвердить расход",
                 "ex:save",
+            ),
+            *(
+                [("Позиции чека", "ex:preview_details")]
+                if draft.mode == "by_items"
+                else []
             ),
             ("Исправить черновик", "ex:review"),
             ("Отменить расход", "ex:cancel"),
@@ -80,12 +90,12 @@ async def preview(
 
 def expense_error(error: ApiError) -> str:
     messages = {
-        "validation_error": "API отклонил данные. Проверьте суммы (расход 0.01–1000000.00 ₽), точное совпадение custom-долей, название, состав и позиции. Подробностей ошибочного поля API не передаёт.",
-        "invalid_participants": "API не принял участников. Обновите состав группы и проверьте выбранных потребителей.",
+        "validation_error": "Расход не прошёл проверку. Проверьте сумму, участников и доли: вместе они должны составлять сумму расхода.",
+        "invalid_participants": "Состав группы изменился. Обновите состав группы и проверьте выбранных потребителей.",
         "expense_author_required": "Изменять или удалять расход может только автор. Владелец группы не может менять чужой расход.",
         "expense_version_conflict": "Расход уже изменился. Перечитайте карточку и начните редактирование заново.",
-        "request_conflict": "UUID относится к другому намерению. Проверьте список расходов. Новый ключ автоматически не создаётся.",
-        "request_history_unavailable": "API не может подтвердить исходный запрос по этому UUID. Проверьте сохранённые расходы; не создавайте дубль.",
+        "request_conflict": "Этот запрос уже относится к другой записи. Проверьте список расходов. Новый ключ автоматически не создаётся.",
+        "request_history_unavailable": "Не удалось найти исходный запрос. Проверьте сохранённые расходы; не создавайте дубль.",
     }
     return messages.get(error.error_code or "", safe_error(error))
 
@@ -96,7 +106,7 @@ async def reconcile_put(
     assert draft.expense_id is not None
     await state.set_state(ExpenseFlow.put_uncertain)
     try:
-        current = await api.expense(actor, draft.expense_id)
+        await api.expense(actor, draft.expense_id)
     except ApiError as error:
         if error.kind not in {ApiFailure.MISSING, ApiFailure.FORBIDDEN}:
             await screen(
@@ -114,8 +124,7 @@ async def reconcile_put(
         await expense_list(message, state, api, actor, draft.group_id)
         return
     await message.answer(
-        f"Текущая версия API: {current.version}; версия до запроса: {draft.version}. "
-        "Это не доказывает, кто внёс изменения. Старый PUT не повторяем. Проверьте карточку; для новой правки начните заново."
+        "Карточка могла измениться. Показываем текущее состояние; прежнюю правку не повторяем. Проверьте её перед новым редактированием."
     )
     await expense_detail(message, state, api, actor, draft.expense_id)
 
@@ -196,7 +205,7 @@ async def save(
                     if error.kind in UNCERTAIN_KINDS
                     else expense_error(error)
                 )
-                + " Не создавайте дубль. Повтор использует прежний UUID и неизменённый чек, включая порядок позиций. /cancel теряет ключ.",
+                + " Не создавайте новую запись. Можно повторить только прежнее действие с теми же данными. Отмена завершит восстановление.",
                 actions,
             )
         elif error.kind in {
@@ -213,15 +222,10 @@ async def save(
             await message.answer(expense_error(error))
             await expense_list(message, state, api, actor, draft.group_id)
         return
-    if draft.expense_id is None:
-        # 200 replay is the ORIGINAL envelope, even after PUT/DELETE. Always GET.
-        await message.answer(
-            "API подтвердил исходное создание расхода. Проверяем актуальную карточку: исходный ответ повтора может отличаться от текущего состояния."
-        )
-    else:
-        await message.answer("API подтвердил сохранение изменений.")
-        await mutation_balances(message, result)
-    await state.clear()
+    await state.update_data(
+        toast="Расход сохранён" if not replay else "Исходная запись найдена"
+    )
+    await reset(state)
     await expense_detail(message, state, api, actor, result.expense.id)
 
 
@@ -238,8 +242,7 @@ async def remove(message: Message, state: FSMContext, api: BotApi, actor: int) -
             await screen(
                 message,
                 state,
-                UNCERTAIN
-                + " Повтор DELETE того же расхода с прежней версией безопасен; первый DELETE всё равно проверит версию.",
+                UNCERTAIN + " Можно повторить то же удаление или проверить список.",
                 [
                     ("Повторить удаление", "ex:remove"),
                     ("Проверить расходы", f"ex:list:{gid}:0"),
@@ -247,18 +250,15 @@ async def remove(message: Message, state: FSMContext, api: BotApi, actor: int) -
             )
         else:
             await message.answer(expense_error(error))
-            await state.clear()
+            await reset(state)
             await expense_detail(message, state, api, actor, eid)
         return
     if result.expense.deleted_at is None:
-        await message.answer("Удаление не подтверждено ответом API. Обновите карточку.")
+        await message.answer("Удаление пока не подтверждено. Обновите карточку.")
         await expense_detail(message, state, api, actor, eid)
         return
-    await message.answer(
-        "API подтвердил soft-delete: расход исключён из расчётов, история и подтверждённые компенсации сохранены."
-    )
-    await mutation_balances(message, result)
-    await state.clear()
+    await state.update_data(toast="Расход удалён. Подтверждённые переводы сохранены.")
+    await reset(state)
     await expense_list(message, state, api, actor, gid)
 
 
@@ -280,7 +280,7 @@ async def dispatch_expense(
                 message,
                 state,
                 UNCERTAIN
-                + " Сохраняем прежние ID и версию DELETE. /cancel завершит восстановление.",
+                + " Прежнее действие сохранено. Отмена завершит восстановление.",
                 [("Повторить удаление", "ex:remove")],
             )
         elif recovery.get("expense_recovery") == "post":
@@ -289,7 +289,7 @@ async def dispatch_expense(
                 message,
                 state,
                 UNCERTAIN
-                + " UUID и исходный запрос сохранены. Просмотр списка не доказывает результат. /cancel очистит намерение.",
+                + " Исходное действие сохранено. Сначала проверьте список; отмена завершит восстановление.",
                 [("Повторить исходный запрос", "ex:post_retry")]
                 if recovery.get("expense_can_retry")
                 else [
@@ -301,6 +301,9 @@ async def dispatch_expense(
         return
     if command == "list":
         await expense_list(message, state, api, actor, int(parts[2]), int(parts[3]))
+        return
+    if command == "receipt":
+        await expense_items(message, state, api, actor, int(parts[2]))
         return
     if command == "detail":
         await expense_detail(message, state, api, actor, int(parts[2]))
@@ -315,7 +318,7 @@ async def dispatch_expense(
             await message.answer("Изменять расход может только его автор.")
             await expense_detail(message, state, api, actor, value.id)
             return
-        await state.clear()
+        await reset(state)
         if command == "edit":
             await state.set_state(ExpenseFlow.edit_confirm)
             actions = [
@@ -335,7 +338,7 @@ async def dispatch_expense(
         await screen(
             message,
             state,
-            f"{'Изменить' if command == 'edit' else 'Удалить'} свой расход «{value.title}» на {value.amount} ₽?\n"
+            f"{'Изменить' if command == 'edit' else 'Удалить'} свой расход «{value.title}» на {money(value.amount)}?\n"
             + WARNING,
             actions + [("Не менять", f"ex:detail:{value.id}")],
         )
@@ -376,6 +379,38 @@ async def dispatch_expense(
     }:
         await message.answer(UNKNOWN)
         return
+    if (
+        command in {"preview_details", "preview_back"}
+        and previous == ExpenseFlow.preview.state
+        and draft.preview_body is not None
+    ):
+        if command == "preview_details":
+            await screen(
+                message,
+                state,
+                str(data["preview_details"]),
+                [("← К подтверждению", "ex:preview_back"), ("Отмена", "ex:cancel")],
+            )
+        else:
+            await screen(
+                message,
+                state,
+                str(data["preview_summary"])
+                + "\n\nВсё верно?"
+                + ("\n" + WARNING if draft.expense_id else ""),
+                [
+                    (
+                        "Сохранить изменения"
+                        if draft.expense_id
+                        else "Подтвердить расход",
+                        "ex:save",
+                    ),
+                    ("Позиции чека", "ex:preview_details"),
+                    ("Исправить черновик", "ex:review"),
+                    ("Отмена", "ex:cancel"),
+                ],
+            )
+        return
     # Returning from a preview to ANY editing action requires a fresh preview.
     await keep(state, draft, changed=True)
     if command == "cancel":
@@ -413,10 +448,12 @@ async def dispatch_expense(
             ExpenseFlow.title.state if command == "title" else ExpenseFlow.amount.state,
             draft,
         )
+    elif command == "item_title_back":
+        await prompt(message, state, ExpenseFlow.item_title.state, draft)
     elif command == "select":
         await select(message, state, draft)
     elif (
-        command in {"toggle", "all", "selected"}
+        command in {"toggle", "all", "none", "selected"}
         and previous == ExpenseFlow.participants.state
     ):
         item = data.get("select_item") is True
@@ -432,6 +469,8 @@ async def dispatch_expense(
                 selected.append(uid)
         elif command == "all":
             selected[:] = draft.members
+        elif command == "none":
+            selected.clear()
         if not item:
             draft.shares = {k: v for k, v in draft.shares.items() if int(k) in selected}
         if command == "selected" and selected:
@@ -461,8 +500,7 @@ async def dispatch_expense(
             else:
                 await review(message, state, draft)
         else:
-            if command == "selected":
-                await message.answer("Выберите хотя бы одного участника.")
+            # Empty confirmation keeps the count on this panel without chat spam.
             await keep(state, draft, changed=True)
             await select(message, state, draft, item=item)
     elif command == "share" and int(parts[2]) in draft.selected:

@@ -14,6 +14,7 @@ from bot.settlement_notifications import NOTICE
 from bot.states import ExpenseFlow
 from tests.unit.test_bot_expenses import ExpenseJourney
 from tests.unit.test_bot_expenses import expense_journey as expense_journey
+from tests.unit.test_bot_handlers import business_state
 from tests.unit.test_bot_settlements import SettlementJourney
 from tests.unit.test_bot_settlements import settlement_journey as settlement_journey
 
@@ -33,7 +34,7 @@ async def test_known_rejected_save_preserves_draft_and_requires_new_preview(
     j = expense_journey
     await j.simple("custom")
     before = (await load(j.ui.state)).business()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     j.server.overrides["POST", CREATE] = [httpx.Response(status)]
     old = await j.choose("Подтвердить расход")
     assert (await load(j.ui.state)).business() == before
@@ -42,7 +43,7 @@ async def test_known_rejected_save_preserves_draft_and_requires_new_preview(
     assert len(j.calls("POST", CREATE)) == 1 and not j.server.saved
     await j.ui.click(old)
     assert len(j.calls("POST", CREATE)) == 1
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     await j.choose("Подтвердить расход")
     assert len(j.server.saved) == 1
     writes = j.calls("POST", CREATE)
@@ -54,12 +55,12 @@ async def test_changed_rejected_draft_is_a_new_intent(
 ) -> None:
     j = expense_journey
     await j.simple()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     j.server.overrides["POST", CREATE] = [httpx.Response(401)]
     await j.choose("Подтвердить расход")
     await j.choose("Изменить название")
     await j.ui.send("Другой обед")
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     await j.choose("Подтвердить расход")
     bodies = [json.loads(r.content) for r in j.calls("POST", CREATE)]
     assert bodies[0]["client_request_id"] != bodies[1]["client_request_id"]
@@ -74,8 +75,8 @@ async def test_malformed_callback_index_is_rejected_without_losing_current_scree
     await j.simple()
     before = await j.ui.state.get_data()
     await j.ui.click(f"l3:{before['screen']}:{index}")
-    assert "Эта кнопка больше не действует" in j.ui.sent[-1].text
-    assert await j.ui.state.get_data() == before
+    assert j.ui.alerts[-1].show_alert
+    assert business_state(await j.ui.state.get_data()) == business_state(before)
     assert not j.calls("POST", CREATE)
 
 
@@ -90,7 +91,7 @@ async def test_read_failure_has_fresh_read_retry_and_stale_button_cannot_write(
     await j.simple()
     await j.ui.send("/cancel")
     await j.ui.click("menu:groups")
-    await j.choose("Группа 100 · #100")
+    await j.choose("Группа 100")
     path = "/internal/groups/100/members"
     failures: dict[str, httpx.Response | Exception] = {
         "timeout": httpx.ReadTimeout("private diagnostic"),
@@ -102,7 +103,7 @@ async def test_read_failure_has_fresh_read_retry_and_stale_button_cannot_write(
         httpx.Response(failure) if isinstance(failure, int) else failures[failure]
     )
     j.server.overrides["GET", path] = [response]
-    old = await j.choose("Все участники")
+    old = await j.choose("Участники")
     fresh = j.button("Повторить просмотр")
     assert fresh != old
     await j.ui.click(old)
@@ -110,7 +111,7 @@ async def test_read_failure_has_fresh_read_retry_and_stale_button_cannot_write(
     count = len(j.calls("GET", path))
     await j.ui.click(fresh)
     assert len(j.calls("GET", path)) == count + 1
-    assert "Участники:" in j.text
+    assert "Участники группы" in j.text
     assert not j.calls("POST", CREATE)
 
 
@@ -119,7 +120,7 @@ async def test_rate_limit_is_clear_and_keeps_frozen_intent(
 ) -> None:
     j = expense_journey
     await j.simple()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     j.server.overrides["POST", CREATE] = [httpx.Response(429)]
     await j.choose("Подтвердить расход")
     frozen = await load(j.ui.state)
@@ -136,7 +137,7 @@ async def test_unexpected_mutation_group_is_uncertain_and_not_displayed(
 ) -> None:
     j = expense_journey
     await j.simple()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     foreign = copy.deepcopy(j.server.preview_data)
     private = secrets.token_urlsafe(32)
     foreign.update(
@@ -164,7 +165,7 @@ async def test_unknown_write_result_keeps_exact_json_without_automatic_retry(
 ) -> None:
     j = expense_journey
     await j.receipt()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     failures: dict[str, httpx.Response | Exception] = {
         "network": httpx.ConnectError("private"),
         "json": httpx.Response(201, content=b"{"),
@@ -208,7 +209,7 @@ async def test_notification_claim_failure_cannot_retry_finance_or_leak(
     assert len(j.calls("POST", "/internal/groups/10/settlements")) == 1
     assert len(j.calls("POST", path)) == 1
     assert j.server.saved[123]["status"] == "pending"
-    assert "Актуальный статус API: pending" in j.text
+    assert "Баланс изменится после подтверждения" in j.text
     assert not any(
         getattr(c.args[1], "text", None) == NOTICE for c in j.ui.session.await_args_list
     )

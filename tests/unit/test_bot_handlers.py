@@ -1,7 +1,8 @@
 import secrets
 from collections.abc import AsyncIterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import Any
 from unittest.mock import AsyncMock
 
 import httpx
@@ -10,11 +11,12 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.session.base import BaseSession
 from aiogram.enums import ChatType, MessageEntityType
 from aiogram.fsm.context import FSMContext
-from aiogram.methods import AnswerCallbackQuery, SendMessage
+from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
 from aiogram.types import (
     CallbackQuery,
     Chat,
     InaccessibleMessage,
+    InlineKeyboardMarkup,
     Message,
     MessageEntity,
     Update,
@@ -25,6 +27,7 @@ from bot.api_client import ApiClient
 from bot.handlers import ACTIVE, FAILED, HELP, PRIVATE, UNKNOWN
 from bot.keyboards import main_menu
 from bot.main import create_dispatcher
+from bot.presentation import html_card
 from bot.states import Navigation
 
 
@@ -42,6 +45,46 @@ class Harness:
     requests: list[httpx.Request]
     update_id: int = 0
     actor: int = 123
+    last_actions: list[str] = field(default_factory=list)
+    last_nonce: str = ""
+    last_page: int = 0
+
+    def __post_init__(self) -> None:
+        original = self.session.side_effect
+
+        async def response(bot: Bot, method: Any, **kwargs: Any) -> Any:
+            result = (
+                await original(bot, method, **kwargs) if callable(original) else True
+            )
+            if isinstance(method, (SendMessage, EditMessageText)) and not isinstance(
+                result, Message
+            ):
+                return Message(
+                    message_id=(method.message_id or 1)
+                    if isinstance(method, EditMessageText)
+                    else 100 + len(self.sent),
+                    date=datetime.now(UTC),
+                    chat=Chat(
+                        id=int(method.chat_id or self.actor), type=ChatType.PRIVATE
+                    ),
+                    from_user=User(id=bot.id, is_bot=True, first_name="Тестовый бот"),
+                    text=method.text,
+                    reply_markup=method.reply_markup
+                    if isinstance(method.reply_markup, InlineKeyboardMarkup)
+                    else None,
+                )
+            return result
+
+        self.session.side_effect = response
+
+    def action(self, value: str) -> str:
+        return f"l3:{self.last_nonce}:{self.last_actions.index(value)}"
+
+    async def sync_screen(self) -> None:
+        data = await self.state.get_data()
+        self.last_actions = data.get("actions", [])
+        self.last_nonce = data.get("screen", "")
+        self.last_page = data.get("view_page", 0)
 
     @property
     def state(self) -> FSMContext:
@@ -51,11 +94,30 @@ class Harness:
 
     @property
     def sent(self) -> list[SendMessage]:
+        """Rendered screen events, including edits. Raw wire methods stay in session."""
+        result = []
+        for call in self.session.await_args_list:
+            method = call.args[1]
+            if (
+                isinstance(method, (SendMessage, EditMessageText))
+                and method.chat_id == self.actor
+            ):
+                result.append(
+                    SendMessage(
+                        chat_id=self.actor,
+                        text=method.text or "",
+                        reply_markup=method.reply_markup,
+                        parse_mode=method.parse_mode,
+                    )
+                )
+        return result
+
+    @property
+    def alerts(self) -> list[AnswerCallbackQuery]:
         return [
             call.args[1]
             for call in self.session.await_args_list
-            if isinstance(call.args[1], SendMessage)
-            and call.args[1].chat_id == self.actor
+            if isinstance(call.args[1], AnswerCallbackQuery) and call.args[1].show_alert
         ]
 
     def message(self, text: str, *, chat_type: ChatType = ChatType.PRIVATE) -> Message:
@@ -88,6 +150,8 @@ class Harness:
             api=self.api,
         )
 
+        await self.sync_screen()
+
     async def click(
         self,
         data: str | None,
@@ -112,6 +176,8 @@ class Harness:
             Update(update_id=self.update_id, callback_query=callback),
             api=self.api,
         )
+
+        await self.sync_screen()
 
 
 @pytest.fixture
@@ -161,10 +227,10 @@ async def harness() -> AsyncIterator[Harness]:
 async def test_start_repeat_and_no_false_profile_success(harness: Harness) -> None:
     for _ in range(2):
         await harness.send("/start")
-        assert harness.sent[-1].text == "Что хотите сделать?"
-        assert harness.sent[-1].reply_markup == main_menu()
+        assert "<b>Скинулись</b>" in harness.sent[-1].text
+        assert "Мои группы" in str(harness.sent[-1].reply_markup)
         assert await harness.state.get_state() == Navigation.menu.state
-        assert await harness.state.get_data() == {}
+        assert business_state(await harness.state.get_data()) == {}
     combined = " ".join(message.text for message in harness.sent)
     assert "Профиль создан" not in combined
     assert "Вы авторизованы" not in combined
@@ -178,7 +244,7 @@ async def test_deep_link_is_not_consumed_or_echoed(harness: Harness) -> None:
     await harness.send("/start " + payload)
     assert "Не удалось открыть приглашение" in harness.sent[-1].text
     assert payload not in harness.sent[-1].text
-    assert await harness.state.get_data() == {}
+    assert business_state(await harness.state.get_data()) == {}
     assert not harness.requests
 
 
@@ -187,11 +253,11 @@ async def test_help_command_and_button_preserve_draft(harness: Harness) -> None:
     await harness.state.set_state("Future:input")
     await harness.state.set_data({"draft": "unsaved"})
     await harness.send("/help")
-    assert harness.sent[-1].text == HELP
+    assert harness.sent[-1].text == html_card(HELP)
     await harness.click("menu:help")
-    assert harness.sent[-1].text == HELP
+    assert harness.sent[-1].text == html_card(HELP)
     assert await harness.state.get_state() == "Future:input"
-    assert await harness.state.get_data() == {"draft": "unsaved"}
+    assert business_state(await harness.state.get_data()) == {"draft": "unsaved"}
 
 
 @pytest.mark.anyio
@@ -201,8 +267,8 @@ async def test_cancel_clears_draft_and_returns_to_menu(harness: Harness) -> None
     for _ in range(2):
         await harness.send("/cancel")
         assert await harness.state.get_state() == Navigation.menu.state
-        assert await harness.state.get_data() == {}
-        assert harness.sent[-1].reply_markup == main_menu()
+        assert business_state(await harness.state.get_data()) == {}
+        assert "Мои группы" in str(harness.sent[-1].reply_markup)
         assert "Сохранённые записи" in harness.sent[-2].text
 
 
@@ -215,13 +281,13 @@ async def test_menu_and_repeated_buttons_are_honest(
 ) -> None:
     await harness.click(action)
     if action == "menu:pending":
-        assert "На этой странице групп нет" in harness.sent[-1].text
+        assert "Групп пока нет" in harness.sent[-1].text
     elif action == "menu:create":
         assert "Как назовём" in harness.sent[-1].text
         await harness.click(action)
         assert harness.sent[-1].text == ACTIVE
     elif action == "menu:profile":
-        assert "Telegram-only" in harness.sent[-1].text
+        assert "Вход через Telegram" in harness.sent[-1].text
     else:
         assert "пока нет групп" in harness.sent[-1].text
     assert all(request.method == "GET" for request in harness.requests)
@@ -237,7 +303,7 @@ async def test_start_and_navigation_do_not_silently_discard_draft(
     await harness.click("menu:groups")
     await harness.click("menu:health")
     assert all(message.text == ACTIVE for message in harness.sent)
-    assert await harness.state.get_data() == {"draft": "unsaved"}
+    assert business_state(await harness.state.get_data()) == {"draft": "unsaved"}
 
 
 @pytest.mark.anyio
@@ -251,7 +317,7 @@ async def test_unknown_input_and_stale_callback_do_not_echo_secrets(
     await harness.click(None)
     assert harness.sent[-1].text == UNKNOWN
     assert all(private not in message.text for message in harness.sent)
-    assert await harness.state.get_data() == {}
+    assert business_state(await harness.state.get_data()) == {}
 
 
 @pytest.mark.anyio
@@ -340,3 +406,21 @@ def test_keyboard_has_unique_safe_callbacks() -> None:
     callbacks = [button.callback_data for button in buttons]
     assert len(set(callbacks)) == len(callbacks)
     assert all(data is not None and len(data.encode()) <= 64 for data in callbacks)
+
+
+def business_state(data: dict[str, Any]) -> dict[str, Any]:
+    return {
+        k: v
+        for k, v in data.items()
+        if k
+        not in {
+            "screen",
+            "actions",
+            "view_text",
+            "view_actions",
+            "view_page",
+            "panel_id",
+            "telegram_name",
+            "toast",
+        }
+    }

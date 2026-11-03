@@ -457,3 +457,17 @@ PR42 merged 28.10.2026, Issue39 closed; это перепроверено при
 ## O-06 — merged / Issue #46 closed (30.10.2026)
 
 [PR #51](https://github.com/inte11ectua1/skinulis/pull/51) merged в `main` (`88df77d64deb1bd0dbd5702e91b648f954d45fb0`). JWT/verified bot public/internal GET balances/plan, exact SQL NUMERIC/zero shares, Q-05 greedy и согласованный read-only REPEATABLE READ snapshot. [CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41096303217): 871 unit + 310 PostgreSQL = **1181 tests**, coverage 95,58%. Issue #46 закрыта как completed после технической проверки; независимое human APPROVED в GitHub не зарегистрировано, это не формальная G4 verification. O-07 #47 **может начинаться**, живое Telegram тестирование по решению Тимура остаётся отложенным.
+
+
+## #84 — Telegram UX и локальный тест (feature branch, на ревью)
+
+Реализованы единые русские карточки, имена/редактирование профиля, single-panel
+multi-select, групповые/финансовые экраны и изолированный Mac runner. Nullable
+`users.display_name` добавляется миграцией `0007_user_display_name`; production не
+мигрировался. [Контракт](contracts/84_DISPLAY_NAMES.md), [галерея/чек-лист](ux/84_TELEGRAM_REDESIGN.md),
+[локальный запуск](operations/LOCAL_TELEGRAM_UX.md).
+
+Технические проверки и PR фиксируются в описании PR. Внешние Telegram-запросы,
+тестовый polling и визуальная/live-приёмка тремя аккаунтами **не выполнялись**.
+Токен вводит владелец вне Git; закрытие #84 и merge только после независимого
+review и пользовательской приёмки. AWS и принятые результаты M6 этим этапом не меняются.

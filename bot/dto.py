@@ -17,6 +17,7 @@ class WireModel(BaseModel):
 
 class UserProfile(WireModel):
     id: EntityId
+    display_name: str | None = Field(default=None, max_length=64)
     email: str | None = Field(repr=False)
     telegram_id: EntityId | None = Field(repr=False)
     created_at: datetime
@@ -31,6 +32,7 @@ class GroupProfile(WireModel):
 
 class MemberProfile(WireModel):
     user_id: EntityId
+    display_name: str | None = Field(default=None, max_length=64)
     joined_at: datetime
     is_owner: bool
 
@@ -74,3 +76,25 @@ class GroupDraft(WireModel):
 
 def valid_capability(value: str) -> bool:
     return re.fullmatch(r"[A-Za-z0-9_-]{43}", value) is not None
+
+
+def display_name_input(value: str) -> str:
+    value = unicodedata.normalize("NFC", value).strip()
+    if not 1 <= len(value) <= 64 or any(
+        unicodedata.category(c).startswith("C") for c in value
+    ):
+        raise ValueError("Invalid display name")
+    return value
+
+
+def telegram_name(value: str) -> str:
+    value = (
+        "".join(
+            c
+            for c in unicodedata.normalize("NFC", value)
+            if not unicodedata.category(c).startswith("C")
+        )
+        .strip()[:64]
+        .strip()
+    )
+    return value or "Участник"

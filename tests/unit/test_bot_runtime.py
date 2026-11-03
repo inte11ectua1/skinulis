@@ -202,3 +202,31 @@ def test_main_telegram_failures_emit_safe_json_outcomes(
     assert entry["event"] == "bot_runtime_failed"
     assert entry["service"] == "bot"
     assert entry["outcome"] == kind
+
+
+@pytest.mark.anyio
+async def test_local_expected_username_refuses_production_before_polling(
+    settings: BotSettings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from aiogram.types import User
+
+    session = AsyncMock(spec=BaseSession)
+    session.return_value = User(
+        id=1, is_bot=True, first_name="Test", username="skinulis_expenses_bot"
+    )
+    configured = settings.model_copy(
+        update={"expected_bot_username": "skinulis_testing_bot"}
+    )
+    monkeypatch.setattr(
+        runtime,
+        "Bot",
+        lambda **kwargs: Bot(
+            token=settings.telegram_bot_token.get_secret_value(), session=session
+        ),
+    )
+    poll = AsyncMock()
+    monkeypatch.setattr(Dispatcher, "start_polling", poll)
+    with pytest.raises(ValueError):
+        await runtime.run(configured)
+    poll.assert_not_awaited()
+    session.close.assert_awaited_once()

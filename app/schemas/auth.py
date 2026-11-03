@@ -60,6 +60,7 @@ class UserProfile(BaseModel):
                 {
                     "id": 1,
                     "email": "alice@example.com",
+                    "display_name": "Алиса",
                     "telegram_id": None,
                     "created_at": "2026-10-27T00:00:00Z",
                 }
@@ -68,6 +69,7 @@ class UserProfile(BaseModel):
     )
 
     id: UserId
+    display_name: str | None = None
     email: str | None
     telegram_id: UserId | None
     created_at: UTCDateTime
@@ -88,3 +90,36 @@ class TokenResponse(BaseModel):
     access_token: str = Field(repr=False)
     token_type: Literal["bearer"] = "bearer"
     expires_in: int
+
+
+class ProfileUpdate(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        hide_input_in_errors=True,
+        json_schema_extra={"examples": [{"display_name": "Тимур"}]},
+    )
+    display_name: str = Field(strict=True)
+
+    @field_validator("display_name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        value = unicodedata.normalize("NFC", value).strip()
+        if not 1 <= len(value) <= 64 or any(
+            unicodedata.category(c).startswith("C") for c in value
+        ):
+            raise ValueError("Use 1–64 visible characters without control characters")
+        return value
+
+
+class BootstrapInput(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        hide_input_in_errors=True,
+        json_schema_extra={"examples": [{"display_name": "Тимур"}, {}]},
+    )
+    display_name: str | None = Field(default=None, strict=True)
+
+    @field_validator("display_name")
+    @classmethod
+    def normalize_name(cls, value: str | None) -> str | None:
+        return ProfileUpdate.normalize_name(value) if value is not None else None

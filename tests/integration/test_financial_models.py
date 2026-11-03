@@ -111,13 +111,24 @@ class FinanceDB:
                 raise AssertionError(table)
 
 
-def seed_identity(engine: Engine) -> tuple[int, int, int, int, int, int]:
+def seed_identity(
+    engine: Engine, *, legacy: bool = False
+) -> tuple[int, int, int, int, int, int]:
     """Existing identity contracts, including the deferred owner membership FK."""
     owner, member, outsider, newcomer = (2**40 + n for n in range(1, 5))
     with Session(engine) as session, session.begin():
-        session.add_all(
-            User(id=uid, telegram_id=uid) for uid in (owner, member, outsider, newcomer)
-        )
+        if legacy:
+            # Seed the historical schema without referencing later ORM columns.
+            for uid in (owner, member, outsider, newcomer):
+                session.execute(
+                    text("INSERT INTO users (id, telegram_id) VALUES (:uid, :uid)"),
+                    {"uid": uid},
+                )
+        else:
+            session.add_all(
+                User(id=uid, telegram_id=uid)
+                for uid in (owner, member, outsider, newcomer)
+            )
         session.flush()
         first = Group(owner_id=owner, name="Поездка", client_request_id=uuid4())
         second = Group(owner_id=owner, name="Другая", client_request_id=uuid4())
@@ -255,25 +266,29 @@ def test_upgrade_preserves_identity_and_downgrade_only_removes_finance(
     command.upgrade(config, "0003_groups_identity")
     engine = create_engine(database_url, hide_parameters=True)
     try:
-        identity = seed_identity(engine)
+        identity = seed_identity(engine, legacy=True)
+        columns = {
+            table: ", ".join(c["name"] for c in inspect(engine).get_columns(table))
+            for table in ("users", "groups", "group_members")
+        }
         with engine.connect() as connection:
             before = {
                 table: connection.execute(
-                    text(f"SELECT * FROM {table} ORDER BY 1, 2")
+                    text(f"SELECT {columns[table]} FROM {table} ORDER BY 1, 2")
                 ).all()
                 for table in ("users", "groups", "group_members")
             }
         command.upgrade(config, "head")
         command.upgrade(config, "head")
         assert ScriptDirectory.from_config(config).get_heads() == [
-            "0006_settlement_notification_claim"
+            "0007_user_display_name"
         ]
         command.check(config)
         with engine.connect() as connection:
             for table, rows in before.items():
                 assert (
                     connection.execute(
-                        text(f"SELECT * FROM {table} ORDER BY 1, 2")
+                        text(f"SELECT {columns[table]} FROM {table} ORDER BY 1, 2")
                     ).all()
                     == rows
                 )

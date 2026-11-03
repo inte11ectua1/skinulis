@@ -49,12 +49,12 @@ async def duplicate_click(ui: Harness, button: str) -> None:
 async def group(ui: Harness, gid: int) -> None:
     await ui.send("/start")
     await ui.click("menu:groups")
-    await choose(ui, f"Ресторанная группа · #{gid}")
+    await choose(ui, f"@group:{gid}")
 
 
 async def invite(ui: Harness, gid: int) -> str:
     await group(ui, gid)
-    await choose(ui, "Приглашения")
+    await choose(ui, "Пригласить друзей")
     await choose(ui, "Создать приглашение")
     await choose(ui, "Создать приглашение")
     return next(
@@ -65,7 +65,7 @@ async def invite(ui: Harness, gid: int) -> str:
 async def mark(ui: Harness, gid: int, receiver: int, amount: str) -> int:
     await group(ui, gid)
     await choose(ui, "Я перевёл деньги")
-    await choose(ui, f"Участник #{receiver}")
+    await choose(ui, f"@st:receiver:{receiver}")
     await ui.send(amount)
     old = await choose(ui, "Да, я уже перевёл деньги")
     await ui.click(old)
@@ -175,9 +175,9 @@ async def test_full_offline_onboarding_link_invite_three_modes_and_settlements(
                 await open_wizard(dasha, gid, "equal")
                 await dasha.send("Своя копейка")
                 await dasha.send("0.01")
-                await choose(dasha, f"Участник #{dasha_id}")
+                await choose(dasha, f"@ex:toggle:{dasha_id}")
                 await choose(dasha, "Готово")
-                await choose(dasha, "Серверный предпросмотр")
+                await choose(dasha, "Проверить доли")
                 assert not (await api.expenses(123, gid)).items
                 await choose(dasha, "Подтвердить расход")
 
@@ -188,13 +188,13 @@ async def test_full_offline_onboarding_link_invite_three_modes_and_settlements(
                 await choose(anton, "Готово")
                 for amount in ["0.00", "0.01", "0.00"]:
                     await anton.send(amount)
-                await choose(anton, "Серверный предпросмотр")
+                await choose(anton, "Проверить доли")
                 assert len((await api.expenses(123, gid)).items) == 1
                 await choose(anton, "Подтвердить расход")
 
                 await open_wizard(tim, gid, "by_items")
                 await fill(tim, "by_items", ids)
-                await choose(tim, "Серверный предпросмотр")
+                await choose(tim, "Проверить доли")
                 assert len((await api.expenses(123, gid)).items) == 2
                 old = await choose(tim, "Подтвердить расход")
                 await tim.click(old)
@@ -214,16 +214,16 @@ async def test_full_offline_onboarding_link_invite_three_modes_and_settlements(
                     "0.01",
                     "0.00",
                 ]
-                assert "Сохранённый расход" in " ".join(m.text for m in tim.sent)
+                assert "Расход сохранён" in " ".join(m.text for m in tim.sent)
                 await choose(tim, "К расходам")
-                await choose(tim, "Открыть #" + str(expenses[-1].id) + " · Ресторан")
+                await choose(tim, f"@ex:detail:{expenses[-1].id}")
 
                 async def vector() -> list[str]:
                     return [b.balance for b in (await api.balances(123, gid)).balances]
 
                 assert await vector() == ["2200.00", "-1400.00", "-800.00"]
                 await group(tim, gid)
-                await choose(tim, "Балансы")
+                await choose(tim, "💰 Кто кому должен")
                 await choose(tim, "План переводов")
                 assert [
                     t.amount for t in (await api.settlement_plan(123, gid)).transfers
@@ -232,16 +232,20 @@ async def test_full_offline_onboarding_link_invite_three_modes_and_settlements(
                 assert await vector() == ["2200.00", "-1400.00", "-800.00"]
                 await tim.send("/start")
                 await tim.click("menu:pending")
-                await choose(tim, f"Ресторанная группа · #{gid}")
-                await choose(tim, f"Открыть перевод #{sid}")
+                await choose(tim, f"@st:list:{gid}:pending:incoming:0")
+                await choose(tim, f"@record:{sid}")
                 await choose(tim, "Подтвердить получение")
-                assert "реально полученные деньги" in tim.sent[-1].text
+                assert "действительно получили" in tim.sent[-1].text
                 refreshed_from = len(tim.sent)
                 old = await choose(tim, "Да, деньги получены")
                 await tim.click(old)
                 assert await vector() == ["1700.00", "-900.00", "-800.00"]
                 refreshed = " ".join(m.text for m in tim.sent[refreshed_from:])
-                assert "План переводов группы" in refreshed and "1700.00" in refreshed
+                assert "Подтверждено" in refreshed
+                await choose(tim, "Кто кому должен")
+                assert "Должны вернуть 1 700 ₽" in tim.sent[-1].text
+                await choose(tim, "План переводов")
+                assert "900 ₽" in tim.sent[-1].text
                 current = await api.confirm_settlement(123, sid)
                 assert current.settlement.status == "confirmed"
                 assert await vector() == ["1700.00", "-900.00", "-800.00"]
@@ -249,8 +253,8 @@ async def test_full_offline_onboarding_link_invite_three_modes_and_settlements(
                 for action, actor in [("reject", tim), ("cancel", anton)]:
                     pending = await mark(anton, gid, tim_id, "100.00")
                     await group(actor, gid)
-                    await choose(actor, "История переводов")
-                    await choose(actor, f"Открыть перевод #{pending}")
+                    await choose(actor, "Переводы")
+                    await choose(actor, f"@record:{pending}")
                     await choose(
                         actor, "Отклонить" if action == "reject" else "Отменить заявку"
                     )
@@ -278,7 +282,8 @@ async def test_full_offline_onboarding_link_invite_three_modes_and_settlements(
                 ]
                 assert [m.chat_id for m in notices] == [123, 123, 123]
                 assert all(
-                    m.reply_markup is None and "500.00" not in m.text for m in notices
+                    "menu:pending" in str(m.reply_markup) and "500.00" not in m.text
+                    for m in notices
                 )
                 for value in secret_values:
                     assert value not in caplog.text

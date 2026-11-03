@@ -48,6 +48,10 @@ async def run(settings: BotSettings) -> None:
         async with Bot(
             token=settings.telegram_bot_token.get_secret_value()
         ).context() as telegram:
+            if settings.expected_bot_username is not None:
+                identity = await telegram.get_me()
+                if identity.username != settings.expected_bot_username:
+                    raise ValueError("Unexpected test bot identity")
             dispatcher = create_dispatcher()
             emit(Event.BOT_STARTED)
             try:

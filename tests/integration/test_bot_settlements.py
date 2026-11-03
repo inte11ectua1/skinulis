@@ -14,6 +14,7 @@ from bot.api_client import ApiClient, ApiError
 from bot.dto import GroupDraft
 from bot.expense_dto import DRAFT
 from bot.main import create_dispatcher
+from bot.presentation import STATUSES
 from bot.settlement_dto import SettlementCreate, SettlementProfile
 from tests.integration.test_bot_expenses import choose
 from tests.integration.test_bot_identity_groups import local_api as local_api
@@ -72,13 +73,13 @@ class Restaurant:
     async def group(self, ui: Harness) -> None:
         await ui.send("/start")
         await ui.click("menu:groups")
-        await choose(ui, f"Ресторан M4 · #{self.gid}")
+        await choose(ui, f"@group:{self.gid}")
 
     async def draft(self, amount: str = "500.00") -> None:
         await self.group(self.sender)
         await choose(self.sender, "План переводов")
         await choose(self.sender, "Я перевёл деньги")
-        await choose(self.sender, f"Участник #{self.ids[0]}")
+        await choose(self.sender, f"@st:receiver:{self.ids[0]}")
         await self.sender.send(amount)
 
     async def mark(self, amount: str = "500.00") -> SettlementProfile:
@@ -90,8 +91,8 @@ class Restaurant:
 
     async def open(self, ui: Harness, sid: int) -> None:
         await self.group(ui)
-        await choose(ui, "История переводов")
-        await choose(ui, f"Открыть перевод #{sid}")
+        await choose(ui, "Переводы")
+        await choose(ui, f"@record:{sid}")
 
     async def vector(self) -> list[str]:
         return [b.balance for b in (await self.api.balances(123, self.gid)).balances]
@@ -153,8 +154,8 @@ async def test_restaurant_partial_confirm_repeat_and_soft_delete_reverse_debt(
     r = restaurant
     assert await r.vector() == ["2200.00", "-1400.00", "-800.00"]
     await r.group(r.sender)
-    await choose(r.sender, "Балансы")
-    assert "-1400.00 ₽ — участник должен" in " ".join(m.text for m in r.sender.sent)
+    await choose(r.sender, "💰 Кто кому должен")
+    assert "Нужно вернуть 1 400 ₽" in " ".join(m.text for m in r.sender.sent)
     pending = await r.mark()
     assert pending.status == "pending" and await r.vector() == [
         "2200.00",
@@ -163,10 +164,10 @@ async def test_restaurant_partial_confirm_repeat_and_soft_delete_reverse_debt(
     ]
     await r.owner.send("/start")
     await r.owner.click("menu:pending")
-    await choose(r.owner, f"Ресторан M4 · #{r.gid}")
-    await choose(r.owner, f"Открыть перевод #{pending.id}")
+    await choose(r.owner, f"@st:list:{r.gid}:pending:incoming:0")
+    await choose(r.owner, f"@record:{pending.id}")
     await choose(r.owner, "Подтвердить получение")
-    assert "реально полученные деньги" in r.owner.sent[-1].text
+    assert "действительно получили" in r.owner.sent[-1].text
     old = await choose(r.owner, "Да, деньги получены")
     await r.owner.click(old)
     confirmed = (await r.api.settlements(123, r.gid, status="confirmed")).items[0]
@@ -174,22 +175,26 @@ async def test_restaurant_partial_confirm_repeat_and_soft_delete_reverse_debt(
     repeat = await r.api.confirm_settlement(123, pending.id)
     assert repeat.settlement.resolved_at == confirmed.resolved_at
     assert await r.vector() == ["1700.00", "-900.00", "-800.00"]
-    text = " ".join(m.text for m in r.owner.sent)
-    assert "1700.00" in text and "-900.00" in text
-    assert f"Участник #{r.ids[1]} → Участник #{r.ids[0]}: 900.00 ₽" in text
+    await choose(r.owner, f"@group:{r.gid}")
+    await choose(r.owner, "💰 Кто кому должен")
+    assert "Должны вернуть 1 700 ₽" in r.owner.sent[-1].text
+    assert "Нужно вернуть 900 ₽" in r.owner.sent[-1].text
+    await choose(r.owner, "План переводов")
+    assert "→" in r.owner.sent[-1].text and "900 ₽" in r.owner.sent[-1].text
+    assert "Участник #" not in r.owner.sent[-1].text
     # Exercise the existing L-04 UI with actual confirmed history, no bot balance math.
-    await choose(r.owner, "К группе")
+    await choose(r.owner, f"@group:{r.gid}")
     await choose(r.owner, "Расходы")
-    await choose(r.owner, f"Открыть #{r.eid} · Ресторан")
+    await choose(r.owner, f"@ex:detail:{r.eid}")
     await choose(r.owner, "Удалить")
     assert "обратного долга" in r.owner.sent[-1].text
     await choose(r.owner, "Да, удалить расход")
     assert await r.vector() == ["-500.00", "500.00", "0.00"]
     assert (await r.api.settlements(123, r.gid)).items[0].status == "confirmed"
-    await choose(r.owner, "К группе")
-    await choose(r.owner, "Балансы")
+    await choose(r.owner, f"@group:{r.gid}")
+    await choose(r.owner, "💰 Кто кому должен")
     text = " ".join(m.text for m in r.owner.sent)
-    assert "-500.00 ₽ — участник должен" in text and "0.00 ₽ — долгов нет" in text
+    assert "Нужно вернуть 500 ₽" in text and "Долгов нет" in text
 
 
 async def test_two_pending_full_debt_only_one_confirms_other_can_reject(
@@ -202,14 +207,12 @@ async def test_two_pending_full_debt_only_one_confirms_other_can_reject(
     await choose(r.owner, "Подтвердить получение")
     await choose(r.owner, "Да, деньги получены")
     await choose(r.owner, "Ожидают подтверждения")
-    await choose(r.owner, f"Открыть перевод #{second.id}")
+    await choose(r.owner, f"@record:{second.id}")
     await choose(r.owner, "Подтвердить получение")
     await choose(r.owner, "Да, деньги получены")
     rows = (await r.api.settlements(123, r.gid)).items
     assert [v.status for v in rows] == ["confirmed", "pending"]
-    assert "Долг или доступный кредит изменился" in " ".join(
-        m.text for m in r.owner.sent
-    )
+    assert "Долг изменился" in " ".join(m.text for m in r.owner.sent)
     assert await r.vector() == ["800.00", "0.00", "-800.00"]
     await choose(r.owner, "Отклонить")
     await choose(r.owner, "Да, отклонить")
@@ -245,7 +248,7 @@ async def test_changed_expense_before_confirm_conflicts_without_amount_repair(
         and current.resolved_at is None
     )
     assert await r.vector() == ["1000.00", "-1000.00", "0.00"]
-    assert "Прежнюю сумму сейчас принять нельзя" in " ".join(
+    assert "Эту сумму сейчас подтвердить нельзя" in " ".join(
         m.text for m in r.owner.sent
     )
 
@@ -297,7 +300,7 @@ async def test_real_response_lost_after_commit_and_historical_replay(
         current = (await r.api.settlements(123, r.gid)).items[0]
         await r.api.confirm_settlement(123, current.id)
         await choose(r.sender, "История переводов")
-        await choose(r.sender, "К восстановлению заявки")
+        await choose(r.sender, "К восстановлению")
         await choose(r.sender, "Повторить исходную заявку")
         creates = [p for p in r.transport.posts if p[0].endswith("/settlements")]
         assert len(creates) == 2 and creates[0] == creates[1]
@@ -309,8 +312,8 @@ async def test_real_response_lost_after_commit_and_historical_replay(
         )
         text = " ".join(m.text for m in r.sender.sent)
         assert (
-            "Актуальный статус API: confirmed" in text
-            and "Актуальный статус API: pending" not in text
+            "Получатель подтвердил получение" in text
+            and "Баланс изменится после подтверждения" not in text
         )
         assert len((await r.api.settlements(123, r.gid)).items) == 1
     else:
@@ -338,10 +341,7 @@ async def test_real_response_lost_after_commit_and_historical_replay(
         target = {"confirm": "confirmed", "reject": "rejected", "cancel": "cancelled"}[
             operation
         ]
-        assert (
-            f"Актуальный статус API: {target}" in text
-            and "API подтвердил статус" not in text
-        )
+        assert STATUSES[target] in text and "API подтвердил статус" not in text
         assert (
             len([p for p in r.transport.posts if p[0].endswith("/" + operation)]) == 1
         )
@@ -359,16 +359,18 @@ async def test_real_filters_pagination_and_sequential_current_status_lookup(
                 receiver_id=r.ids[0], amount="1.00", client_request_id=uuid4()
             ),
         )
-    await r.group(r.owner)
-    await choose(r.owner, "Ожидают подтверждения")
+    await r.owner.click("menu:pending")
+    await choose(r.owner, f"@st:list:{r.gid}:pending:incoming:0")
     await choose(r.owner, "Далее")
     page = await r.api.settlements(
         123, r.gid, status="pending", direction="incoming", offset=20
     )
     assert len(page.items) == 1
-    await choose(r.owner, f"Открыть перевод #{page.items[0].id}")
+    await choose(r.owner, f"@record:{page.items[0].id}")
     await choose(r.owner, "Следующая страница поиска")
-    assert "Актуальный статус API: pending" in " ".join(m.text for m in r.owner.sent)
+    assert "Баланс изменится после подтверждения" in " ".join(
+        m.text for m in r.owner.sent
+    )
     await choose(r.owner, "Подтвердить получение")
     # Review itself also reads pages, never invents GET /settlements/{id}.
     await choose(r.owner, "Следующая страница поиска")
