@@ -53,7 +53,12 @@ async def render() -> None:
             keyboard = "".join(
                 '<div class="row">'
                 + "".join(
-                    '<span class="button">' + escape(b.text) + "</span>" for b in row
+                    '<span class="button '
+                    + (b.style or "neutral")
+                    + '">'
+                    + escape(b.text)
+                    + "</span>"
+                    for b in row
                 )
                 + "</div>"
                 for row in markup.inline_keyboard
@@ -152,6 +157,9 @@ async def render() -> None:
             j.server.fail_after = "POST"
             await j.choose("Подтвердить расход")
             capture("18b · Потерянный ответ: безопасное восстановление", j)
+            await j.ui.send("/help")
+            capture("18c · Помощь без потери черновика", j)
+            await j.choose("Продолжить ввод")
 
     with patch.object(SettlementServer, "respond", named(SettlementServer.respond)):
         async with example(settlement_journey) as j:
@@ -193,8 +201,12 @@ body{margin:0;padding:28px}header{max-width:980px;margin:0 auto 28px}
 h1{font-size:30px}p{line-height:1.6}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;max-width:1400px;margin:auto}
 article{min-width:0}h2{font-size:17px;margin:0 0 12px}.phone{max-width:390px;padding:16px;background:#dfe9e5;border-radius:24px;border:1px solid #c8d8d1}
 .bubble{background:white;border-radius:14px;padding:16px;line-height:1.5;overflow-wrap:anywhere;box-shadow:0 1px 2px #0001;margin-bottom:8px}
+.button.primary{background:#2869ae;color:white}.button.success{background:#23784d;color:white}.button.danger{background:#b83e42;color:white}.button.neutral{background:#dee7eb;color:#18323e}
 .row{display:flex;gap:6px;margin-top:5px}.button{flex:1;text-align:center;border-radius:8px;background:#4b7169;color:white;padding:10px 8px;font-size:14px}
 code{background:white;padding:2px 5px}footer{margin:28px auto;max-width:980px}
+"""
+    style += """
+@media(prefers-color-scheme:dark){:root{background:#15232b;color:#edf3f6}.phone{background:#1f333c;border-color:#45606b}.bubble{background:#2b434f}.button.neutral{background:#3a535f;color:#fff}code{background:#2b434f}}
 """
     output = ROOT / "docs/ux/84_SCREENS.html"
     output.write_text(
@@ -202,7 +214,7 @@ code{background:white;padding:2px 5px}footer{margin:28px auto;max-width:980px}
         + "<title>Скинулись · #84 · Реальные шаблоны</title><style>"
         + style
         + "</style><header><h1>Скинулись · офлайн-галерея #84</h1>"
-        + "<p><b>Симуляция, не скриншоты Telegram.</b> Текст и кнопки получены из настоящего Dispatcher/FSM; HTTP и Telegram замоканы. Синтетические данные. Цвета галереи не задают цвета Telegram.</p>"
+        + "<p><b>Симуляция, не скриншоты Telegram.</b> Текст и кнопки получены из настоящего Dispatcher/FSM; HTTP и Telegram замоканы. Синтетические данные. Стандартные primary/success/danger показаны условно; точные оттенки зависят от темы Telegram.</p>"
         + "<p>До: системные ID и отдельные сообщения после выбора. После: имена, одна редактируемая карточка, главная сумма и явное действие. Визуальная/live-приёмка ещё предстоит.</p><h2>До</h2><p>Фрагменты настоящих шаблонов fc9ac54, синтетические значения. Чек сокращён после итоговых долей.</p></header><main>"
         + before
         + "</main><header><h2>После · настоящие экраны ветки #84</h2></header><main>"

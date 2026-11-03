@@ -12,6 +12,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Update
 
 from app.config import Settings
 from bot.api_client import ApiClient, ApiError
+from bot.button_theme import plain_label
 from bot.main import create_dispatcher
 from bot.settlement_notifications import NOTICE
 from bot.states import Navigation
@@ -114,7 +115,7 @@ async def test_full_offline_onboarding_link_invite_three_modes_and_settlements(
                     b.callback_data
                     for row in markup.inline_keyboard
                     for b in row
-                    if b.text == "Да, создать"
+                    if plain_label(b.text) == "Да, создать"
                 )
                 assert button is not None
                 await duplicate_click(tim, button)
@@ -282,8 +283,7 @@ async def test_full_offline_onboarding_link_invite_three_modes_and_settlements(
                 ]
                 assert [m.chat_id for m in notices] == [123, 123, 123]
                 assert all(
-                    "menu:pending" in str(m.reply_markup) and "500.00" not in m.text
-                    for m in notices
+                    m.reply_markup is None and "500.00" not in m.text for m in notices
                 )
                 for value in secret_values:
                     assert value not in caplog.text

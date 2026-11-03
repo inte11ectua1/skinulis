@@ -146,10 +146,8 @@ async def test_edit_missing_falls_back_once_but_network_error_is_not_financial_r
         return await original(bot, method, **kw)
 
     ui.session.side_effect = offline
-    with pytest.raises(TelegramNetworkError):
-        await screen(
-            ui.message("x").as_(ui.bot), ui.state, "Третья", [("Назад", "home")]
-        )
+    await screen(ui.message("x").as_(ui.bot), ui.state, "Третья", [("Назад", "home")])
+    assert ui.sent[-1].text == "<b>Третья</b>"
     assert not journey.writes("/internal/groups")
 
 

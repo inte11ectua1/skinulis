@@ -12,6 +12,7 @@ from pydantic import SecretStr
 
 from app.config import Settings
 from bot.api_client import ApiError
+from bot.button_theme import plain_label
 from bot.expense_dto import DRAFT, draft_from_profile
 from bot.expense_wizard import load
 from bot.main import create_dispatcher
@@ -94,7 +95,7 @@ async def test_committed_expense_replay_reads_edited_or_deleted_current_state(
         b.callback_data
         for row in markup.inline_keyboard
         for b in row
-        if b.text == "Повторить исходный запрос"
+        if plain_label(b.text) == "Повторить исходный запрос"
     )
     assert button is not None
     await ui.send("/help")
@@ -102,6 +103,18 @@ async def test_committed_expense_replay_reads_edited_or_deleted_current_state(
     assert (await load(ui.state)).sent_body == frozen.sent_body
     start = len(ui.sent)
     await ui.click(button)
+    assert (
+        len(
+            [
+                w
+                for w in transport.writes
+                if w[0] == "POST" and w[1].endswith("/expenses")
+            ]
+        )
+        == 1
+    )
+    await choose(ui, "Продолжить ввод")
+    button = await choose(ui, "Повторить исходный запрос")
     await ui.click(button)
     writes = [
         w for w in transport.writes if w[0] == "POST" and w[1].endswith("/expenses")

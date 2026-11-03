@@ -11,7 +11,7 @@ from bot.api_client import ApiError, BotApi
 from bot.dto import GroupDraft, GroupProfile, Page
 from bot.presentation import person, roster
 from bot.states import GroupFlow, Navigation
-from bot.ui import UNCERTAIN, reset, safe_error, screen
+from bot.ui import UNCERTAIN, hint, reset, safe_error, screen
 
 
 def paging[T](page: Page[T], prefix: str) -> list[tuple[str, str]]:
@@ -156,8 +156,10 @@ async def group_name(message: Message, state: FSMContext) -> None:
     try:
         draft = GroupDraft(name=message.text or "", client_request_id=uuid4())
     except ValidationError:
-        await message.answer(
-            "Название не подошло. Нужно от 1 до 120 символов без переносов и скрытых знаков."
+        await hint(
+            message,
+            state,
+            "Название не подошло. Нужно от 1 до 120 символов без переносов и скрытых знаков.",
         )
         return
     await state.update_data(draft=draft.model_dump_json())

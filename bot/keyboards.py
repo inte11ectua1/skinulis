@@ -1,36 +1,50 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+from bot.button_theme import LABELS, decorate, plain_label
 
-def action_keyboard(nonce: str, labels: list[str]) -> InlineKeyboardMarkup:
+
+def themed_button(
+    label: str, action: str, callback: str, *, colors: bool = True
+) -> InlineKeyboardButton:
+    text, style = decorate(label, action)
+    return InlineKeyboardButton(
+        text=text, callback_data=callback, style=style if colors else None
+    )
+
+
+def action_keyboard(
+    nonce: str, actions: list[tuple[str, str]], *, colors: bool = True
+) -> InlineKeyboardMarkup:
     rows: list[list[InlineKeyboardButton]] = []
-    for index, label in enumerate(labels):
-        button = InlineKeyboardButton(text=label, callback_data=f"l3:{nonce}:{index}")
-        # Selection rows stay full width; two short secondary controls fit one row.
-        if (
-            label in {"Снять выбор", "Готово", "Отмена"}
-            and rows
-            and len(rows[-1]) == 1
-            and rows[-1][0].text in {"Выбрать всех", "Назад"}
-        ):
+    previous = ""
+    primary_used = False
+    for index, (label, action) in enumerate(actions):
+        button = themed_button(label, action, f"l3:{nonce}:{index}", colors=colors)
+        if button.style == "primary":
+            if primary_used:
+                button.style = None
+            primary_used = True
+        if plain_label(label) in {"Снять выбор", "Отмена"} and previous in {
+            "Выбрать всех",
+            "Назад",
+        }:
             rows[-1].append(button)
         else:
             rows.append([button])
+        previous = plain_label(label)
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def main_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="Мои группы", callback_data="menu:groups")],
-            [InlineKeyboardButton(text="Создать группу", callback_data="menu:create")],
-            [
-                InlineKeyboardButton(
-                    text="Ожидают подтверждения", callback_data="menu:pending"
-                )
-            ],
-            [
-                InlineKeyboardButton(text="Профиль", callback_data="menu:profile"),
-                InlineKeyboardButton(text="Помощь", callback_data="menu:help"),
-            ],
+            [themed_button(label, action, action)]
+            for label, action in [
+                (LABELS["groups"], "menu:groups"),
+                (LABELS["create"], "menu:create"),
+                (LABELS["pending"], "menu:pending"),
+                (LABELS["profile"], "menu:profile"),
+                (LABELS["help"], "menu:help"),
+            ]
         ]
     )

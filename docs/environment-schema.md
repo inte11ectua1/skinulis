@@ -199,3 +199,9 @@ APP_ENV=test, уникальные COMPOSE_PROJECT_NAME/LOCAL_UX_IMAGE и loopba
 проверяет username до polling. В production значение не менялось; дополнительный
 запрос при null не выполняется. Эта проверка не заменяет разрешение владельца и
 не определяет, есть ли polling того же токена на другом хосте.
+
+
+В доработке после live-feedback тот же EXPECTED_BOT_USERNAME также ограничивает
+регистрацию тестового командного меню: SetMyCommands/SetChatMenuButton вызываются
+только при совпавшем `getMe.username == skinulis_testing_bot`. Для production с null
+настройка меню не выполняется. Дополнительных секретов/переменных не вводится.

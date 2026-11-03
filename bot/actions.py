@@ -20,6 +20,7 @@ from bot.group_views import (
 )
 from bot.presentation import person, roster
 from bot.profile_views import begin_name, profile_screen
+from bot.screen_lifecycle import retire
 from bot.states import GroupFlow, Onboarding
 from bot.ui import (
     HELP,
@@ -87,12 +88,15 @@ async def dispatch_action(
                 await message.answer(safe_error(error))
                 await offer_onboarding(message, state)
         else:
-            await message.answer("Профиль создан.")
+            await state.update_data(toast="Профиль создан.")
             await ready(message, state)
     elif action == "link" and previous == Onboarding.choice.state:
         await state.set_state(Onboarding.link_code)
-        await message.answer(
-            "Привязать аккаунт\nПолучите одноразовый код по инструкции подключения в своём аккаунте по почте.\n\nПришлите сюда только код. Он действует 10 минут. Пароль и ключ доступа не отправляйте."
+        await screen(
+            message,
+            state,
+            "Привязать аккаунт\nПолучите одноразовый код по инструкции подключения в своём аккаунте по почте.\n\nПришлите сюда только код. Он действует 10 минут. Пароль и ключ доступа не отправляйте.",
+            [("Назад", "onboard")],
         )
     elif action in {"create", "rename"}:
         await begin_group(message, state)
@@ -123,7 +127,7 @@ async def dispatch_action(
                 )
         else:
             await reset(state)
-            await message.answer("Группа создана.")
+            await state.update_data(toast="Группа создана.")
             await show_group(message, state, api, actor, group)
     elif action.startswith("groups:"):
         await show_groups(message, state, api, actor, int(action.split(":")[1]))
@@ -188,6 +192,7 @@ async def dispatch_action(
                 await message.answer(safe_error(error))
                 await show_invites(message, state, api, actor, gid)
         else:
+            await retire(message, state)
             if invite.token is None:
                 await message.answer(
                     "Ссылка уже была выдана и не сохранилась. Отзовите приглашение, затем создайте новое."
@@ -242,8 +247,8 @@ async def dispatch_action(
                 await message.answer(safe_error(error))
                 await show_invites(message, state, api, actor, gid)
         else:
-            await message.answer(
-                "Ссылка отозвана."
+            await state.update_data(
+                toast="Ссылка отозвана."
                 if result.revoked_at
                 else "Отзыв не подтверждён. Обновите список приглашений."
             )
@@ -278,7 +283,7 @@ async def dispatch_action(
                 await message.answer(safe_error(error))
                 await home(message, state)
         else:
-            await message.answer("Вы в группе!")
+            await state.update_data(toast="Вы в группе!")
             await show_group(message, state, api, actor, group)
     else:
         await message.answer(UNKNOWN)

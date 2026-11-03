@@ -2,18 +2,20 @@
 
 from uuid import uuid4
 
-from aiogram.exceptions import TelegramBadRequest
+from aiogram.exceptions import TelegramBadRequest, TelegramNetworkError
 from aiogram.fsm.context import FSMContext
 from aiogram.types import LinkPreviewOptions, Message
 from pydantic import SecretStr
 
 from bot.api_client import ApiError, ApiFailure, BotApi
+from bot.button_theme import LABELS
 from bot.keyboards import action_keyboard
 from bot.presentation import html_card
+from bot.screen_lifecycle import retire
 from bot.states import GroupFlow, Navigation, Onboarding
 
 WELCOME = "Скинулись\nОбщие расходы — без путаницы.\n\nСоздайте профиль, чтобы вести расходы с друзьями. Уже пользовались сервисом? Привяжите прежний аккаунт.\nБанковские переводы вы делаете сами."
-HELP = "Как пользоваться\n\n1. Создайте группу и пригласите друзей.\n2. Запишите расход и выберите, кто участвовал.\n3. Посмотрите долги и план переводов.\n4. После оплаты получатель подтверждает получение.\n\nБот учитывает расходы, но не переводит деньги.\n/start — главное меню\n/cancel — отменить несохранённый ввод\n\nЕсли ответ на сохранение потерялся, сначала проверьте историю."
+HELP = "Как пользоваться\n\n1. Создайте группу и пригласите друзей.\n2. Запишите расход и выберите, кто участвовал.\n3. Посмотрите долги и план переводов.\n4. После оплаты получатель подтверждает получение.\n\nБот учитывает расходы, но не переводит деньги.\n/start — главное меню\n/groups — мои группы\n/profile — профиль\n/cancel — отменить несохранённый ввод\n\nЕсли ответ на сохранение потерялся, сначала проверьте историю."
 
 
 UNAVAILABLE = "Выберите доступное действие в меню."
@@ -99,8 +101,10 @@ async def screen(
     page: int = 0,
 ) -> None:
     data = await state.get_data()
+    base_text = text
     if data.get("toast"):
-        text = str(data["toast"]) + "\n\n" + text
+        heading, _, body = text.partition("\n")
+        text = heading + "\n" + str(data["toast"]) + "\n\n" + body
         await state.update_data(toast=None)
     chunks = pages(text)
     page = max(0, min(page, len(chunks) - 1))
@@ -123,11 +127,11 @@ async def screen(
         screen=nonce,
         actions=[value for _, value in visible],
         view_page=page,
-        view_text=text,
+        view_text=base_text,
         view_actions=actions,
     )
     rendered = html_card(shown)
-    markup = action_keyboard(nonce, [label for label, _ in visible])
+    markup = action_keyboard(nonce, visible)
     options = LinkPreviewOptions(is_disabled=True)
     panel = data.get("panel_id")
     bot = message.bot
@@ -154,10 +158,31 @@ async def screen(
                 )
             ):
                 raise
+            await retire(message, state)
+        except TelegramNetworkError:
+            # Only replace the panel after its previous keyboard was retired.
+            await retire(message, state)
+    # retire invalidated the new nonce too; restore only this rendered view.
+    await state.update_data(screen=nonce, actions=[value for _, value in visible])
     sent = await message.answer(
         rendered, reply_markup=markup, parse_mode="HTML", link_preview_options=options
     )
     await state.update_data(panel_id=sent.message_id)
+
+
+async def hint(message: Message, state: FSMContext, text: str) -> None:
+    data = await state.get_data()
+    if data.get("view_text") and data.get("view_actions"):
+        await state.update_data(toast=text)
+        await screen(
+            message,
+            state,
+            data["view_text"],
+            data["view_actions"],
+            page=data.get("view_page", 0),
+        )
+    else:
+        await message.answer(text)
 
 
 async def home(message: Message, state: FSMContext) -> None:
@@ -168,11 +193,11 @@ async def home(message: Message, state: FSMContext) -> None:
         state,
         "Скинулись\nСоберите общие расходы в одном месте.\n\nВыберите группу или начните новую.",
         [
-            ("👥 Мои группы", "groups:0"),
-            ("＋ Создать группу", "create"),
-            ("⏳ Ожидают подтверждения", "st:groups:0"),
-            ("👤 Профиль", "profile"),
-            ("Помощь", "help"),
+            (LABELS["groups"], "groups:0"),
+            (LABELS["create"], "create"),
+            (LABELS["pending"], "st:groups:0"),
+            (LABELS["profile"], "profile"),
+            (LABELS["help"], "help"),
         ],
     )
 

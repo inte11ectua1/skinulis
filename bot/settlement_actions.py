@@ -33,7 +33,7 @@ from bot.settlement_views import (
     show_record,
 )
 from bot.states import Navigation, SettlementFlow
-from bot.ui import UNCERTAIN, UNCERTAIN_KINDS, UNKNOWN, reset, screen
+from bot.ui import UNCERTAIN, UNCERTAIN_KINDS, UNKNOWN, hint, reset, screen
 
 
 async def choose_receiver(
@@ -125,8 +125,10 @@ async def amount_message(message: Message, state: FSMContext) -> None:
     try:
         session.amount = amount_input(message.text or "")
     except (ValueError, ValidationError):
-        await message.answer(
-            "Введите положительную сумму вида 500.00: без знака, пробелов, запятой, экспоненты и округления. /cancel — отмена."
+        await hint(
+            message,
+            state,
+            "Введите положительную сумму вида 500.00: без знака, пробелов, запятой, экспоненты и округления. /cancel — отмена.",
         )
         return
     await review(message, state, session)
@@ -327,7 +329,7 @@ async def create(
     bot = message.bot
     if bot is not None:
         await notify_receiver(bot, api, actor, result.settlement.id)
-    await message.answer("Запись принята. Проверяем её текущее состояние.")
+    await state.update_data(toast="Запись принята. Проверяем её текущее состояние.")
     await find_current(message, state, api, actor, session)
 
 
@@ -369,8 +371,8 @@ async def resolve(
         await find_current(message, state, api, actor, session)
         return
     session.uncertain, session.purpose = None, "detail"
-    await message.answer(
-        f"{STATUSES[value.status]}. Повтор не изменяет баланс второй раз."
+    await state.update_data(
+        toast=f"{STATUSES[value.status]}. Повтор не изменяет баланс второй раз."
     )
     await show_record(message, state, api, actor, value, session)
 

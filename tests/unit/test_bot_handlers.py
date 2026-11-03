@@ -24,6 +24,7 @@ from aiogram.types import (
 )
 
 from bot.api_client import ApiClient
+from bot.button_theme import plain_label
 from bot.handlers import ACTIVE, FAILED, HELP, PRIVATE, UNKNOWN
 from bot.keyboards import main_menu
 from bot.main import create_dispatcher
@@ -169,7 +170,13 @@ class Harness:
             ),
             chat_instance="test-chat",
             data=data,
-            message=message if message is not None else self.message("Меню"),
+            message=message
+            if message is not None
+            else self.message("Меню").model_copy(
+                update={
+                    "message_id": (await self.state.get_data()).get("panel_id", 1) or 1
+                }
+            ),
         )
         await self.dispatcher.feed_update(
             self.bot,
@@ -269,7 +276,7 @@ async def test_cancel_clears_draft_and_returns_to_menu(harness: Harness) -> None
         assert await harness.state.get_state() == Navigation.menu.state
         assert business_state(await harness.state.get_data()) == {}
         assert "Мои группы" in str(harness.sent[-1].reply_markup)
-        assert "Сохранённые записи" in harness.sent[-2].text
+        assert "Сохранённые записи" in harness.sent[-1].text
 
 
 @pytest.mark.anyio
@@ -285,7 +292,7 @@ async def test_menu_and_repeated_buttons_are_honest(
     elif action == "menu:create":
         assert "Как назовём" in harness.sent[-1].text
         await harness.click(action)
-        assert harness.sent[-1].text == ACTIVE
+        assert ACTIVE in harness.sent[-1].text.replace("<b>", "").replace("</b>", "")
     elif action == "menu:profile":
         assert "Вход через Telegram" in harness.sent[-1].text
     else:
@@ -315,7 +322,7 @@ async def test_unknown_input_and_stale_callback_do_not_echo_secrets(
     await harness.send("/unknown " + private)
     await harness.click(private)
     await harness.click(None)
-    assert harness.sent[-1].text == UNKNOWN
+    assert harness.alerts[-1].text == UNKNOWN
     assert all(private not in message.text for message in harness.sent)
     assert business_state(await harness.state.get_data()) == {}
 
@@ -396,7 +403,7 @@ async def test_unexpected_handler_failure_has_safe_fallback(
 
 def test_keyboard_has_unique_safe_callbacks() -> None:
     buttons = [button for row in main_menu().inline_keyboard for button in row]
-    assert {button.text for button in buttons} >= {
+    assert {plain_label(button.text) for button in buttons} >= {
         "Мои группы",
         "Создать группу",
         "Ожидают подтверждения",
@@ -422,5 +429,6 @@ def business_state(data: dict[str, Any]) -> dict[str, Any]:
             "panel_id",
             "telegram_name",
             "toast",
+            "resume_view",
         }
     }

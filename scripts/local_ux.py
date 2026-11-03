@@ -119,7 +119,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "operation",
-        choices=["init", "up", "check", "start-bot", "stop-bot", "stop", "status"],
+        choices=[
+            "init",
+            "build",
+            "up",
+            "check",
+            "start-bot",
+            "stop-bot",
+            "stop",
+            "status",
+        ],
     )
     parser.add_argument("--env-file", type=Path, default=DEFAULT)
     parser.add_argument(
@@ -200,6 +209,8 @@ def main() -> int:
             local_health(values)
             # A fixed container name makes repeated up converge to one process.
             command = ["up", "-d", "--no-deps", "bot"]
+        elif args.operation == "build":
+            command = ["build", "api"]
         elif args.operation == "up":
             command = ["up", "-d", "--build", "db", "migrate", "api"]
         elif args.operation == "stop-bot":
@@ -207,10 +218,30 @@ def main() -> int:
         elif args.operation == "stop":
             command = ["stop", "--timeout", "30"]
         else:
-            command = ["ps", "-a"]
-        subprocess.run(
-            [*compose, *command], cwd=ROOT, env=env, check=True, capture_output=True
+            command = ["ps", "-a", "--format", "json"]
+        result = subprocess.run(
+            [*compose, *command],
+            cwd=ROOT,
+            env=env,
+            check=True,
+            capture_output=True,
+            text=True,
         )
+        if args.operation == "status":
+            raw = result.stdout.strip()
+            rows = (
+                json.loads(raw)
+                if raw.startswith("[")
+                else [json.loads(row) for row in raw.splitlines()]
+            )
+            print(
+                json.dumps(
+                    [
+                        {k: row.get(k) for k in ("Service", "State", "Health")}
+                        for row in rows
+                    ]
+                )
+            )
         print(
             "Local operation completed:",
             args.operation,

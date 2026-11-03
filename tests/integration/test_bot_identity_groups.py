@@ -24,6 +24,7 @@ from app.config import Settings
 from app.core.migrate import main as migrate
 from app.main import create_app
 from bot.api_client import ApiClient, ApiError
+from bot.button_theme import plain_label
 from bot.main import create_dispatcher
 from tests.unit.test_bot_handlers import Harness
 
@@ -105,7 +106,7 @@ async def choose(ui: Harness, label: str) -> str:
                 b.callback_data
                 for row in markup.inline_keyboard
                 for b in row
-                if b.text == label
+                if plain_label(b.text) == plain_label(label)
                 and b.callback_data is not None
                 and b.callback_data.startswith(prefix)
             ]

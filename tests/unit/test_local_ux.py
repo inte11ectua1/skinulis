@@ -94,3 +94,49 @@ def test_remote_docker_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DOCKER_HOST", "ssh://example.invalid")
     with pytest.raises(ValueError):
         local_ux.local_docker({})
+
+
+@pytest.mark.parametrize("operation", ["build", "status"])
+def test_build_never_restarts_and_status_only_prints_safe_fields(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    operation: str,
+) -> None:
+    import json
+    import sys
+
+    p = tmp_path / "local.env"
+    local_ux.init(p)
+    private = local_ux.environment(p)["BOT_SERVICE_TOKEN"]
+    commands: list[list[str]] = []
+
+    def run(args: list[str], **kw: object) -> subprocess.CompletedProcess[str]:
+        commands.append(args)
+        output = (
+            "unix:///var/run/docker.sock"
+            if "context" in args
+            else json.dumps(
+                [
+                    {
+                        "Service": "bot",
+                        "State": "running",
+                        "Health": "",
+                        "Command": private,
+                    }
+                ]
+            )
+        )
+        return subprocess.CompletedProcess(args, 0, output, "")
+
+    monkeypatch.setattr(subprocess, "run", run)
+    monkeypatch.setattr(subprocess, "check_output", lambda *a, **k: "0" * 40)
+    monkeypatch.setattr(sys, "argv", ["local_ux", operation, "--env-file", str(p)])
+    assert local_ux.main() == 0
+    assert not any("up" in c or "stop" in c or "restart" in c for c in commands)
+    out = capsys.readouterr().out
+    assert private not in out
+    if operation == "status":
+        assert '"State": "running"' in out and '"Command"' not in out
+    else:
+        assert commands[-1][-2:] == ["build", "api"]

@@ -4,7 +4,6 @@ import asyncio
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from bot.api_client import ApiError, BotApi
 from skinulis_logging import Event, emit
@@ -34,16 +33,6 @@ async def notify_receiver(
                 chat_id=claim.recipient_telegram_id,
                 text=NOTICE,
                 parse_mode=None,
-                reply_markup=InlineKeyboardMarkup(
-                    inline_keyboard=[
-                        [
-                            InlineKeyboardButton(
-                                text="Ожидают подтверждения",
-                                callback_data="menu:pending",
-                            )
-                        ]
-                    ]
-                ),
             )
     except (TelegramAPIError, TimeoutError, OSError):
         # Never log the Telegram exception: it can contain identity or credentials.

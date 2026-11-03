@@ -177,6 +177,7 @@ async def test_unknown_write_result_keeps_exact_json_without_automatic_retry(
     frozen = await load(j.ui.state)
     await j.ui.send("/help")
     await j.ui.send("/start")
+    await j.choose("Продолжить ввод")
     assert (await load(j.ui.state)).sent_body == frozen.sent_body
     assert len(j.calls("POST", CREATE)) == 1
     await j.choose("Повторить исходный запрос")

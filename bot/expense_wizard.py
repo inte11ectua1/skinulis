@@ -18,7 +18,7 @@ from bot.expense_dto import (
 from bot.expense_views import WARNING
 from bot.presentation import MODES, money, person, roster
 from bot.states import ExpenseFlow
-from bot.ui import reset, screen
+from bot.ui import hint, reset, screen
 
 
 class DraftSession(BaseModel):
@@ -271,8 +271,10 @@ async def text_input(message: Message, state: FSMContext) -> None:
         else:
             return
     except (ValueError, ValidationError):
-        await message.answer(
-            "Проверьте поле: название 1–120 видимых символов; сумма вида 1250.00, без пробелов/запятой/знака/округления. Ноль допустим только в долях. /cancel — отмена."
+        await hint(
+            message,
+            state,
+            "Проверьте поле: название 1–120 видимых символов; сумма вида 1250.00, без пробелов/запятой/знака/округления. Ноль допустим только в долях. /cancel — отмена.",
         )
         return
     await keep(state, draft, changed=True)

@@ -18,6 +18,7 @@ from aiogram.types import InlineKeyboardMarkup, Update
 from pydantic import SecretStr
 
 from bot.api_client import ApiClient
+from bot.button_theme import plain_label
 from bot.main import create_dispatcher
 from bot.presentation import STATUSES
 from bot.settlement_state import load
@@ -231,7 +232,9 @@ class SettlementJourney:
                     b.callback_data
                     for row in markup.inline_keyboard
                     for b in row
-                    if b.text == label
+                    if plain_label(b.text) == plain_label(label)
+                    and b.callback_data is not None
+                    and b.callback_data.startswith(f"l3:{self.ui.last_nonce}:")
                 ]
                 if values:
                     assert len(values) == 1 and values[0] is not None

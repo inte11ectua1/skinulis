@@ -18,6 +18,7 @@ from aiogram.types import InlineKeyboardMarkup, Update, User
 from pydantic import SecretStr
 
 from bot.api_client import ApiClient
+from bot.button_theme import plain_label
 from bot.handlers import ACTIVE
 from bot.main import create_dispatcher
 from bot.states import GroupFlow, Navigation, Onboarding
@@ -166,7 +167,7 @@ class Journey:
             button.callback_data
             for row in markup.inline_keyboard
             for button in row
-            if button.text == label
+            if plain_label(button.text) == plain_label(label)
         ]
         assert len(matches) == 1 and matches[0] is not None
         return matches[0]
@@ -534,7 +535,7 @@ async def test_cancel_each_step_and_repeated_start_preserve_draft(
             await journey.choose("Отозвать ссылку 1")
     before = await journey.ui.state.get_data()
     await journey.ui.send("/start")
-    assert journey.ui.sent[-1].text == ACTIVE
+    assert ACTIVE in journey.ui.sent[-1].text
     assert business_state(await journey.ui.state.get_data()) == business_state(before)
     writes_before = sum(r.method != "GET" for r in journey.server.requests)
     await journey.ui.send("/cancel")

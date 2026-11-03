@@ -48,7 +48,7 @@ async def test_verified_recipient_and_no_claim_on_reads_or_duplicate_update(
     assert not j.calls("POST", CLAIM)
     old = await j.choose("Да, я уже перевёл деньги")
     assert [m.chat_id for m in notices(j)] == [987654321]
-    assert "menu:pending" in str(notices(j)[0].reply_markup)
+    assert notices(j)[0].reply_markup is None
     assert "500.00" not in NOTICE and "могла" in NOTICE
     assert len(j.calls("POST", CREATE)) == len(j.calls("POST", CLAIM)) == 1
     request = j.calls("POST", CLAIM)[0]
