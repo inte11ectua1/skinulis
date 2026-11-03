@@ -1,0 +1,118 @@
+{
+  "audit_date": "2026-11-03",
+  "repository_main": "git:71363d1b9e59de919efd3e9e91089d36adfa00c7",
+  "expected_production_sha": "git:7aa7c14e563d5e72efd027d89d7b5765d2f570e3",
+  "aws": {
+    "account": "621150878773",
+    "region": "ap-southeast-2",
+    "instance_id": "i-0c920378dd242af2b",
+    "state": "running",
+    "public_ip": "3.25.53.31",
+    "architecture": "x86_64",
+    "ssm": [
+      {
+        "InstanceId": "i-0c920378dd242af2b",
+        "PingStatus": "Online",
+        "AgentVersion": "3.3.4793.0"
+      }
+    ]
+  },
+  "server": {
+    "checked_at": "2026-11-03T07:59:29.538036+00:00",
+    "scope": "read-only; no container lifecycle/configuration/database writes",
+    "current_release": {
+      "sha": "git:7aa7c14e563d5e72efd027d89d7b5765d2f570e3",
+      "image": "ghcr.io/inte11ectua1/skinulis@sha256:ff1530a0c0f2166d9e9236df968e32157e7713dad347c00660be78b7383d3f3f",
+      "polling": false,
+      "expected_sha_matches": true
+    },
+    "api_image": {
+      "repo_digests": [
+        "ghcr.io/inte11ectua1/skinulis@sha256:ff1530a0c0f2166d9e9236df968e32157e7713dad347c00660be78b7383d3f3f"
+      ],
+      "oci_revision": "git:7aa7c14e563d5e72efd027d89d7b5765d2f570e3",
+      "oci_source": "https://github.com/inte11ectua1/skinulis",
+      "matches_release_image_id": true,
+      "matches_expected_revision": true,
+      "release_digest_present": true
+    },
+    "postgresql_volumes": [
+      {
+        "name": "skinulis-production-postgres",
+        "created_at": "2026-11-01T20:22:25Z",
+        "driver": "local",
+        "mount_destination": "/var/lib/postgresql/data",
+        "mount_read_write": true,
+        "compose_volume_label": null
+      }
+    ],
+    "alembic_revision": [
+      "0006_settlement_notification_claim"
+    ],
+    "postgresql_readonly_query_succeeded": true,
+    "polling": {
+      "bot_service_containers": [],
+      "host_visible_bot_main_process_count": 0,
+      "containers_with_bot_main_process": 0,
+      "other_running_container_count": 0,
+      "conclusion": "POLLING OFF"
+    },
+    "resources": {
+      "memory": {
+        "MemTotal_kib": 1951736,
+        "MemAvailable_kib": 1254088,
+        "SwapTotal_kib": 2097148,
+        "SwapFree_kib": 2097120
+      },
+      "root_disk_total_bytes": 19682557952,
+      "root_disk_free_bytes": 13417156608,
+      "load_average": [
+        0.134765625,
+        0.1904296875,
+        0.15234375
+      ],
+      "docker_server_version": "29.9.2"
+    },
+    "all_expected_services_found": true,
+    "containers": [
+      {"service": "caddy", "compose_project": "skinulis-production", "status": "running", "running": true, "health": "healthy", "restart_count": 0, "oom_killed": false, "exit_code": 0, "started_at": "2026-11-03T06:48:43.436563664Z", "finished_at": "0001-01-01T00:00:00Z", "configured_image": "caddy:2.11.7-alpine@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5", "image_id": "sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5", "logging": {"Type": "json-file", "Config": {"compress": "true", "max-file": "3", "max-size": "5m"}}, "port_bindings": {"443/tcp": [{"HostIp": "", "HostPort": "443"}], "80/tcp": [{"HostIp": "", "HostPort": "80"}]}, "mounts": [{"type": "volume", "name": "skinulis-production-caddy-config", "destination": "/config", "read_write": true}, {"type": "volume", "name": "skinulis-production-caddy-data", "destination": "/data", "read_write": true}]},
+      {"service": "api", "compose_project": "skinulis-production", "status": "running", "running": true, "health": "healthy", "restart_count": 0, "oom_killed": false, "exit_code": 0, "started_at": "2026-11-03T06:48:37.092056779Z", "finished_at": "0001-01-01T00:00:00Z", "configured_image": "ghcr.io/inte11ectua1/skinulis@sha256:ff1530a0c0f2166d9e9236df968e32157e7713dad347c00660be78b7383d3f3f", "image_id": "sha256:ff1530a0c0f2166d9e9236df968e32157e7713dad347c00660be78b7383d3f3f", "logging": {"Type": "json-file", "Config": {"compress": "true", "max-file": "3", "max-size": "5m"}}, "port_bindings": {}, "mounts": []},
+      {"service": "migrate", "compose_project": "skinulis-production", "status": "exited", "running": false, "health": "not configured", "restart_count": 0, "oom_killed": false, "exit_code": 0, "started_at": "2026-11-03T06:48:33.035914285Z", "finished_at": "2026-11-03T06:48:36.654926773Z", "configured_image": "ghcr.io/inte11ectua1/skinulis@sha256:ff1530a0c0f2166d9e9236df968e32157e7713dad347c00660be78b7383d3f3f", "image_id": "sha256:ff1530a0c0f2166d9e9236df968e32157e7713dad347c00660be78b7383d3f3f", "logging": {"Type": "json-file", "Config": {"compress": "true", "max-file": "3", "max-size": "5m"}}, "port_bindings": {}, "mounts": []},
+      {"service": "db", "compose_project": "skinulis-production", "status": "running", "running": true, "health": "healthy", "restart_count": 0, "oom_killed": false, "exit_code": 0, "started_at": "2026-11-02T09:08:04.281442266Z", "finished_at": "2026-11-02T09:08:04.197470803Z", "configured_image": "postgres:17.11-bookworm@sha256:858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27", "image_id": "sha256:858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27", "logging": {"Type": "json-file", "Config": {"compress": "true", "max-file": "3", "max-size": "5m"}}, "port_bindings": {}, "mounts": [{"type": "volume", "name": "skinulis-production-postgres", "destination": "/var/lib/postgresql/data", "read_write": true}]}
+    ],
+    "logs": [
+      {"service": "caddy", "scope": "last30m capped200", "line_count": 0, "json_object_count": 0, "required_api_fields_present": null, "non_null_request_id_count": 0, "unexpected_api_field_count": null, "error_critical_count": 0, "known_events": {}, "sensitive_value_match_count": 0, "obvious_sensitive_field_names": false, "log_command_succeeded": true},
+      {"service": "api", "scope": "last30m capped200", "line_count": 200, "json_object_count": 200, "required_api_fields_present": true, "non_null_request_id_count": 100, "unexpected_api_field_count": 0, "error_critical_count": 0, "known_events": {"http_request_completed": 100, "library_event": 100}, "sensitive_value_match_count": 0, "obvious_sensitive_field_names": false, "log_command_succeeded": true},
+      {"service": "migrate", "scope": "last200 current container", "line_count": 4, "json_object_count": 4, "required_api_fields_present": true, "non_null_request_id_count": 0, "unexpected_api_field_count": 0, "error_critical_count": 0, "known_events": {"migration_started": 1, "library_event": 2, "migration_completed": 1}, "sensitive_value_match_count": 0, "obvious_sensitive_field_names": false, "log_command_succeeded": true}
+    ]
+  },
+  "logging_extra": {
+    "checked_at": "2026-11-03T08:01:54.891060+00:00",
+    "last30m_oom_restart_die_events": {},
+    "logs": [
+      {"service": "caddy", "scope": "last200 current container including startup", "lines": 19, "json_objects": 19, "error_critical_count": 0, "proxy_event_only": false, "sensitive_request_fields_absent": true, "sensitive_value_match_count": 0, "obvious_sensitive_field_names": false},
+      {"service": "api", "scope": "last200 current container including startup", "lines": 200, "json_objects": 200, "error_critical_count": 0, "utc_z_timestamp_valid_count": 200, "level_present_count": 200, "request_id_field_count": 200, "non_null_request_ids": 100, "valid_uuid4_request_ids": 100, "sensitive_value_match_count": 0, "obvious_sensitive_field_names": false},
+      {"service": "migrate", "scope": "last200 current container including startup", "lines": 4, "json_objects": 4, "error_critical_count": 0, "utc_z_timestamp_valid_count": 4, "level_present_count": 4, "request_id_field_count": 4, "non_null_request_ids": 0, "valid_uuid4_request_ids": 0, "sensitive_value_match_count": 0, "obvious_sensitive_field_names": false}
+    ]
+  },
+  "public": {
+    "/health": {
+      "status": 200,
+      "body": {
+        "status": "ok",
+        "database": "ok"
+      }
+    },
+    "/version": {
+      "status": 200,
+      "body": {
+        "version": "0.1.0",
+        "commit_sha": "git:7aa7c14e563d5e72efd027d89d7b5765d2f570e3"
+      }
+    }
+  },
+  "rollout_flag": false,
+  "internal_state": "VERIFIED",
+  "overall_post_deploy": "NOT READY",
+  "remaining_blocker": "Previously documented Caddy foreign-authority absolute-form empty200; unchanged and not re-tested here"
+}

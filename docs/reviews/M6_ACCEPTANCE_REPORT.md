@@ -13,7 +13,8 @@
 > **POST-DEPLOY актуализация 03.11.2026:** PR81 merged; Release41591582318
 > действительно deploy, production version=`7aa7c14`, main CI5/5. Полный новый
 > [POST_DEPLOY_REPORT](POST_DEPLOY_REPORT.md) имеет итог NOT READY: один routing
-> negative case unexpected empty200, свежие container checks NOT VERIFIED.
+> negative case unexpected empty200. Последующий read-only follow-up подтвердил
+> containers/DB/migrations/image/volumes/logs и POLLING OFF; runtime VERIFIED.
 > Ниже сохранён первоначальный аудит до этого deployment, включая старые SHA;
 > он не является доказательством нового deployment. Formal DoD gaps остаются.
 
