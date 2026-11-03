@@ -1,0 +1,147 @@
+{
+  "checked_on": "2026-11-03",
+  "main_sha": "git:7aa7c14e563d5e72efd027d89d7b5765d2f570e3",
+  "release_sha": "git:7aa7c14e563d5e72efd027d89d7b5765d2f570e3",
+  "image_digest": "sha256:ff1530a0c0f2166d9e9236df968e32157e7713dad347c00660be78b7383d3f3f",
+  "registry": {
+    "sha": "git:7aa7c14e563d5e72efd027d89d7b5765d2f570e3",
+    "image": "ghcr.io/inte11ectua1/skinulis@sha256:ff1530a0c0f2166d9e9236df968e32157e7713dad347c00660be78b7383d3f3f",
+    "manifest_digest_verified": true,
+    "config_digest_verified": true,
+    "architecture": "amd64",
+    "os": "linux",
+    "user": "skinulis",
+    "cmd": [
+      "python",
+      "-m",
+      "app.core.serve"
+    ],
+    "oci_revision": "git:7aa7c14e563d5e72efd027d89d7b5765d2f570e3",
+    "oci_source": "https://github.com/inte11ectua1/skinulis",
+    "anonymous_pull_metadata_access": true,
+    "compressed_layers_mib": 61.52
+  },
+  "ci": {
+    "url": "https://github.com/inte11ectua1/skinulis/actions/runs/41582982671",
+    "event": "push",
+    "jobs": {
+      "types": "success",
+      "lint": "success",
+      "tests": "success",
+      "docker-build": "success",
+      "ci": "success"
+    },
+    "unit_passed": 1280,
+    "postgresql_passed": 446,
+    "branch_coverage_percent": 95.0
+  },
+  "release": {
+    "url": "https://github.com/inte11ectua1/skinulis/actions/runs/41591582318",
+    "event": "workflow_dispatch",
+    "operation": "deploy",
+    "enable_polling": false,
+    "jobs": {
+      "guard": "success",
+      "publish": "success",
+      "deploy": "success"
+    },
+    "approval_reviewer": "pylinolg-max",
+    "completed_marker_at": "2026-11-03T06:48:44Z"
+  },
+  "rollout_flag": false,
+  "public": {
+    "checked_at": "2026-11-03T07:23:33.217311+00:00",
+    "base_url": "https://3-25-53-31.sslip.io",
+    "expected_sha": "git:7aa7c14e563d5e72efd027d89d7b5765d2f570e3",
+    "tls_verification": true,
+    "connect_address": "3.25.53.31",
+    "sni_and_http_host": "3-25-53-31.sslip.io",
+    "http_redirect": {
+      "status": 308,
+      "location": "https://3-25-53-31.sslip.io/health",
+      "passed": true
+    },
+    "certificate": {
+      "issuer": [
+        [
+          [
+            "countryName",
+            "US"
+          ]
+        ],
+        [
+          [
+            "organizationName",
+            "Let's Encrypt"
+          ]
+        ],
+        [
+          [
+            "commonName",
+            "YE2"
+          ]
+        ]
+      ],
+      "subjectAltName": [
+        [
+          "DNS",
+          "3-25-53-31.sslip.io"
+        ]
+      ],
+      "notBefore": "Nov  2 09:30:54 2026 GMT",
+      "notAfter": "Jan 31 09:30:53 2027 GMT"
+    },
+    "tls": "TLSv1.3",
+    "all_checks_passed": false,
+    "negative_checks_post_omitted": "Only read-only GET/HEAD/OPTIONS/TRACE/CONNECT; existing isolated POST case not repeated in production",
+    "initial_transport_errors": "Initial DNS path had transient timeouts/TLS EOF; repeat connected to known IPv4 with hostname SNI/Host and full default CA verification. Uppercase path retried successfully.",
+    "checks": [
+      {"method": "GET", "path": "/health", "expected_status": [200], "status": 200, "passed": true, "request_id_present": true, "body": {"status": "ok", "database": "ok"}, "server": "uvicorn", "via": "1.1 Caddy"},
+      {"method": "GET", "path": "/version", "expected_status": [200], "status": 200, "passed": true, "request_id_present": true, "body": {"version": "0.1.0", "commit_sha": "git:7aa7c14e563d5e72efd027d89d7b5765d2f570e3"}, "expected_sha_matches": true, "server": "uvicorn", "via": "1.1 Caddy"},
+      {"method": "GET", "path": "/docs", "expected_status": [200], "status": 200, "passed": true, "request_id_present": true, "server": "uvicorn", "via": "1.1 Caddy"},
+      {"method": "GET", "path": "/redoc", "expected_status": [200], "status": 200, "passed": true, "request_id_present": true, "server": "uvicorn", "via": "1.1 Caddy"},
+      {"method": "GET", "path": "/openapi.json", "expected_status": [200], "status": 200, "passed": true, "request_id_present": true, "path_count": 41, "health_examples_present": true, "server": "uvicorn", "via": "1.1 Caddy"},
+      {"method": "GET", "path": "/users/me", "expected_status": [401], "status": 401, "passed": true, "request_id_present": true, "error_code": "invalid_token", "error_structure_valid": true, "server": "uvicorn", "via": "1.1 Caddy"},
+      {"method": "GET", "path": "/groups", "expected_status": [401], "status": 401, "passed": true, "request_id_present": true, "error_code": "invalid_token", "error_structure_valid": true, "server": "uvicorn", "via": "1.1 Caddy"},
+      {"method": "GET", "path": "/internal", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/internal/", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "//internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "///internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/%69nternal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/%49nternal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/internal%2fusers%2fme", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/internal%252fusers%252fme", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/%2569nternal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/internal%5cusers/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/internal\\users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/groups/../internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/groups/%2e%2e/internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/groups/%252e%252e/internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/./internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/internal;ignored/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/INTERNAL/users/me", "expected_status": [400, 404, 405], "passed": true, "initial_error": "TimeoutError", "status": 404, "rechecked_at": "2026-11-03T07:25:44Z", "server": "Caddy", "body_bytes": 0},
+      {"method": "GET", "path": "/internal%00/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "https://localhost/internal/users/me", "expected_status": [400, 404, 405], "status": 200, "passed": false, "request_id_present": false, "server": "Caddy", "via": null, "body_bytes": 0, "reproduced_at": "2026-11-03T07:25:45Z", "interpretation": "Empty Caddy response; expected denial status not met; internal API data not observed"},
+      {"method": "GET", "path": "//localhost/internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "HEAD", "path": "/internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "OPTIONS", "path": "/internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "TRACE", "path": "/internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "CONNECT", "path": "/internal/users/me", "expected_status": [400, 404, 405], "status": 404, "passed": true, "request_id_present": false, "server": "Caddy", "via": null},
+      {"method": "GET", "path": "/health", "expected_status": [200], "status": 200, "passed": true, "request_id_present": true, "body": {"status": "ok", "database": "ok"}, "server": "uvicorn", "via": "1.1 Caddy"},
+      {"method": "GET", "path": "/health", "expected_status": [200], "status": 200, "passed": true, "request_id_present": true, "body": {"status": "ok", "database": "ok"}, "server": "uvicorn", "via": "1.1 Caddy"},
+      {"method": "GET", "path": "/health?q=%2Finternal", "expected_status": [200], "status": 200, "passed": true, "request_id_present": true, "server": "uvicorn", "via": "1.1 Caddy"},
+      {"method": "GET", "path": "https://3-25-53-31.sslip.io/internal/users/me", "status": 404, "passed": true, "server": "Caddy", "body_bytes": 0, "checked_at": "2026-11-03T07:25:47Z", "purpose": "same-authority absolute-form control"}
+    ]
+  },
+  "server_inspection": {
+    "status": "NOT VERIFIED",
+    "reason": "AWS CLI interactive session expired; no SSH-over-SSM connection attempted with invalid credentials",
+    "current_running_image_digest": "NOT VERIFIED",
+    "migration_revision": "NOT VERIFIED",
+    "container_health_restart_oom_volumes_logs": "NOT VERIFIED",
+    "live_polling_process_count": "NOT VERIFIED"
+  },
+  "decision": "NOT READY",
+  "reason": "Foreign-authority absolute-form negative check returned empty Caddy HTTP 200 instead of expected denial; fresh container inspection unavailable"
+}
