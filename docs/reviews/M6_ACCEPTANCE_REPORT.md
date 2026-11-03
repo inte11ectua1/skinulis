@@ -1,6 +1,6 @@
 # M6 Acceptance — техническая приёмка и открытые критерии
 
-**Дата: 03.11.2026, Europe/Moscow. Ответственный: Тимур. Issue [#79](https://github.com/inte11ectua1/skinulis/issues/79). Итог: PARTIALLY, G6 не закрыт.**
+**Первоначальный аудит до финального deployment: 03.11.2026, Europe/Moscow. Ответственный: Тимур. Issue [#79](https://github.com/inte11ectua1/skinulis/issues/79). Итог: PARTIALLY, G6 не закрыт.**
 Это проверка всего приложения, не только наличие документации. Полный DoD ещё
 не принят: исторические review/protection и формальное соответствие логирования
 требуют решения; performance500ms из ТЗ курса не достигнут. Live Telegram,
@@ -9,6 +9,13 @@
 
 **PR M6: [#81](https://github.com/inte11ectua1/skinulis/pull/81) · [required checks текущего head](https://github.com/inte11ectua1/skinulis/pull/81/checks).**
 Запрошенный review не равен APPROVED; Issue #79 не закрывается.
+
+> **POST-DEPLOY актуализация 03.11.2026:** PR81 merged; Release41591582318
+> действительно deploy, production version=`7aa7c14`, main CI5/5. Полный новый
+> [POST_DEPLOY_REPORT](POST_DEPLOY_REPORT.md) имеет итог NOT READY: один routing
+> negative case unexpected empty200, свежие container checks NOT VERIFIED.
+> Ниже сохранён первоначальный аудит до этого deployment, включая старые SHA;
+> он не является доказательством нового deployment. Formal DoD gaps остаются.
 
 ## 1. Границы, версии и источники доказательств
 

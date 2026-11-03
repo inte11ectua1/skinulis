@@ -1,3 +1,10 @@
+> **Свежий read-only post-deploy срез 03.11.2026:** production SHA `7aa7c14`,
+> approved Release41591582318 success, flag=false. [Отчёт](../reviews/POST_DEPLOY_REPORT.md)
+> фиксирует routing FAIL и недоступный текущий container inspection; полная
+> post-deploy приёмка NOT READY. Ниже первый rollout и общий runbook сохраняются
+> как история/инструкция; старые формулировки «новый main не deployed» относятся
+> к прежнему срезу. Этот отчёт не разрешает повторный deployment.
+
 # T-09 — выпуск и production deployment
 
 Актуализация 02.11.2026 · [Issue #59](https://github.com/inte11ectua1/skinulis/issues/59).
