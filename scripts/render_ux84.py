@@ -11,6 +11,7 @@ from unittest.mock import patch
 import httpx
 from aiogram.types import InlineKeyboardMarkup
 
+from bot.button_theme import plain_label
 from bot.presentation import STATUSES
 from tests.unit.test_bot_expenses import ExpenseServer, expense_journey
 from tests.unit.test_bot_onboarding_groups import ContractFixture, journey
@@ -44,6 +45,7 @@ def named(original: Any) -> Any:
 
 async def render() -> None:
     cards: list[str] = []
+    comparisons: list[str] = []
 
     def capture(title: str, j: Any) -> None:
         screen = j.ui.sent[-1]
@@ -63,6 +65,48 @@ async def render() -> None:
                 + "</div>"
                 for row in markup.inline_keyboard
             )
+        if title in {
+            "03 · Главное меню",
+            "07 · Группа владельца",
+            "14 · Сохранённый расход",
+            "19 · Балансы",
+        } and isinstance(markup, InlineKeyboardMarkup):
+            # Exact previous 9a23d37 row policy: one column except all/none and
+            # back/cancel. Use the same actual labels/styles, no fake bot data.
+            old_rows: list[list[str]] = []
+            previous = ""
+            for row in markup.inline_keyboard:
+                for button in row:
+                    label = plain_label(button.text)
+                    html = (
+                        '<span class="button '
+                        + (button.style or "neutral")
+                        + '">'
+                        + escape(button.text)
+                        + "</span>"
+                    )
+                    if label in {"Снять выбор", "Отмена"} and previous in {
+                        "Выбрать всех",
+                        "Назад",
+                    }:
+                        old_rows[-1].append(html)
+                    else:
+                        old_rows.append([html])
+                    previous = label
+            old_keyboard = "".join(
+                '<div class="row">' + "".join(row) + "</div>" for row in old_rows
+            )
+            for caption, content in [
+                ("До · вертикально · ", old_keyboard),
+                ("После · сетка · ", keyboard),
+            ]:
+                comparisons.append(
+                    "<article><h2>"
+                    + escape(caption + title)
+                    + '</h2><div class="phone"><div class="bubble">Те же действия и права; меняется только состав строк.</div>'
+                    + content
+                    + "</div></article>"
+                )
         # Only renderer-generated <b>/escaped user text; never callback payloads.
         cards.append(
             "<article><h2>"
@@ -202,7 +246,7 @@ h1{font-size:30px}p{line-height:1.6}main{display:grid;grid-template-columns:repe
 article{min-width:0}h2{font-size:17px;margin:0 0 12px}.phone{max-width:390px;padding:16px;background:#dfe9e5;border-radius:24px;border:1px solid #c8d8d1}
 .bubble{background:white;border-radius:14px;padding:16px;line-height:1.5;overflow-wrap:anywhere;box-shadow:0 1px 2px #0001;margin-bottom:8px}
 .button.primary{background:#2869ae;color:white}.button.success{background:#23784d;color:white}.button.danger{background:#b83e42;color:white}.button.neutral{background:#dee7eb;color:#18323e}
-.row{display:flex;gap:6px;margin-top:5px}.button{flex:1;text-align:center;border-radius:8px;background:#4b7169;color:white;padding:10px 8px;font-size:14px}
+.row{display:flex;gap:6px;margin-top:5px}.button{flex:1;min-width:0;overflow-wrap:anywhere;text-align:center;border-radius:8px;background:#4b7169;color:white;padding:10px 8px;font-size:14px}
 code{background:white;padding:2px 5px}footer{margin:28px auto;max-width:980px}
 """
     style += """
@@ -217,6 +261,8 @@ code{background:white;padding:2px 5px}footer{margin:28px auto;max-width:980px}
         + "<p><b>Симуляция, не скриншоты Telegram.</b> Текст и кнопки получены из настоящего Dispatcher/FSM; HTTP и Telegram замоканы. Синтетические данные. Стандартные primary/success/danger показаны условно; точные оттенки зависят от темы Telegram.</p>"
         + "<p>До: системные ID и отдельные сообщения после выбора. После: имена, одна редактируемая карточка, главная сумма и явное действие. Визуальная/live-приёмка ещё предстоит.</p><h2>До</h2><p>Фрагменты настоящих шаблонов fc9ac54, синтетические значения. Чек сокращён после итоговых долей.</p></header><main>"
         + before
+        + "</main><header><h2>Финальная доработка · сравнение клавиатур</h2><p>Прежняя политика строк 9a23d37 и текущий InlineKeyboardMarkup на одинаковых данных. Ширину/высоту определяет Telegram, CSS ниже — только офлайн-приближение.</p></header><main>"
+        + "\n".join(comparisons)
         + "</main><header><h2>После · настоящие экраны ветки #84</h2></header><main>"
         + "\n".join(cards)
         + "</main><footer>Воспроизведение: <code>uv run python -m scripts.render_ux84</code>. Никаких внешних запросов, токенов владельца или production.</footer></html>"

@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import ConfigDict, Field, TypeAdapter, field_validator, model_validator
 
 from bot.dto import EntityId, WireModel
+from bot.money_input import parse_money
 
 Money = Annotated[
     str, Field(strict=True, max_length=10, pattern=r"^(0|[1-9][0-9]*)\.[0-9]{2}$")
@@ -25,10 +26,7 @@ def title_input(value: str) -> str:
 
 
 def money_input(value: str, *, zero: bool = False) -> str:
-    value = TypeAdapter(Money).validate_python(value)
-    if not zero and value == "0.00":
-        raise ValueError("Use a positive amount")
-    return value
+    return TypeAdapter(Money).validate_python(parse_money(value, zero=zero))
 
 
 class ExpenseWire(WireModel):
@@ -49,7 +47,9 @@ class NamedAmount(ExpenseWire):
     @field_validator("amount")
     @classmethod
     def positive(cls, value: str) -> str:
-        return money_input(value)
+        if value == "0.00":
+            raise ValueError("Use a positive amount")
+        return value
 
 
 class ReceiptItem(NamedAmount):

@@ -1,6 +1,7 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from bot.button_theme import LABELS, decorate, plain_label
+from bot.button_theme import LABELS, decorate
+from bot.keyboard_layout import layout
 
 
 def themed_button(
@@ -15,8 +16,7 @@ def themed_button(
 def action_keyboard(
     nonce: str, actions: list[tuple[str, str]], *, colors: bool = True
 ) -> InlineKeyboardMarkup:
-    rows: list[list[InlineKeyboardButton]] = []
-    previous = ""
+    buttons: list[InlineKeyboardButton] = []
     primary_used = False
     for index, (label, action) in enumerate(actions):
         button = themed_button(label, action, f"l3:{nonce}:{index}", colors=colors)
@@ -24,27 +24,20 @@ def action_keyboard(
             if primary_used:
                 button.style = None
             primary_used = True
-        if plain_label(label) in {"Снять выбор", "Отмена"} and previous in {
-            "Выбрать всех",
-            "Назад",
-        }:
-            rows[-1].append(button)
-        else:
-            rows.append([button])
-        previous = plain_label(label)
-    return InlineKeyboardMarkup(inline_keyboard=rows)
+        buttons.append(button)
+    return InlineKeyboardMarkup(inline_keyboard=layout(actions, buttons))
 
 
 def main_menu() -> InlineKeyboardMarkup:
+    actions = [
+        (LABELS["groups"], "menu:groups"),
+        (LABELS["create"], "menu:create"),
+        (LABELS["pending"], "menu:pending"),
+        (LABELS["profile"], "menu:profile"),
+        (LABELS["help"], "menu:help"),
+    ]
     return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [themed_button(label, action, action)]
-            for label, action in [
-                (LABELS["groups"], "menu:groups"),
-                (LABELS["create"], "menu:create"),
-                (LABELS["pending"], "menu:pending"),
-                (LABELS["profile"], "menu:profile"),
-                (LABELS["help"], "menu:help"),
-            ]
-        ]
+        inline_keyboard=layout(
+            actions, [themed_button(label, action, action) for label, action in actions]
+        )
     )

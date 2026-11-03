@@ -146,10 +146,10 @@ async def prompt(
     await state.set_state(step)
     prompts = {
         ExpenseFlow.title.state: "За что заплатили?\nНапример, «Ужин в пятницу». До 120 символов.",
-        ExpenseFlow.amount.state: "Общая сумма: от 0.01 до 1000000.00 ₽, например 1250.00. Два знака после точки.",
+        ExpenseFlow.amount.state: "Общая сумма\nВведите сумму, например 100 или 100,50. От 0,01 до 1 000 000 ₽.",
         ExpenseFlow.item_title.state: "Название позиции (1–120 символов). Чаевые/сервис — отдельные положительные позиции.",
-        ExpenseFlow.item_amount.state: "Стоимость позиции, например 700.00. Положительная цена, без процентов, весов и отрицательных скидок.",
-        ExpenseFlow.share.state: f"Указать суммы\n{person(draft.names, draft.share_user or 0)}\n\nВведите долю, например 250.00. Можно 0.00.",
+        ExpenseFlow.item_amount.state: "Введите стоимость позиции, например 100 или 100,50. Положительная цена, без процентов, весов и отрицательных скидок.",
+        ExpenseFlow.share.state: f"Указать суммы\n{person(draft.names, draft.share_user or 0)}\n\nВведите долю, например 100 или 100,50. Можно 0.",
     }
     await screen(
         message,
@@ -274,7 +274,7 @@ async def text_input(message: Message, state: FSMContext) -> None:
         await hint(
             message,
             state,
-            "Проверьте поле: название 1–120 видимых символов; сумма вида 1250.00, без пробелов/запятой/знака/округления. Ноль допустим только в долях. /cancel — отмена.",
+            "Проверьте поле: название 1–120 видимых символов; сумма, например 100 или 100,50, максимум две цифры после точки или запятой, без знака, валюты и разделителей тысяч. Ноль допустим только в долях. /cancel — отмена.",
         )
         return
     await keep(state, draft, changed=True)

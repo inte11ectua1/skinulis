@@ -381,11 +381,11 @@ async def test_custom_server_validation_preserves_zero_and_all_fields(
     [
         "0.00",
         "-1.00",
-        "1,00",
+        "1,0,0",
         "1.001",
         "1e2",
         "01.00",
-        " 1.00",
+        "1 000",
         "١.٠٠",
         "NaN",
         "10000000.00",
