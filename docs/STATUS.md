@@ -2,7 +2,8 @@
 
 **03.11.2026: выполнена отдельная POST-DEPLOY проверка M6 [#79](https://github.com/inte11ectua1/skinulis/issues/79).**
 [Отчёт](reviews/POST_DEPLOY_REPORT.md) · [evidence](reviews/POST_DEPLOY_EVIDENCE.json).
-PR #81 merged; проверенный main/production SHA `7aa7c14` совпадает.
+PR #81/#82 merged; production SHA `7aa7c14` подтверждён actual Docker image и HTTP.
+Main `71363d1` содержит только дополнительную документацию PR82 поверх deployed SHA.
 [Push-main CI](https://github.com/inte11ectua1/skinulis/actions/runs/41582982671)
 5/5, 1726 tests, branch coverage95,00%;
 [настоящий deploy](https://github.com/inte11ectua1/skinulis/actions/runs/41591582318)
@@ -12,8 +13,12 @@ HTTPS/health(databaseok)/version/docs/OpenAPI работают на новой �
 **POST-DEPLOY итог NOT READY:** один raw absolute-form foreign-authority case
 возвращает пустой Caddy200 вместо ожидаемого400/404; внутренние данные не получены,
 обход авторизации не доказан. Остальные проверенные internal пути отклонены404.
-Свежая container/volume/revision/logs/polling process проверка NOT VERIFIED:
-AWS CLI session expired; health не заменяет docker inspect. Новый rollout,
+**Read-only runtime follow-up07:59–08:02UTC: VERIFIED.** AWS login восстановлен,
+правильные account/EC2/SSM проверены. API/db/Caddy healthy, migrate exited0,
+actual Alembic revision0006_settlement_notification_claim, mounted старый volume,
+actual image digest/OCI SHA совпали. Restart0/OOM=false; bounded JSON logs и
+rotation5m×3 проверены; **POLLING OFF** по host/container processes.
+[Runtime evidence](reviews/POST_DEPLOY_RUNTIME_EVIDENCE.json). Новый rollout,
 миграции, restart, AWS changes или polling в этой проверке не запускались.
 
 Полная [M6-матрица](reviews/M6_ACCEPTANCE_REPORT.md), [инструкция](USER_GUIDE.md)
@@ -39,9 +44,9 @@ Issue #79 открыта; безусловный переход к M7 #80 пок
 
 - **G5:** первый rollout02.11 сохранён как история; новый deploy03.11 на `7aa7c14` подтверждён. Результат POST-DEPLOY NOT READY и оставшиеся NOT VERIFIED — в свежем отчёте выше.
 - **G1/T-01 #2:** закрыта `not_planned`, но direct-push/admin-bypass evidence и полноценная приемка не получены. Есть формальный процессный риск.
-- **G2/G3/G4:** реализации/автотесты есть, **живой Telegram E2E не проведён**; Release polling input=false, текущий process count NOT VERIFIED. [#38](https://github.com/inte11ectua1/skinulis/issues/38) закрыта `not_planned`, не `verified`.
+- **G2/G3/G4:** реализации/автотесты есть, **живой Telegram E2E не проведён**; POLLING OFF подтверждён read-only host/container inspection. [#38](https://github.com/inte11ectua1/skinulis/issues/38) закрыта `not_planned`, не `verified`.
 - **Официальный DoD:** зелёный CI, покрытие, инфраструктура и docs — лишь часть критериев. Independent human APPROVED требуется на каждом PR; у ряда исторических PR, включая #77, его нет. Не утверждать весь DoD без отдельного M6 audit и согласования с преподавателем при исключениях.
-- [Production API](https://3-25-53-31.sslip.io): свежий HTTPS/health200/databaseok/version=`7aa7c14` соответствует main. Flag=false. Current container state и bot process count NOT VERIFIED; deployment polling input=false. Новый deploy/polling только по отдельному разрешению.
+- [Production API](https://3-25-53-31.sslip.io): свежий HTTPS/health200/databaseok/version=`7aa7c14` соответствует ожидаемому release; main71363d1 добавляет только docs. Flag=false. Current containers/DB/migration/image/logs VERIFIED; POLLING OFF по process inspection. Новый deploy/polling только по отдельному разрешению.
 - Бэкапы/escrow/домен/Elastic IP не расширять без явной новой задачи: это не закреплённые отдельные требования преподавательского DoD. Не путать `Stop` с `Terminate` EC2.
 
 ## Текущий этап — M6 Acceptance
