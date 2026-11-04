@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** O-06 merged PR51; O-07 merged PR53; O-07N merged PR57. Ниже исходный implementation/review срез, не сегодняшний merge-статус.
+> [Post-release аудит](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # O-06 — точные балансы и план
 
 Основание: [принятый T-08](../contracts/T-08_M4_BALANCES_SETTLEMENTS.md), PR50.

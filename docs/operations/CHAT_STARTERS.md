@@ -1,19 +1,25 @@
-# Стартовые сообщения для чатов — M6 план (03.11.2026)
+# Стартовые сообщения для чатов (04.11.2026)
 
-**Перед началом:** M5 закрыт [по согласованным критериям](M5_CLOSEOUT_M6_HANDOFF.md); новых M6 GitHub Issues пока нет. Сверять актуальные GitHub main, [STATUS](../STATUS.md), roadmap, AGENTS и реальные Issues. Не считать старые сообщения M5 актуальными заданиями.
+Перед задачей сверить GitHub main, [STATUS](../STATUS.md), AGENTS и
+[post-release аудит](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+PR85 merged, release `c9ec9ce` deployed с polling=true; owner UI/menu подтверждены.
+M5 closed; #84/#79/#80 open. Не использовать исторический POLLING OFF как текущий факт.
 
-## Тимур — M6 / T-11, DoD и демонстрация
+## Тимур — M6 / #79
 
-Я Тимур, tech lead «Скинулись». Проверь свежий main, START_HERE, AGENTS, STATUS, TIMUR_SPEC/ROADMAP и [M5 closeout](M5_CLOSEOUT_M6_HANDOFF.md). Предложи критерии отдельной Issue T-11: обязательный DoD преподавателя, независимый PR approval, админские правила main, чистый Docker Compose setup, инфраструктурный evidence и готовность к защите. Не объявляй весь DoD закрытым без доказательств. Без явного разрешения не выполнять AWS deployment/live Telegram или менять secrets.
+Я Тимур, tech lead. Продолжи только согласованный scope единой #79: DoD evidence,
+routing FAIL, missing PR approvals/admin bypass, p95 и границы live-приёмки.
+Не закрывай #79 и не выдавай owner acceptance за исключение преподавателя.
+Read-only аудит не разрешает deploy, restart, миграции или изменение polling.
 
-## Олег — M6 / финальный финансовый QA (ID ещё согласовать)
+## Олег и Лера — консультация и независимое review
 
-Я Олег, financial backend engineer. Изучи свежий main, PRODUCT_RULES, TECHNICAL_DECISIONS, OLEG_SPEC/ROADMAP, STATUS, [O-08 отчёт](LOAD_TEST_M5.md) и O-09 [#76](https://github.com/inte11ectua1/skinulis/issues/76). O-08 и O-09 уже закрыты. Подготовь проверяемый план финального финансового/PG QA для M6, включая честный p95 FAIL при принятом отказе от 500ms; **не создавай и не выполняй ещё одну O-09**. Перед кодом согласовать новую Issue/ID, не использовать production для тестов.
+Изучи текущий аудит и USER_GUIDE; оцени финансовые гарантии/HTTP/FSM/UX и evidence
+в рамках review единой #79. Не создавать отдельные M6 задачи или повторную O-09.
+Новые кодовые исправления — только после отдельного scope/Issue и обычного PR.
 
-## Лера — M6 / L-07 user guide и demo script
+## M7 / #80
 
-Я Лера, Telegram Developer/QA. Прочитай свежий main, AGENTS, LERA_SPEC/ROADMAP, STATUS и [L-06 regression](../bot/L-06_UX_REGRESSION.md). M5 L-06 #62 merged/closed. Помоги сформировать отдельную L-07 Issue: user guide, три синтетических участника, demo script от /start до confirm, ошибки и безопасные скриншоты. Live Telegram без явного разрешения Тимура запрещён; offline HTTP/PG не является live E2E.
-
-## Перед новым PR
-
-Сначала оформите отдельную Issue и acceptance; отдельная ветка от свежего main, 5/5 CI, independent human APPROVED, `Closes` только при полном scope. Не мержить без review и не выдавать архивные статусы за текущие.
+Подготовка presentation7min/demo5min/Q&A8min использует существующий release,
+синтетические данные и честный fallback. Защита не считается пройденной без
+репетиции и учебной приёмки. Полный новый live E2E — только по отдельному разрешению.

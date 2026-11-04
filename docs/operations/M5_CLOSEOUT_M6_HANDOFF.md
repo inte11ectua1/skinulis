@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** PR #85 merged; main/release `c9ec9ce`, protected Release41836839608 success с polling input=true. Владелец подтвердил ответы production-бота и новый UI; меню настроено через BotFather. Read-only follow-up04.11 после штатного browser login подтвердил healthy API/db/Caddy/bot, ровно один Python polling на EC2, SQL revision0007 и прежний volume; рестарты/изменения не выполнялись. Это не прежний POLLING OFF и не полная учебная приёмка. Ниже сохранён датированный исходный срез/общий runbook; его прежние статусы не переносятся на04.11.
+> [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # M5 Delivery → M6 Acceptance: закрытие и handoff (03.11.2026)
 
 **Решение владельца (Тимур): M5 завершён и принят по согласованному объёму разработки и первичного deployment.** Это **не** означает, что полный DoD курса, все release gates или live Telegram demo приняты. Срез к GitHub `main` `0de89b3a5f47522fe4932551d746fe1eb839e463` (merge PR #77); [post-merge main CI #41536084636](https://github.com/inte11ectua1/skinulis/actions/runs/41536084636) **5/5 success**, [Release #41537783167](https://github.com/inte11ectua1/skinulis/actions/runs/41537783167) **success** (trusted publication, не deployment). [PR #77 CI 5/5](https://github.com/inte11ectua1/skinulis/actions/runs/41533351706).

@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** Это этапный контракт/срез до редизайна. Текущий UI и команды — [USER_GUIDE](../USER_GUIDE.md), [редизайн84](../ux/84_TELEGRAM_REDESIGN.md), merged PR85. Бот принимает целые RUB/точку/запятую; API строго два знака. Имена, русские карточки, сетка, stale callbacks и меню обновлены. Старые proposed/«API нет»/mock-only/ожидание live не являются текущим общим статусом; исходные результаты тестов сохранены.
+> [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # L-06 — offline Telegram UX regression
 
 Issue [#62](https://github.com/inte11ectua1/skinulis/issues/62), база main `6132f99`.

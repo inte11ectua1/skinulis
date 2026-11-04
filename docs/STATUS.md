@@ -1,5 +1,33 @@
 # Фактическое состояние проекта
 
+## Текущий срез — 04.11.2026
+
+[Полный post-release аудит](reviews/POST_RELEASE_AUDIT_2026-11-04.md) и
+[evidence](reviews/POST_RELEASE_EVIDENCE_2026-11-04.json).
+PR #85 merged, main/release `c9ec9ce`; main CI41824303985 **5/5**, **1382 unit +458 PG**,
+branch **94,10%**. Release41836839608 guard/publish/deploy success,
+Environment approval **Valeria18-new**, input polling=true, rollout flag прочитан **false**.
+Свежие HTTPS/health(database=ok)/version/docs/OpenAPI PASS; exact SHA совпал.
+**Routing FAIL сохраняется:** foreign-authority absolute-form → пустой200,
+утечка/обход аутентификации не доказаны. Read-only runtime follow-up14:37UTC после browser login **VERIFIED**: API/db/Caddy/bot healthy,
+один Python polling, actual0007, тот же volume/digest, restart0/OOM=false, bounded safe JSON logs.
+Первоначальный пробел expired session закрыт новой проверкой, а не переносом старого evidence.
+
+Владелец подтвердил живой @skinulis_expenses_bot с новым UI; команды production
+настроены им через BotFather. Это owner-reported evidence, не независимый полный
+3-user/new-user E2E. Test bot настраивает команды кодом; production автоматически нет.
+#84 **open**: реализация/CI/merge/deploy есть, решение о закрытии — после оставшейся
+приёмки владельцем с раскрытием отсутствующего PR APPROVED. #79 **open / PARTIALLY**:
+полный DoD не принят (routing, p95, 41/52 merged PR без approvals, admin bypass,
+формальная logging/live/defense приёмка). #80 **open**: подготовка M7 возможна с этими
+ограничениями; защита/репетиция не подтверждены. Ничего автоматически не закрыто.
+Удаление групп, участников с историей и Mini App отложены владельцем.
+
+## Исторические срезы — не текущее состояние
+
+Ниже сохранены прежние наблюдения и результаты на их датах. Утверждения
+«polling выключен», старый main/release и «на ревью» не описывают релиз04.11.
+
 **03.11.2026: выполнена отдельная POST-DEPLOY проверка M6 [#79](https://github.com/inte11ectua1/skinulis/issues/79).**
 [Отчёт](reviews/POST_DEPLOY_REPORT.md) · [evidence](reviews/POST_DEPLOY_EVIDENCE.json).
 PR #81/#82 merged; production SHA `7aa7c14` подтверждён actual Docker image и HTTP.

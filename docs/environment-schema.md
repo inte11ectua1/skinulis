@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** Production deployment release `c9ec9ce` выполнен с enable_polling=true; актуальные runtime secrets не читались. Для commands production используется BotFather, EXPECTED_BOT_USERNAME/configure_test_menu относятся к отдельному test bot. Пустой токен в прежних preflight — исторический факт, не текущий диагноз.
+> [Текущий аудит и границы доказательств](reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # Окружение API (T-03 / T-05 / T-06)
 
 Секреты хранятся в локальном `.env` / переменных окружения. В Git находится только
@@ -8,7 +11,9 @@
 
 **M5 / T-09 (31.10.2026):** подготовлены отдельный production Compose, Caddy policy,
 trusted-main release workflow и контроллер deploy/rollback; [runbook](operations/DEPLOYMENT.md).
-Последняя миграция — `0006_settlement_notification_claim`; новых миграций T-09 нет.
+На срезе T-09 последней была `0006_settlement_notification_claim`; текущий кодовый
+head после PR85 — `0007_user_display_name`. Фактическая production revision `0007_user_display_name` подтверждена read-only SQL
+04.11 после штатного browser login; миграции при аудите не запускались.
 Ниже local/test environment сохранён, а production-схема добавлена отдельно в конце.
 02.11.2026 approved production rollout выполнен; trusted HTTPS, exact version SHA,
 private boundary и backup/restore подтверждены. [Current evidence](operations/T-09_FIRST_PRODUCTION_ROLLOUT.md).

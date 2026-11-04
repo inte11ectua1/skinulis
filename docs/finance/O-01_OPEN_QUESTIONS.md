@@ -11,7 +11,7 @@
 <a id="q-01"></a>
 ## Q-01. Полная грамматика денежных строк и представление баланса
 
-**Источники:** [PR §3](../PRODUCT_RULES.md), [TD §6](../TECHNICAL_https://github.com/inte11ectua1/skinulis/issues/11#issuecomment-6425832067S.md), [OS п.1](../roles/OLEG_SPEC.md), [решение Тимура от 26.10.2026](https://github.com/inte11ectua1/skinulis/issues/11#issuecomment-6425832067).
+**Источники:** [PR §3](../PRODUCT_RULES.md), [TD §6](../TECHNICAL_DECISIONS.md), [OS п.1](../roles/OLEG_SPEC.md), [решение Тимура от 26.10.2026](https://github.com/inte11ectua1/skinulis/issues/11#issuecomment-6425832067).
 
 **Утверждено для pure functions и будущей серверной модели.** Вход — строка канонического ASCII-формата `(0|[1-9][0-9]*)\.[0-9]{2}`. Пробелы, ведущие нули, плюс, Unicode-цифры, отрицательные суммы и `"-0.00"` отвергаются обычной валидацией. Числа/bool/null не приводятся к строкам. Trim, нормализации и округления нет.
 

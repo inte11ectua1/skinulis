@@ -1,24 +1,26 @@
 # «Скинулись» — стартовая точка команды
 
-**Актуализация: 03.11.2026.** M1–M5 приняты владельцем по объёму реализации.
-Текущая работа — **единая M6 Acceptance [#79](https://github.com/inte11ectua1/skinulis/issues/79)**,
-ответственный Тимур. Финансовый QA, user guide и demo входят в неё; отдельных задач
-для Олега/Леры не создавать. M7 подготовлена как [#80](https://github.com/inte11ectua1/skinulis/issues/80),
-её реализация не входит в M6.
+**Актуализация: 04.11.2026.** M1–M5 приняты владельцем по объёму реализации;
+UX #84 реализован и объединён [PR #85](https://github.com/inte11ectua1/skinulis/pull/85).
+Main/release `c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c`; [main CI](https://github.com/inte11ectua1/skinulis/actions/runs/41824303985)
+5/5, 1382 unit +458 PostgreSQL, branch coverage94,10%.
+[Protected deploy](https://github.com/inte11ectua1/skinulis/actions/runs/41836839608)
+success с независимым Environment approval Леры и enable_polling=true.
+Публичный /version совпал; health/database/HTTPS работают. Владелец подтвердил новый
+UI @skinulis_expenses_bot и ручное меню BotFather. Read-only runtime follow-up04.11 — VERIFIED (healthy, один polling,0007, прежний volume).
 
-[Отчёт M6](docs/reviews/M6_ACCEPTANCE_REPORT.md) · [USER_GUIDE](docs/USER_GUIDE.md) ·
-[3-user smoke/demo](docs/reviews/M6_THREE_USER_DEMO.md) · [STATUS](docs/STATUS.md).
-Основной GitHub baseline M6 — `638a976`; production по read-only проверке всё ещё
-`f7020cd`, публикация GHCR не означает deployment. Исторический
-[M5 closeout](docs/operations/M5_CLOSEOUT_M6_HANDOFF.md) сохраняется как датированный
-handoff, его фразы о не созданных M6 Issues больше не описывают текущую очередь.
+**Текущие Issues:** #84 open (оценка финальной UX-приёмки), #79 open (M6 Acceptance,
+ответственный Тимур), #80 open (M7 — подготовка защиты, не пройдена).
+[Актуальный аудит](docs/reviews/POST_RELEASE_AUDIT_2026-11-04.md) ·
+[USER_GUIDE](docs/USER_GUIDE.md) · [3-user сценарий](docs/reviews/M6_THREE_USER_DEMO.md) ·
+[STATUS](docs/STATUS.md). Исторические отчёты не доказывают новый runtime.
 
-**G6 не закрыт:** недостающие исторические APPROVED, admin bypass, формальная
-приёмка логирования и live Telegram остаются открыты. p95≤500ms — FAIL с внутренним
-решением владельца для M5; эта норма есть в ТЗ курса, исключение преподавателем не согласовано.
-В M6 разрешены изолированные локальные тесты и read-only public/GitHub проверки.
-Не менять AWS/production/branch protection и не запускать deploy, миграции production,
-polling или нагрузку production без отдельного разрешения.
+**G6 не закрыт:** routing FAIL absolute-form/foreign authority (пустой200, без доказанной
+утечки), p95>500ms, 41/52 merged PR без независимого APPROVED, admin bypass и формальные
+logging/live-E2E/defense gaps. Environment approval не заменяет PR review;
+согласие владельца не является исключением преподавателя.
+Новые deploy/restart/migrations/polling/config/данные production или AWS changes —
+только по отдельному разрешению. Этот документационный аудит ничего из этого не выполняет.
 
 ## Команда
 - **Тимур** — technical lead, платформа, безопасность, DevOps и интеграция.

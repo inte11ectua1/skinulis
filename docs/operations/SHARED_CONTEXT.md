@@ -2,9 +2,15 @@
 
 **Источник истины — GitHub main:** docs, ADR, Issues, PR и docs/STATUS.md. ChatGPT-чаты и Codex могут расходиться и не синхронизируют память автоматически.
 
-**Актуальный handoff 03.11.2026:** M5 **принят по согласованному объёму**. T-09 #59 и T-10 #60 (Тимур), O-08 #61 (Олег), L-06 #62 (Лера), O-09 #76 (Тимур) — все **closed** и PR #74/#75/#77 merged. [Фактический closeout и M6-план](M5_CLOSEOUT_M6_HANDOFF.md); подробности [STATUS](../STATUS.md). G5 — evidence первого API production rollout (не новый `main`), Telegram polling off, live G2/G3/G4 not verified. O-09 устранила HTTP500 на 100-client local load; p95≈956/1098ms **выше внутреннего таргета 500ms**, но Тимур принял это отклонение. T-01 #2 закрыта `not_planned` и не fully accepted; недостающие GitHub human APPROVED — риск для DoD.
-
-**Следом M6 Acceptance (ещё без Issues):** Тимур T-11 DoD/cold start, Олег финальный PG/finance audit, Лера L-07 user guide/demo. Утверждать, что новая задача назначена, можно только после создания GitHub Issue. Prod deploy/AWS/SSH/live Telegram/stress — только после явной новой команды Тимура.
+**Актуальный handoff 04.11.2026:** PR85 merged, main/release `c9ec9ce`;
+protected deploy41836839608 с polling=true успешен. Владелец подтвердил UI и меню
+production через BotFather. #84/#79/#80 open; M6 не принят полностью, M7 не пройден.
+[Свежий аудит](../reviews/POST_RELEASE_AUDIT_2026-11-04.md) / [STATUS](../STATUS.md)
+заменяют старые текущие срезы. Общие M6 задачи у Тимура, не создавать новые L-07/O-09.
+Есть routing FAIL (пустой200 foreign-authority без доказанной утечки), p95>500ms,
+исторические missing approvals/admin bypass; runtime follow-up04.11 VERIFIED после browser login (без изменений production).
+Owner acceptance и зелёный CI не заменяют исключение преподавателя или независимое review.
+Любые новые production/AWS/polling изменения требуют отдельного разрешения.
 
 ## Цикл
 1. В начале задачи прочитать latest main, STATUS.md, issue, AGENTS.md и персональные документы.

@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** Опорный текущий release `c9ec9ce` с polling input=true; владелец подтвердил живого production-бота. Не останавливать/не запускать его ради аудита. Read-only runtime follow-up04.11 подтвердил actual0007, volume, healthy services/restart0 и bounded JSON logs. Сам по себе health200 не заменяет эти проверки; новый backup/restore не выполнялся. Следующие команды — runbook по отдельному разрешению, не инструкция выполнять rollback в этой задаче.
+> [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # T-10 — инциденты, логи и безопасный откат
 
 [Issue #60](https://github.com/inte11ectua1/skinulis/issues/60) · код принят в main

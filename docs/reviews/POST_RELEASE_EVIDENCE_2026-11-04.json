@@ -1,0 +1,1303 @@
+{
+  "audit_date": "2026-11-04",
+  "scope": "read-only external/GitHub/GHCR + pinned SSH-over-SSM runtime follow-up after owner-authorized AWS browser login; no runtime mutations or Telegram API calls",
+  "repository_main": "git:c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c",
+  "github": {
+    "pr85_merged": true,
+    "merged_at": "2026-11-04T11:51:15Z",
+    "main_ci": "https://github.com/inte11ectua1/skinulis/actions/runs/41824303985",
+    "jobs": {
+      "lint": "success",
+      "types": "success",
+      "tests": "success",
+      "docker-build": "success",
+      "ci": "success"
+    },
+    "unit_passed": 1382,
+    "postgresql_integration_passed": 458,
+    "branch_coverage_percent": "94.10",
+    "release": "https://github.com/inte11ectua1/skinulis/actions/runs/41836839608",
+    "operation": "deploy",
+    "enable_polling": true,
+    "rollback_compatible": false,
+    "guard_publish_deploy": "success",
+    "approval_user": "Valeria18-new",
+    "environment_can_admins_bypass": false,
+    "prevent_self_review": true,
+    "protected_branches_only": true,
+    "main_enforce_admins": false,
+    "rollout_flag": "false",
+    "merged_prs_reviewed": 52,
+    "independent_approved_before_merge": 11,
+    "missing_approved_before_merge": 41,
+    "issues": {
+      "84": "open",
+      "79": "open",
+      "80": "open"
+    }
+  },
+  "registry": {
+    "sha": "git:c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c",
+    "image": "ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+    "manifest_digest_verified": true,
+    "config_digest_verified": true,
+    "architecture": "amd64",
+    "os": "linux",
+    "user": "skinulis",
+    "cmd": [
+      "python",
+      "-m",
+      "app.core.serve"
+    ],
+    "oci_revision": "git:c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c",
+    "oci_source": "https://github.com/inte11ectua1/skinulis",
+    "anonymous_pull_metadata_access": true,
+    "compressed_layers_mib": 61.53
+  },
+  "public": {
+    "checked_at": "2026-11-04T13:55:25.251983+00:00",
+    "base_url": "https://3-25-53-31.sslip.io",
+    "expected_sha": "git:c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c",
+    "tls_verification": true,
+    "connect_address": "3.25.53.31",
+    "sni_and_http_host": "3-25-53-31.sslip.io",
+    "checks": [
+      {
+        "method": "GET",
+        "path": "/health",
+        "expected_status": [
+          200
+        ],
+        "status": 200,
+        "passed": true,
+        "request_id_present": true,
+        "body": {
+          "status": "ok",
+          "database": "ok"
+        },
+        "server": "uvicorn",
+        "via": "1.1 Caddy"
+      },
+      {
+        "method": "GET",
+        "path": "/version",
+        "expected_status": [
+          200
+        ],
+        "status": 200,
+        "passed": true,
+        "request_id_present": true,
+        "body": {
+          "version": "0.1.0",
+          "commit_sha": "git:c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c"
+        },
+        "expected_sha_matches": true,
+        "server": "uvicorn",
+        "via": "1.1 Caddy"
+      },
+      {
+        "method": "GET",
+        "path": "/docs",
+        "expected_status": [
+          200
+        ],
+        "status": 200,
+        "passed": true,
+        "request_id_present": true,
+        "server": "uvicorn",
+        "via": "1.1 Caddy"
+      },
+      {
+        "method": "GET",
+        "path": "/redoc",
+        "expected_status": [
+          200
+        ],
+        "status": 200,
+        "passed": true,
+        "request_id_present": true,
+        "server": "uvicorn",
+        "via": "1.1 Caddy"
+      },
+      {
+        "method": "GET",
+        "path": "/openapi.json",
+        "expected_status": [
+          200
+        ],
+        "status": 200,
+        "passed": true,
+        "request_id_present": true,
+        "path_count": 41,
+        "health_examples_present": true,
+        "server": "uvicorn",
+        "via": "1.1 Caddy"
+      },
+      {
+        "method": "GET",
+        "path": "/users/me",
+        "expected_status": [
+          401
+        ],
+        "status": 401,
+        "passed": true,
+        "request_id_present": true,
+        "error_code": "invalid_token",
+        "error_structure_valid": true,
+        "server": "uvicorn",
+        "via": "1.1 Caddy"
+      },
+      {
+        "method": "GET",
+        "path": "/groups",
+        "expected_status": [
+          401
+        ],
+        "status": 401,
+        "passed": true,
+        "request_id_present": true,
+        "error_code": "invalid_token",
+        "error_structure_valid": true,
+        "server": "uvicorn",
+        "via": "1.1 Caddy"
+      },
+      {
+        "method": "GET",
+        "path": "/internal",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/internal/",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "//internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "///internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/%69nternal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/%49nternal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/internal%2fusers%2fme",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/internal%252fusers%252fme",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/%2569nternal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/internal%5cusers/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/internal\\users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/groups/../internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/groups/%2e%2e/internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/groups/%252e%252e/internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/./internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/internal;ignored/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/INTERNAL/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/internal%00/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "https://localhost/internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 200,
+        "passed": false,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "//localhost/internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "HEAD",
+        "path": "/internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "OPTIONS",
+        "path": "/internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "TRACE",
+        "path": "/internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "CONNECT",
+        "path": "/internal/users/me",
+        "expected_status": [
+          400,
+          404,
+          405
+        ],
+        "status": 404,
+        "passed": true,
+        "request_id_present": false,
+        "server": "Caddy",
+        "via": null
+      },
+      {
+        "method": "GET",
+        "path": "/health",
+        "expected_status": [
+          200
+        ],
+        "status": 200,
+        "passed": true,
+        "request_id_present": true,
+        "body": {
+          "status": "ok",
+          "database": "ok"
+        },
+        "server": "uvicorn",
+        "via": "1.1 Caddy"
+      },
+      {
+        "method": "GET",
+        "path": "/health",
+        "expected_status": [
+          200
+        ],
+        "status": 200,
+        "passed": true,
+        "request_id_present": true,
+        "body": {
+          "status": "ok",
+          "database": "ok"
+        },
+        "server": "uvicorn",
+        "via": "1.1 Caddy"
+      },
+      {
+        "method": "GET",
+        "path": "/health?q=%2Finternal",
+        "expected_status": [
+          200
+        ],
+        "status": 200,
+        "passed": true,
+        "request_id_present": true,
+        "server": "uvicorn",
+        "via": "1.1 Caddy"
+      }
+    ],
+    "http_redirect": {
+      "status": 308,
+      "location": "https://3-25-53-31.sslip.io/health",
+      "passed": true
+    },
+    "certificate": {
+      "issuer": [
+        [
+          [
+            "countryName",
+            "US"
+          ]
+        ],
+        [
+          [
+            "organizationName",
+            "Let's Encrypt"
+          ]
+        ],
+        [
+          [
+            "commonName",
+            "YE2"
+          ]
+        ]
+      ],
+      "subjectAltName": [
+        [
+          "DNS",
+          "3-25-53-31.sslip.io"
+        ]
+      ],
+      "notBefore": "Nov  2 09:30:54 2026 GMT",
+      "notAfter": "Jan 31 09:30:53 2027 GMT"
+    },
+    "tls": "TLSv1.3",
+    "all_checks_passed": false
+  },
+  "absolute_form_repeat": {
+    "client": "curl with normal TLS verification and --request-target",
+    "target": "https://localhost/internal/users/me",
+    "status": 200,
+    "body_bytes": 0,
+    "conclusion": "FAIL expected400/404, no internal data observed"
+  },
+  "runtime": {
+    "initial_attempt": "AWS CLI session expired; later resolved by owner-authorized standard browser login",
+    "followup": "VERIFIED current read-only snapshot",
+    "aws": {
+      "account": "621150878773",
+      "instance_id": "i-0c920378dd242af2b",
+      "region": "ap-southeast-2",
+      "state": "running",
+      "public_ip": "3.25.53.31",
+      "architecture": "x86_64",
+      "inbound_rules": [
+        {
+          "protocol": "tcp",
+          "from": 80,
+          "to": 80,
+          "public_ipv4": true,
+          "public_ipv6": false
+        },
+        {
+          "protocol": "tcp",
+          "from": 443,
+          "to": 443,
+          "public_ipv4": true,
+          "public_ipv6": false
+        }
+      ]
+    },
+    "server": {
+      "checked_at": "2026-11-04T14:37:44.018947+00:00",
+      "scope": "read-only metadata; no env/secrets/user records; no lifecycle or database writes",
+      "current_release": {
+        "sha": "git:c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c",
+        "image": "ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+        "polling": true,
+        "expected_sha_matches": true
+      },
+      "containers": [
+        {
+          "service": "bot",
+          "status": "running",
+          "running": true,
+          "health": "healthy",
+          "exit_code": 0,
+          "oom_killed": false,
+          "restart_count": 0,
+          "started_at": "2026-11-04T13:30:31.810641349Z",
+          "configured_image": "ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "image_id": "sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "logging": {
+            "Config": {
+              "compress": "true",
+              "max-file": "3",
+              "max-size": "5m"
+            },
+            "Type": "json-file"
+          },
+          "port_bindings": {},
+          "networks": [
+            "skinulis-production_application",
+            "skinulis-production_telegram"
+          ],
+          "volumes": []
+        },
+        {
+          "service": "caddy",
+          "status": "running",
+          "running": true,
+          "health": "healthy",
+          "exit_code": 0,
+          "oom_killed": false,
+          "restart_count": 0,
+          "started_at": "2026-11-04T13:30:30.424651666Z",
+          "configured_image": "caddy:2.11.7-alpine@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5",
+          "image_id": "sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5",
+          "logging": {
+            "Config": {
+              "compress": "true",
+              "max-file": "3",
+              "max-size": "5m"
+            },
+            "Type": "json-file"
+          },
+          "port_bindings": {
+            "443/tcp": [
+              {
+                "HostIp": "",
+                "HostPort": "443"
+              }
+            ],
+            "80/tcp": [
+              {
+                "HostIp": "",
+                "HostPort": "80"
+              }
+            ]
+          },
+          "networks": [
+            "skinulis-production_application",
+            "skinulis-production_edge"
+          ],
+          "volumes": [
+            {
+              "name": "skinulis-production-caddy-config",
+              "destination": "/config"
+            },
+            {
+              "name": "skinulis-production-caddy-data",
+              "destination": "/data"
+            }
+          ]
+        },
+        {
+          "service": "api",
+          "status": "running",
+          "running": true,
+          "health": "healthy",
+          "exit_code": 0,
+          "oom_killed": false,
+          "restart_count": 0,
+          "started_at": "2026-11-04T13:30:24.013623277Z",
+          "configured_image": "ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "image_id": "sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "logging": {
+            "Config": {
+              "compress": "true",
+              "max-file": "3",
+              "max-size": "5m"
+            },
+            "Type": "json-file"
+          },
+          "port_bindings": {},
+          "networks": [
+            "skinulis-production_application",
+            "skinulis-production_database"
+          ],
+          "volumes": []
+        },
+        {
+          "service": "migrate",
+          "status": "exited",
+          "running": false,
+          "health": "not configured",
+          "exit_code": 0,
+          "oom_killed": false,
+          "restart_count": 0,
+          "started_at": "2026-11-04T13:30:19.914074931Z",
+          "configured_image": "ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "image_id": "sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "logging": {
+            "Config": {
+              "compress": "true",
+              "max-file": "3",
+              "max-size": "5m"
+            },
+            "Type": "json-file"
+          },
+          "port_bindings": {},
+          "networks": [
+            "skinulis-production_database"
+          ],
+          "volumes": []
+        },
+        {
+          "service": "db",
+          "status": "running",
+          "running": true,
+          "health": "healthy",
+          "exit_code": 0,
+          "oom_killed": false,
+          "restart_count": 0,
+          "started_at": "2026-11-02T09:08:04.281442266Z",
+          "configured_image": "postgres:17.11-bookworm@sha256:858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27",
+          "image_id": "sha256:858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27",
+          "logging": {
+            "Config": {
+              "compress": "true",
+              "max-file": "3",
+              "max-size": "5m"
+            },
+            "Type": "json-file"
+          },
+          "port_bindings": {},
+          "networks": [
+            "skinulis-production_database"
+          ],
+          "volumes": [
+            {
+              "name": "skinulis-production-postgres",
+              "destination": "/var/lib/postgresql/data"
+            }
+          ]
+        }
+      ],
+      "running_image": {
+        "id": "sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+        "repo_digests": [
+          "ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf"
+        ],
+        "revision": "git:c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c",
+        "source": "https://github.com/inte11ectua1/skinulis",
+        "expected_revision_matches": true,
+        "release_digest_matches": true,
+        "api_bot_same_image": true
+      },
+      "postgresql_volumes": [
+        {
+          "name": "skinulis-production-postgres",
+          "created_at": "2026-11-01T20:22:25Z",
+          "driver": "local",
+          "matches_historical_identity": true
+        }
+      ],
+      "alembic_revision": [
+        "0007_user_display_name"
+      ],
+      "runtime_role": {
+        "login": true,
+        "superuser": false,
+        "createdb": false,
+        "createrole": false,
+        "replication": false,
+        "bypassrls": false
+      },
+      "sql_session_readonly": true,
+      "polling": {
+        "host_bot_main_count": 1,
+        "init_forwarder_count_excluded": 1,
+        "unreadable_proc_cmdlines": 0,
+        "containers_with_bot_main": [
+          {
+            "service": "bot",
+            "expected_project": true,
+            "bot_main_count": 1
+          }
+        ],
+        "running_bot_service_containers": 1,
+        "other_running_containers": 0
+      },
+      "logs": [
+        {
+          "service": "bot",
+          "scope": "last200 including startup",
+          "lines": 25,
+          "json_objects": 25,
+          "read_ok": true,
+          "error_critical_count": 0,
+          "obvious_sensitive_fields": false,
+          "token_shape_match_count": 0,
+          "required_fields_present": true,
+          "unexpected_field_count": 0,
+          "non_null_request_ids": 24
+        },
+        {
+          "service": "caddy",
+          "scope": "last200 including startup",
+          "lines": 19,
+          "json_objects": 19,
+          "read_ok": true,
+          "error_critical_count": 0,
+          "obvious_sensitive_fields": false,
+          "token_shape_match_count": 0
+        },
+        {
+          "service": "api",
+          "scope": "last30m capped200 lines",
+          "lines": 200,
+          "json_objects": 200,
+          "read_ok": true,
+          "error_critical_count": 0,
+          "obvious_sensitive_fields": false,
+          "token_shape_match_count": 0,
+          "required_fields_present": true,
+          "unexpected_field_count": 0,
+          "non_null_request_ids": 100
+        },
+        {
+          "service": "migrate",
+          "scope": "last200 including startup",
+          "lines": 5,
+          "json_objects": 5,
+          "read_ok": true,
+          "error_critical_count": 0,
+          "obvious_sensitive_fields": false,
+          "token_shape_match_count": 0,
+          "required_fields_present": true,
+          "unexpected_field_count": 0,
+          "non_null_request_ids": 0,
+          "migration_started_count": 1,
+          "migration_completed_count": 1
+        }
+      ],
+      "resources": {
+        "memory": {
+          "MemTotal_kib": 1951736,
+          "MemAvailable_kib": 1010696,
+          "SwapTotal_kib": 2097148,
+          "SwapFree_kib": 2096880
+        },
+        "disk_total_bytes": 19682557952,
+        "disk_free_bytes": 13210943488,
+        "load_average": [
+          0.32666015625,
+          0.2001953125,
+          0.12353515625
+        ],
+        "docker_version": "29.9.2"
+      },
+      "last30m_events": {}
+    },
+    "ssm_status": "Online",
+    "ssh_host_key_policy": "StrictHostKeyChecking=yes; existing pinned dedicated known_hosts; no fallback",
+    "backup_restore": "NOT VERIFIED in this follow-up; not executed"
+  },
+  "owner_reported": {
+    "source": "explicit owner task04.11.2026; not independently replayed",
+    "production_bot_replies_new_ui": true,
+    "production_commands_configured_via_BotFather": true,
+    "complete_three_new_users_e2e": "NOT VERIFIED"
+  },
+  "reviews": [
+    {
+      "number": 85,
+      "merged_at": "2026-11-04T11:51:15Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 83,
+      "merged_at": "2026-11-03T08:16:54Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 82,
+      "merged_at": "2026-11-03T07:55:31Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 81,
+      "merged_at": "2026-11-03T05:16:44Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 78,
+      "merged_at": "2026-11-02T22:56:50Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 77,
+      "merged_at": "2026-11-02T22:18:09Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 75,
+      "merged_at": "2026-11-02T20:41:00Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 74,
+      "merged_at": "2026-11-02T20:12:15Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 73,
+      "merged_at": "2026-11-02T13:51:27Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 72,
+      "merged_at": "2026-11-02T06:27:33Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 71,
+      "merged_at": "2026-11-02T07:03:02Z",
+      "status": "PASS",
+      "approvals": [
+        {
+          "user": "pylinolg-max",
+          "url": "https://github.com/inte11ectua1/skinulis/pull/71#pullrequestreview-5732883323",
+          "commit": "git:1aa968ce5122a16a0002696becb040c5f05d7791"
+        }
+      ]
+    },
+    {
+      "number": 70,
+      "merged_at": "2026-11-02T06:17:40Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 69,
+      "merged_at": "2026-11-02T05:56:27Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 68,
+      "merged_at": "2026-11-01T17:51:34Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 67,
+      "merged_at": "2026-11-01T17:32:13Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 66,
+      "merged_at": "2026-11-01T17:11:36Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 64,
+      "merged_at": "2026-10-31T19:48:35Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 63,
+      "merged_at": "2026-10-31T15:57:14Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 58,
+      "merged_at": "2026-10-31T15:31:13Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 57,
+      "merged_at": "2026-10-31T14:19:00Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 56,
+      "merged_at": "2026-10-31T13:45:41Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 54,
+      "merged_at": "2026-10-31T14:59:09Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 53,
+      "merged_at": "2026-10-31T11:59:55Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 52,
+      "merged_at": "2026-10-31T10:08:15Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 51,
+      "merged_at": "2026-10-30T17:21:28Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 50,
+      "merged_at": "2026-10-30T16:45:35Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 49,
+      "merged_at": "2026-10-30T15:51:05Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 44,
+      "merged_at": "2026-10-30T13:42:27Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 43,
+      "merged_at": "2026-10-30T13:05:52Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 42,
+      "merged_at": "2026-10-28T16:47:09Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 41,
+      "merged_at": "2026-10-28T14:09:36Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 40,
+      "merged_at": "2026-10-28T12:24:33Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 34,
+      "merged_at": "2026-10-28T11:35:25Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 33,
+      "merged_at": "2026-10-28T11:12:48Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 31,
+      "merged_at": "2026-10-28T11:21:34Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 30,
+      "merged_at": "2026-10-28T09:37:01Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 28,
+      "merged_at": "2026-10-28T09:18:44Z",
+      "status": "PASS",
+      "approvals": [
+        {
+          "user": "inte11ectua1",
+          "url": "https://github.com/inte11ectua1/skinulis/pull/28#pullrequestreview-5680211421",
+          "commit": "git:ccbe21178a13dd2f0d26fe6b0eba3da273fb43a7"
+        }
+      ]
+    },
+    {
+      "number": 27,
+      "merged_at": "2026-10-27T09:23:08Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 26,
+      "merged_at": "2026-10-27T07:50:43Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 25,
+      "merged_at": "2026-10-27T07:03:07Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 20,
+      "merged_at": "2026-10-27T06:50:11Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 19,
+      "merged_at": "2026-10-27T06:35:22Z",
+      "status": "FAIL",
+      "approvals": []
+    },
+    {
+      "number": 18,
+      "merged_at": "2026-10-26T22:03:41Z",
+      "status": "PASS",
+      "approvals": [
+        {
+          "user": "inte11ectua1",
+          "url": "https://github.com/inte11ectua1/skinulis/pull/18#pullrequestreview-5659722090",
+          "commit": "git:4623c874eca6423d7f58668ef3acfc41fa7dfee5"
+        }
+      ]
+    },
+    {
+      "number": 17,
+      "merged_at": "2026-10-26T20:18:42Z",
+      "status": "PASS",
+      "approvals": [
+        {
+          "user": "inte11ectua1",
+          "url": "https://github.com/inte11ectua1/skinulis/pull/17#pullrequestreview-5658362424",
+          "commit": "git:8d2ceea008fb45e9fa7595590dc3baaa8edb594c"
+        }
+      ]
+    },
+    {
+      "number": 16,
+      "merged_at": "2026-10-26T19:46:17Z",
+      "status": "PASS",
+      "approvals": [
+        {
+          "user": "inte11ectua1",
+          "url": "https://github.com/inte11ectua1/skinulis/pull/16#pullrequestreview-5658027298",
+          "commit": "git:2b62cedb5c7feb50b274d2bfafcc712d278bb8ac"
+        }
+      ]
+    },
+    {
+      "number": 15,
+      "merged_at": "2026-10-26T19:14:09Z",
+      "status": "PASS",
+      "approvals": [
+        {
+          "user": "pylinolg-max",
+          "url": "https://github.com/inte11ectua1/skinulis/pull/15#pullrequestreview-5657642557",
+          "commit": "git:1e0b4dfc7714348d51a48b8e54f7fd034cbc69dc"
+        }
+      ]
+    },
+    {
+      "number": 14,
+      "merged_at": "2026-10-26T18:40:33Z",
+      "status": "PASS",
+      "approvals": [
+        {
+          "user": "pylinolg-max",
+          "url": "https://github.com/inte11ectua1/skinulis/pull/14#pullrequestreview-5657215967",
+          "commit": "git:b77c5b0b616bde9b853d28de7aa5136e0589de06"
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "merged_at": "2026-10-26T18:20:44Z",
+      "status": "PASS",
+      "approvals": [
+        {
+          "user": "inte11ectua1",
+          "url": "https://github.com/inte11ectua1/skinulis/pull/9#pullrequestreview-5656791131",
+          "commit": "git:a4ba10cdc5206102790d6769967faa28e26dc47a"
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "merged_at": "2026-10-26T17:33:42Z",
+      "status": "PASS",
+      "approvals": [
+        {
+          "user": "inte11ectua1",
+          "url": "https://github.com/inte11ectua1/skinulis/pull/8#pullrequestreview-5656332473",
+          "commit": "git:ca6c3462ff0a5bfbd6ad55ef268dc1ee673a9294"
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "merged_at": "2026-10-26T17:20:01Z",
+      "status": "PASS",
+      "approvals": [
+        {
+          "user": "pylinolg-max",
+          "url": "https://github.com/inte11ectua1/skinulis/pull/7#pullrequestreview-5656157751",
+          "commit": "git:47a0873a9f6d3c42705176671f0c1866f5dd6ffa"
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "merged_at": "2026-10-16T17:00:07Z",
+      "status": "PASS",
+      "approvals": [
+        {
+          "user": "Valeria18-new",
+          "url": "https://github.com/inte11ectua1/skinulis/pull/6#pullrequestreview-5551027724",
+          "commit": "git:03ddb00d0efca29c793e67edbf3cff9400a4fc80"
+        }
+      ]
+    },
+    {
+      "number": 1,
+      "merged_at": "2026-10-15T21:23:36Z",
+      "status": "FAIL",
+      "approvals": []
+    }
+  ]
+}

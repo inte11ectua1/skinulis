@@ -41,6 +41,17 @@
 
 
 
-## Текущий handoff Codex (03.11.2026)
+## Текущий handoff Codex (04.11.2026)
 
-M5 задачи T-09 #59/T-10 #60/O-08 #61/L-06 #62/O-09 #76 закрыты, PR #77 merged. [M5 closeout / M6 plan](docs/operations/M5_CLOSEOUT_M6_HANDOFF.md), [STATUS](docs/STATUS.md) — актуальные рабочие точки. Новых M6 Issues на дату среза нет: **не запускать Codex с устаревшей M5 Issue и не переиспользовать ID O-09**. Формальный DoD и live Telegram требуют отдельной приёмки. Дополнительный AWS rollout, production DB changes и live polling — только по явной новой команде Тимура. Оригинальные правила выше действуют.
+PR #85 merged; main/release `c9ec9ce`, main CI5/5, protected deploy success с
+polling=true. Владелец подтвердил production UI и меню BotFather. Не считать старые
+POLLING OFF/current SHA в исторических отчётах текущим состоянием.
+[Актуальный аудит](docs/reviews/POST_RELEASE_AUDIT_2026-11-04.md),
+[STATUS](docs/STATUS.md) и GitHub Issues — рабочие точки. #84/#79/#80 открыты;
+новых дублирующих M6 Issues не создавать. G6/официальный DoD не закрыты:
+routing FAIL, p95, исторические approvals/admin bypass и оставшаяся приёмка раскрыты.
+Read-only AWS runtime04.11 после browser login VERIFIED: healthy services, один polling, actual0007 и прежний volume. Production read-only аудит не
+разрешает deploy/restart/миграции/запуск или остановку polling/изменение данных.
+Меню production задано владельцем через BotFather; автоматический setup в коде —
+только для проверенного test bot. Удаление групп/участников с историей и Mini App
+вне MVP. Оригинальные правила выше сохраняются.

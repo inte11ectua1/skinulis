@@ -1,3 +1,9 @@
+> **Новый аудит04.11.2026:** все52mergedPR — **11PASS /41FAIL** по наличию
+> независимого submitted APPROVED до merge. #81/#82/#83/#85 — без APPROVED;
+> approval Valeria18-new в Release41836839608 является deployment approval.
+> [Текущий post-release аудит](POST_RELEASE_AUDIT_2026-11-04.md).
+> Ниже первоначальный срез03.11 сохранён без изменения.
+
 # M6: аудит каждого Pull Request
 
 Срез03.11.2026, baseline main `638a976`. Источник — REST `/pulls?state=all`
@@ -77,3 +83,13 @@ merge_commit_sha соответствующего merged PR.48merged PR в ре�
 давать48first-parent merges (PR может войти через другую ветку). Никакого доказанного
 позднего direct-push в доступной истории не обнаружено; возможность admin push
 и фактический прошлый direct-push — разные утверждения.
+
+
+## Дополнение04.11: merged после baseline первоначального аудита
+
+| PR | Merge UTC | Independent APPROVED до merge |
+|---|---|---|
+| [#85](https://github.com/inte11ectua1/skinulis/pull/85) | 2026-11-04T11:51:15Z | FAIL |
+| [#83](https://github.com/inte11ectua1/skinulis/pull/83) | 2026-11-03T08:16:54Z | FAIL |
+| [#82](https://github.com/inte11ectua1/skinulis/pull/82) | 2026-11-03T07:55:31Z | FAIL |
+| [#81](https://github.com/inte11ectua1/skinulis/pull/81) | 2026-11-03T05:16:44Z | FAIL |

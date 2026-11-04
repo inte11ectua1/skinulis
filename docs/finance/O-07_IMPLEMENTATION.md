@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** O-07 и notification follow-up завершены и merged PR53/57. Ниже сохранён этапный срез31.10; описание in progress не является текущим статусом.
+> [Post-release аудит](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # O-07 — ручные компенсации
 
 **O-07N #55 — in progress / PR review (31.10.2026).** Основная O-07 merged через
