@@ -3,7 +3,8 @@
 Перед задачей сверить GitHub main, [STATUS](../STATUS.md), AGENTS и
 [post-release аудит](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
 PR85 merged, release `c9ec9ce` deployed с polling=true; owner UI/menu подтверждены.
-M5 closed; #84/#79/#80 open. Не использовать исторический POLLING OFF как текущий факт.
+M5 closed; #84 completed, #80 not_planned (отдельный M7 отменён).
+#79 — единственная оставшаяся открытая M6 Issue. Не использовать исторический POLLING OFF как текущий факт.
 
 ## Тимур — M6 / #79
 
@@ -18,8 +19,3 @@ Read-only аудит не разрешает deploy, restart, миграции �
 в рамках review единой #79. Не создавать отдельные M6 задачи или повторную O-09.
 Новые кодовые исправления — только после отдельного scope/Issue и обычного PR.
 
-## M7 / #80
-
-Подготовка presentation7min/demo5min/Q&A8min использует существующий release,
-синтетические данные и честный fallback. Защита не считается пройденной без
-репетиции и учебной приёмки. Полный новый live E2E — только по отдельному разрешению.
