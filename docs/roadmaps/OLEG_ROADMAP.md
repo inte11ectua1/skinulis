@@ -1,4 +1,4 @@
-> **Актуализация 04.11.2026.** Текущий порядок: #84 (UX merged/released; owner acceptance и formal review gaps), #79 (единый M6 у Тимура, open/PARTIALLY), #80 (M7 open; подготовка, не завершённая защита). M5 closed; новый release `c9ec9ce` уже deployed с polling=true. Старые секции ниже — этапные срезы; не создавать отдельные L-07/O-09/M6 задачи и не утверждать G6 PASS.
+> **Решение владельца 04.11.2026.** UX Issue #84 закрыта как completed (с раскрытыми исключениями); #80 закрыта как not_planned. Отдельный этап M7 исключён из текущего плана. Действующая незавершённая фаза — M6 #79 у Тимура, G6 остаётся PARTIALLY. M5 closed, production `c9ec9ce` с polling=true. Ниже сохранены выполненные задачи и их доказательства; не создавать отдельные M6 Issues.
 > [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
 
 # Олег — личный roadmap
@@ -16,7 +16,6 @@
 | O-07 | M4 | settlements state machine confirm/reject/cancel, partial, locks | O-06, T-06 | concurrency 2 pending same debt; only 1 confirm |
 | O-08 | M5 | Cross-group security, retry, property/integration, load p95 test | O-07 | coverage >=60 globally, 100 concurrent report |
 | O-09 | M5 follow-up (перенесён раньше) | Тимур: double checkout / pool fix, issue #76 закрыта | O-08 | 100-client zero pool500, 19 PG cases; p95 internal exception |
-| O-10 | M7 | Financial demo rehearsal + questions | all | can explain transaction/rounding/invariants |
 
 ## Завершённая фаза M1 (27.10.2026)
 
