@@ -4,9 +4,14 @@
 
 [Полный post-release аудит](reviews/POST_RELEASE_AUDIT_2026-11-04.md) и
 [evidence](reviews/POST_RELEASE_EVIDENCE_2026-11-04.json).
-PR #85 merged, main/release `c9ec9ce`; main CI41824303985 **5/5**, **1382 unit +458 PG**,
+PR #85 merged, deployed release `c9ec9ce`; его main CI41824303985 **5/5**, **1382 unit +458 PG**,
 branch **94,10%**. Release41836839608 guard/publish/deploy success,
 Environment approval **Valeria18-new**, input polling=true, rollout flag прочитан **false**.
+После docs PR #86 актуальный main — `1d668e59cb994de45dc1e9c853a61eb6579d4628`,
+[push CI 41862624252](https://github.com/inte11ectua1/skinulis/actions/runs/41862624252) 5/5.
+[Автоматический Release 41866257675](https://github.com/inte11ectua1/skinulis/actions/runs/41866257675)
+завершился `failure` на guard; publish/deploy были skipped. Это **не новый production deploy**;
+старый подтверждённый deployment сохраняется. Причину guard исследовать отдельно перед следующим релизом.
 Свежие HTTPS/health(database=ok)/version/docs/OpenAPI PASS; exact SHA совпал.
 **Routing FAIL сохраняется:** foreign-authority absolute-form → пустой200,
 утечка/обход аутентификации не доказаны. Read-only runtime follow-up14:37UTC после browser login **VERIFIED**: API/db/Caddy/bot healthy,
@@ -16,11 +21,12 @@ Environment approval **Valeria18-new**, input polling=true, rollout flag про�
 Владелец подтвердил живой @skinulis_expenses_bot с новым UI; команды production
 настроены им через BotFather. Это owner-reported evidence, не независимый полный
 3-user/new-user E2E. Test bot настраивает команды кодом; production автоматически нет.
-#84 **open**: реализация/CI/merge/deploy есть, решение о закрытии — после оставшейся
-приёмки владельцем с раскрытием отсутствующего PR APPROVED. #79 **open / PARTIALLY**:
-полный DoD не принят (routing, p95, 41/52 merged PR без approvals, admin bypass,
-формальная logging/live/defense приёмка). #80 **open**: подготовка M7 возможна с этими
-ограничениями; защита/репетиция не подтверждены. Ничего автоматически не закрыто.
+**Решение владельца 04.11.2026:** #84 **closed/completed** — новая UX-реализация
+принята на основании production smoke, без подмены отсутствующих independent APPROVED
+и 3-user/new-user E2E на PASS. #80 **closed/not_planned** — отдельный этап M7 отменён
+и исключён из актуального плана. #79 **open / PARTIALLY** — единственный оставшийся
+этап M6: routing, p95, 41/52 исторических PR без approvals, admin bypass,
+formal logging/live/учебная приёмка. Решение владельца не является waiver преподавателя.
 Удаление групп, участников с историей и Mini App отложены владельцем.
 
 ## Исторические срезы — не текущее состояние
@@ -54,7 +60,8 @@ rotation5m×3 проверены; **POLLING OFF** по host/container processes.
 официального DoD не устранены: historical approvals37/48, admin bypass,
 p95>500ms, formal logging/actor context, live Telegram NOT VERIFIED.
 Внутреннее принятие ограничений Тимуром не является исключением преподавателя.
-Issue #79 открыта; безусловный переход к M7 #80 пока не рекомендован и не начат.
+На момент среза 03.11 Issue #79 оставалась открыта. Предполагавшийся тогда M7
+отменён решением владельца от 04.11 (Issue #80 closed/not_planned).
 
 ## M5 — завершённый объём и доказательства
 
@@ -81,8 +88,9 @@ Issue #79 открыта; безусловный переход к M7 #80 пок
 
 Исполнитель единой #79 — Тимур; консультации и независимое review команды не
 меняют ownership. Проверки/команды/ошибки/остаточные риски — в отчёте выше.
-M7 #80 — презентация7мин, репетиция demo5мин и Q&A; live Telegram и финальный
-rollout требуют отдельных разрешений. Новые дублирующие M6 Issues не создавались.
+Отдельный этап M7 удалён из действующего roadmap решением владельца (Issue #80
+closed/not_planned). Официальные требования преподавателя не отменены; оставшиеся
+проверки и подтверждения учитываются в #79. Новые дублирующие M6 Issues не создаются.
 
 ## Исторические срезы до закрытия M5
 
