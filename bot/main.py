@@ -13,6 +13,7 @@ from aiogram.fsm.storage.memory import MemoryStorage, SimpleEventIsolation
 from pydantic import ValidationError
 
 from bot.api_client import ApiClient
+from bot.commands import configure_test_menu
 from bot.config import BotSettings
 from bot.handlers import create_router
 from bot.middleware import DeliveredUpdates, protect_telegram_logs
@@ -48,6 +49,12 @@ async def run(settings: BotSettings) -> None:
         async with Bot(
             token=settings.telegram_bot_token.get_secret_value()
         ).context() as telegram:
+            if settings.expected_bot_username is not None:
+                identity = await telegram.get_me()
+                if identity.username != settings.expected_bot_username:
+                    raise ValueError("Unexpected test bot identity")
+                if settings.expected_bot_username == "skinulis_testing_bot":
+                    await configure_test_menu(telegram, identity)
             dispatcher = create_dispatcher()
             emit(Event.BOT_STARTED)
             try:

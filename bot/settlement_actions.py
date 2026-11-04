@@ -8,6 +8,7 @@ from aiogram.types import Message
 from pydantic import ValidationError
 
 from bot.api_client import ApiError, ApiFailure, BotApi
+from bot.presentation import STATUSES, money, person, roster
 from bot.settlement_dto import (
     Direction,
     SettlementCreate,
@@ -22,6 +23,7 @@ from bot.settlement_views import (
     REAL_MONEY,
     TARGET_STATUS,
     allowed,
+    filters,
     menu,
     pending_groups,
     settlement_error,
@@ -31,7 +33,7 @@ from bot.settlement_views import (
     show_record,
 )
 from bot.states import Navigation, SettlementFlow
-from bot.ui import UNCERTAIN, UNCERTAIN_KINDS, UNKNOWN, screen
+from bot.ui import UNCERTAIN, UNCERTAIN_KINDS, UNKNOWN, hint, reset, screen
 
 
 async def choose_receiver(
@@ -42,8 +44,8 @@ async def choose_receiver(
     await screen(
         message,
         state,
-        "Кому вы уже перевели деньги вне приложения? Выберите другого участника. Допустимость суммы проверит API.",
-        [(f"Участник #{uid}", f"st:receiver:{uid}") for uid in session.members]
+        "Кому вы уже перевели деньги вне приложения? Выберите другого участника. ",
+        [(person(session.names, uid), f"st:receiver:{uid}") for uid in session.members]
         + [("Отменить ввод", f"st:discard:{session.group_id}")],
     )
 
@@ -65,8 +67,10 @@ async def begin(
         if len(page.items) < page.limit:
             break
         offset = page.offset + page.limit
-    await state.clear()
-    session = SettlementSession(group_id=gid, members=members)
+    await reset(state)
+    session = SettlementSession(
+        group_id=gid, members=members, names=await roster(api, actor, gid)
+    )
     if not members:
         await state.set_state(Navigation.menu)
         await screen(
@@ -87,8 +91,8 @@ async def review(
     await screen(
         message,
         state,
-        f"Проверка введённых данных: вы → Участник #{session.receiver_id}, {session.amount} ₽. "
-        "Вы подтверждаете, что уже отправили эти деньги вне приложения? API проверит текущий долг и создаст pending — баланс пока не изменится. "
+        f"Отметить перевод\n{money(session.amount)}\n\nВы → {person(session.names, session.receiver_id or 0)}\n"
+        "Деньги уже отправлены? После вашей записи получатель подтвердит получение. До этого долг не изменится. "
         + REAL_MONEY,
         [
             ("Да, я уже перевёл деньги", "st:create"),
@@ -108,7 +112,7 @@ async def amount_prompt(
     await screen(
         message,
         state,
-        "Сколько вы фактически отправили? Положительная сумма с двумя знаками, например 500.00. Частичный перевод допустим. Предел расхода 1000000.00 здесь не применяется; сумму и текущий долг проверяет API.",
+        "Сколько вы фактически отправили? Введите положительную сумму, например 100 или 100,50. Частичный перевод допустим. Сумма не должна превышать ваш текущий долг.",
         [
             ("Назад к получателю", "st:receivers"),
             ("Отменить ввод", f"st:discard:{session.group_id}"),
@@ -121,8 +125,10 @@ async def amount_message(message: Message, state: FSMContext) -> None:
     try:
         session.amount = amount_input(message.text or "")
     except (ValueError, ValidationError):
-        await message.answer(
-            "Введите положительную сумму вида 500.00: без знака, пробелов, запятой, экспоненты и округления. /cancel — отмена."
+        await hint(
+            message,
+            state,
+            "Введите положительную сумму, например 100 или 100,50: максимум две цифры после точки или запятой, без знака, валюты, разделителей тысяч и округления. /cancel — отмена.",
         )
         return
     await review(message, state, session)
@@ -144,7 +150,7 @@ async def recovery(
         message,
         state,
         UNCERTAIN
-        + " UUID и отправленные данные сохранены. POST replay возвращает историю создания, а не текущий статус. /cancel потеряет черновик и не отменит запрос.",
+        + " Исходное действие сохранено. Сначала проверьте актуальную запись. Отмена завершит восстановление, но не отменит уже сохранённый перевод.",
         actions + menu(session.group_id, recovering=True),
     )
 
@@ -209,7 +215,7 @@ async def find_current(
     await screen(
         message,
         state,
-        "На проверенной странице запись не найдена. Это не доказывает отсутствие записи или отказ запроса. Проверяйте следующие страницы; отдельного GET по ID в контракте нет.",
+        "На этой странице запись не найдена. Проверьте следующие страницы, прежде чем создавать новую.",
         actions,
     )
 
@@ -234,11 +240,11 @@ async def transition_review(
     await keep(state, session)
     await state.set_state(SettlementFlow.transition_confirm)
     text = (
-        f"Вы реально получили {value.amount} ₽ от участника #{value.sender_id}? После подтверждения запись нельзя отменить. "
+        f"Подтвердить получение?\n{money(value.amount)} от {person(await roster(api, actor, value.group_id), value.sender_id)}\n\nПосле подтверждения запись нельзя отменить. "
         if session.operation == "confirm"
         else "Отклонить запись? Не подтверждайте деньги, которые не получили. "
         if session.operation == "reject"
-        else "Отменить свою pending-заявку? Это не возвращает деньги, отправленные вне приложения. "
+        else "Отменить ожидающий перевод? Это не возвращает деньги, отправленные вне приложения. "
     )
     await screen(
         message,
@@ -323,9 +329,7 @@ async def create(
     bot = message.bot
     if bot is not None:
         await notify_receiver(bot, api, actor, result.settlement.id)
-    await message.answer(
-        "API подтвердил исходное создание заявки. Ответ мог содержать исторический pending; актуальный статус проверяю через список."
-    )
+    await state.update_data(toast="Запись принята. Проверяем её текущее состояние.")
     await find_current(message, state, api, actor, session)
 
 
@@ -367,8 +371,8 @@ async def resolve(
         await find_current(message, state, api, actor, session)
         return
     session.uncertain, session.purpose = None, "detail"
-    await message.answer(
-        f"API подтвердил статус {value.status}. Повтор допустимого terminal-перехода не учитывает деньги второй раз."
+    await state.update_data(
+        toast=f"{STATUSES[value.status]}. Повтор не изменяет баланс второй раз."
     )
     await show_record(message, state, api, actor, value, session)
 
@@ -389,6 +393,8 @@ async def dispatch_settlement(
         await show_balances(message, state, api, actor, int(parts[2]))
     elif command == "plan":
         await show_plan(message, state, api, actor, int(parts[2]))
+    elif command == "filters":
+        await filters(message, state, int(parts[2]), parts[3], parts[4])
     elif command == "list":
         status = None if parts[3] == "all" else cast(SettlementStatus, parts[3])
         await show_list(
@@ -426,7 +432,7 @@ async def dispatch_settlement(
             session.purpose = "reconcile"
         await find_current(message, state, api, actor, session)
     elif command == "discard":
-        await state.clear()
+        await reset(state)
         await show_list(message, state, api, actor, int(parts[2]), direction="outgoing")
     else:
         if "settlement_session" not in await state.get_data():

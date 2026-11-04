@@ -12,6 +12,7 @@ from sqlalchemy.engine import URL
 from app.core.security import hash_password
 from app.models import Settlement, User
 from bot.main import create_dispatcher
+from bot.presentation import STATUSES
 from bot.settlement_dto import SettlementCreate
 from bot.settlement_notifications import NOTICE
 from tests.integration.test_bot_expenses import choose
@@ -96,10 +97,12 @@ async def test_failed_telegram_preserves_pending_ledger_and_incoming_menu(
     assert len(notices(r)) == 1
     assert await r.vector() == ["2200.00", "-1400.00", "-800.00"]
     assert len([p for p in r.transport.posts if p[0].endswith("/settlements")]) == 1
-    await r.group(r.owner)
-    await choose(r.owner, "Ожидают подтверждения")
-    await choose(r.owner, f"Открыть перевод #{pending.id}")
-    assert "Актуальный статус API: pending" in " ".join(m.text for m in r.owner.sent)
+    await r.owner.click("menu:pending")
+    await choose(r.owner, f"@st:list:{r.gid}:pending:incoming:0")
+    await choose(r.owner, f"@record:{pending.id}")
+    assert "Баланс изменится после подтверждения" in " ".join(
+        m.text for m in r.owner.sent
+    )
     assert private not in caplog.text + " ".join(m.text for m in r.sender.sent)
 
 
@@ -130,9 +133,7 @@ async def test_real_lost_create_recovery_and_historical_terminal_replay(
         "reject": "rejected",
         "cancel": "cancelled",
     }[terminal]
-    assert f"Актуальный статус API: {expected}" in " ".join(
-        m.text for m in r.sender.sent
-    )
+    assert STATUSES[expected] in " ".join(m.text for m in r.sender.sent)
     await r.sender.click(old)
     assert (
         len([p for p in r.transport.posts if p[0].endswith("/notification-claim")]) == 1

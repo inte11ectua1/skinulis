@@ -15,14 +15,16 @@ from bot.expense_dto import (
     money_input,
     title_input,
 )
-from bot.expense_views import WARNING, lines
+from bot.expense_views import WARNING
+from bot.presentation import MODES, money, person, roster
 from bot.states import ExpenseFlow
-from bot.ui import screen
+from bot.ui import hint, reset, screen
 
 
 class DraftSession(BaseModel):
     group_id: int
     members: list[int]
+    names: dict[int, str] = Field(default_factory=dict)
     expense_id: int | None = None
     version: int | None = None
     title: str = ""
@@ -97,7 +99,7 @@ async def begin(
         if len(page.items) < page.limit:
             break
         offset = page.offset + page.limit
-    draft = DraftSession(group_id=gid, members=ids)
+    draft = DraftSession(group_id=gid, members=ids, names=await roster(api, actor, gid))
     if eid is not None:
         value = await api.expense(actor, eid)
         profile = await api.profile(actor)
@@ -113,7 +115,7 @@ async def begin(
             draft.amount = original.amount
             draft.selected = [s.user_id for s in value.shares]
             draft.shares = {str(s.user_id): s.amount for s in value.shares}
-    await state.clear()
+    await reset(state)
     await keep(state, draft)
     if eid is not None:
         await review(message, state, draft)
@@ -126,11 +128,11 @@ async def mode_screen(message: Message, state: FSMContext) -> None:
     await screen(
         message,
         state,
-        "Как разделить расход? Смена режима очищает сумму, доли и позиции после вашего выбора.",
+        "Новый расход\nКак разделим сумму?\n\nПоровну — одна сумма на всех. Указать суммы — своя доля каждому. По позициям — общий чек.",
         [
-            ("Поровну — equal", "ex:mode:equal"),
-            ("Точные суммы — custom", "ex:mode:custom"),
-            ("По позициям — by_items", "ex:mode:by_items"),
+            ("Поровну", "ex:mode:equal"),
+            ("Указать суммы", "ex:mode:custom"),
+            ("По позициям", "ex:mode:by_items"),
             ("К черновику", "ex:review"),
         ],
     )
@@ -143,37 +145,59 @@ async def prompt(
     await keep(state, draft)  # Invalidates buttons before accepting text at a new step.
     await state.set_state(step)
     prompts = {
-        ExpenseFlow.title.state: "Название расхода: 1–120 символов, без управляющих/невидимых символов. /cancel — отмена.",
-        ExpenseFlow.amount.state: "Общая сумма: от 0.01 до 1000000.00 ₽, например 1250.00. Два знака после точки. Диапазон проверит API.",
+        ExpenseFlow.title.state: "За что заплатили?\nНапример, «Ужин в пятницу». До 120 символов.",
+        ExpenseFlow.amount.state: "Общая сумма\nВведите сумму, например 100 или 100,50. От 0,01 до 1 000 000 ₽.",
         ExpenseFlow.item_title.state: "Название позиции (1–120 символов). Чаевые/сервис — отдельные положительные позиции.",
-        ExpenseFlow.item_amount.state: "Стоимость позиции, например 700.00. Положительная цена, без процентов, весов и отрицательных скидок.",
-        ExpenseFlow.share.state: f"Доля участника #{draft.share_user}: точная сумма с двумя знаками. Нулевая доля 0.00 допустима.",
+        ExpenseFlow.item_amount.state: "Введите стоимость позиции, например 100 или 100,50. Положительная цена, без процентов, весов и отрицательных скидок.",
+        ExpenseFlow.share.state: f"Указать суммы\n{person(draft.names, draft.share_user or 0)}\n\nВведите долю, например 100 или 100,50. Можно 0.",
     }
-    await screen(message, state, prompts[step], [("Назад к черновику", "ex:review")])
+    await screen(
+        message,
+        state,
+        prompts[step],
+        [
+            (
+                "Назад",
+                "ex:title"
+                if step == ExpenseFlow.amount.state
+                else "ex:item_title_back"
+                if step == ExpenseFlow.item_amount.state
+                else "ex:select"
+                if step == ExpenseFlow.share.state
+                else "ex:review",
+            ),
+            ("Отмена", "ex:cancel"),
+        ],
+    )
 
 
 async def review(message: Message, state: FSMContext, draft: DraftSession) -> None:
     await state.set_state(ExpenseFlow.draft)
     rows = [
         f"Черновик: {draft.title or 'название ещё не задано'}",
-        f"Режим: {draft.mode}",
+        f"{MODES[draft.mode]} · ещё не сохранено",
     ]
     actions = [("Изменить название", "ex:title"), ("Сменить режим", "ex:modes")]
     if draft.mode == "by_items":
-        rows += [f"Позиций: {len(draft.items)} / 50. Итог и доли рассчитает API."]
-        for index, item in enumerate(draft.items):
+        rows += [f"Позиций: {len(draft.items)} из 50"]
+        for index, item in enumerate(draft.items[:5]):
             rows += [
-                f"{index + 1}. {item.title} — {item.amount} ₽; участники: "
-                + ", ".join(f"#{u}" for u in item.participants)
+                f"{index + 1}. {item.title} · {money(item.amount)}\n"
+                + ", ".join(person(draft.names, u) for u in item.participants)
             ]
+        if len(draft.items) > 5:
+            rows.append(
+                f"Ещё позиций: {len(draft.items) - 5}. Откройте список для правки."
+            )
         if len(draft.items) < 50:
             actions.append(("Добавить позицию", "ex:item:new"))
         if draft.items:
             actions.append(("Изменить/убрать позицию", "ex:items"))
     else:
         rows += [
-            f"Общая сумма (ввод): {draft.amount or 'не задана'}",
-            "Выбранные участники: " + ", ".join(f"#{u}" for u in draft.selected),
+            f"Сумма: {money(draft.amount) if draft.amount else 'ещё не указана'}",
+            "Выбранные участники: "
+            + ", ".join(person(draft.names, u) for u in draft.selected),
         ]
         actions += [
             ("Изменить сумму", "ex:amount"),
@@ -181,19 +205,22 @@ async def review(message: Message, state: FSMContext, draft: DraftSession) -> No
         ]
         if draft.mode == "custom":
             rows += [
-                f"#{uid}: {draft.shares.get(str(uid), 'не введена')} ₽"
+                f"{person(draft.names, uid)} · {money(draft.shares[str(uid)]) if str(uid) in draft.shares else 'укажите долю'}"
                 for uid in draft.selected
             ]
-            actions += [(f"Доля #{uid}", f"ex:share:{uid}") for uid in draft.selected]
-    await lines(message, rows)
+            actions += [
+                (f"Доля · {person(draft.names, uid)}", f"ex:share:{uid}")
+                for uid in draft.selected
+            ]
     actions += [
-        ("Серверный предпросмотр", "ex:preview"),
+        ("Проверить доли", "ex:preview"),
         ("Отменить расход", "ex:cancel"),
     ]
     await screen(
         message,
         state,
-        "Черновик не сохранён. Суммы/совпадение долей/состав проверит сервер."
+        "\n".join(rows)
+        + "\n\nПроверьте данные, затем посмотрите итоговые доли."
         + ("\n" + WARNING if draft.expense_id else ""),
         actions,
     )
@@ -208,15 +235,20 @@ async def select(
     await screen(
         message,
         state,
-        "Кто участвует? Выберите хотя бы одного; плательщик может не участвовать.",
+        f"Кто участвовал в {'позиции' if item else 'расходе'}?\nВыбрано: {len(selected)} из {len(draft.members)}\n\nОтметьте нужных людей. Вы можете не включать себя.",
         [
-            (("✓ " if uid in selected else "") + f"Участник #{uid}", f"ex:toggle:{uid}")
+            (
+                ("✅ " if uid in selected else "☐ ") + person(draft.names, uid),
+                f"ex:toggle:{uid}",
+            )
             for uid in draft.members
         ]
         + [
             ("Выбрать всех", "ex:all"),
+            ("Снять выбор", "ex:none"),
             ("Готово", "ex:selected"),
-            ("Назад к черновику", "ex:review"),
+            ("Назад", "ex:review"),
+            ("Отмена", "ex:cancel"),
         ],
     )
 
@@ -239,8 +271,10 @@ async def text_input(message: Message, state: FSMContext) -> None:
         else:
             return
     except (ValueError, ValidationError):
-        await message.answer(
-            "Проверьте поле: название 1–120 видимых символов; сумма вида 1250.00, без пробелов/запятой/знака/округления. 0.00 допустима только для custom-доли. /cancel — отмена."
+        await hint(
+            message,
+            state,
+            "Проверьте поле: название 1–120 видимых символов; сумма, например 100 или 100,50, максимум две цифры после точки или запятой, без знака, валюты и разделителей тысяч. Ноль допустим только в долях. /cancel — отмена.",
         )
         return
     await keep(state, draft, changed=True)

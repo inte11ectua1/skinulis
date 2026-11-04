@@ -18,8 +18,12 @@ from bot.group_views import (
     show_groups,
     show_invites,
 )
+from bot.presentation import person, roster
+from bot.profile_views import begin_name, profile_screen
+from bot.screen_lifecycle import retire
 from bot.states import GroupFlow, Onboarding
 from bot.ui import (
+    HELP,
     UNCERTAIN,
     UNCERTAIN_KINDS,
     UNKNOWN,
@@ -28,6 +32,7 @@ from bot.ui import (
     offer_onboarding,
     ready,
     recover_identity,
+    reset,
     safe_error,
     screen,
 )
@@ -44,10 +49,16 @@ async def dispatch_action(
     previous: str | None,
 ) -> None:
     if action == "home":
-        await state.clear()
+        await reset(state)
         await check_profile(message, state, api, actor)
+    elif action == "profile":
+        await profile_screen(message, state, api, actor)
+    elif action == "profile:rename":
+        await begin_name(message, state)
+    elif action == "help":
+        await screen(message, state, HELP, [("← Главное меню", "home")])
     elif action == "decline":
-        await state.clear()
+        await reset(state)
         await message.answer(
             "Профиль не создавали. Когда будете готовы, откройте /start."
         )
@@ -60,7 +71,7 @@ async def dispatch_action(
         await screen(
             message,
             state,
-            "Создать Telegram-only профиль, связанный с вашим Telegram? Email и пароль не нужны. Если API-аккаунт уже есть, отмените создание и выберите привязку: объединить профили потом нельзя.",
+            f"Создать профиль?\nИмя: {data.get('telegram_name', 'Участник')}\n\nЭто имя увидят участники ваших групп. Его можно изменить в профиле.\nПароль не нужен. Если вы уже регистрировались по почте, вернитесь и выберите привязку: объединить два профиля нельзя.",
             [("Да, создать", "bootstrap"), ("Назад", "onboard")],
         )
     elif action == "onboard":
@@ -68,7 +79,7 @@ async def dispatch_action(
     elif action == "bootstrap" and previous == Onboarding.consent.state:
         await state.set_state(GroupFlow.busy)
         try:
-            await api.bootstrap(actor)
+            await api.bootstrap(actor, str(data.get("telegram_name", "Участник")))
         except ApiError as error:
             if error.kind in UNCERTAIN_KINDS:
                 await message.answer(UNCERTAIN)
@@ -77,12 +88,15 @@ async def dispatch_action(
                 await message.answer(safe_error(error))
                 await offer_onboarding(message, state)
         else:
-            await message.answer("API подтвердил профиль.")
+            await state.update_data(toast="Профиль создан.")
             await ready(message, state)
     elif action == "link" and previous == Onboarding.choice.state:
         await state.set_state(Onboarding.link_code)
-        await message.answer(
-            "В своём существующем API-аккаунте получите код: POST /users/me/telegram-link-code с {} после авторизации в публичном API (например, /docs → Authorize). JWT остаётся в API. Код действует 10 минут; срок проверяет сервер. Пришлите сюда только код. Пароль, JWT и доступ к email не нужны. /cancel — отмена."
+        await screen(
+            message,
+            state,
+            "Привязать аккаунт\nПолучите одноразовый код по инструкции подключения в своём аккаунте по почте.\n\nПришлите сюда только код. Он действует 10 минут. Пароль и ключ доступа не отправляйте.",
+            [("Назад", "onboard")],
         )
     elif action in {"create", "rename"}:
         await begin_group(message, state)
@@ -98,7 +112,7 @@ async def dispatch_action(
                     message,
                     state,
                     UNCERTAIN
-                    + " Можно безопасно повторить тот же запрос с прежним UUID и именем.",
+                    + " Можно безопасно повторить тот же запрос с теми же данными.",
                     [
                         ("Повторить тот же запрос", "save_group"),
                         ("Проверить мои группы", "groups:0"),
@@ -112,8 +126,8 @@ async def dispatch_action(
                     [("Проверить мои группы", "groups:0"), ("Отмена", "home")],
                 )
         else:
-            await state.clear()
-            await message.answer("API подтвердил создание группы.")
+            await reset(state)
+            await state.update_data(toast="Группа создана.")
             await show_group(message, state, api, actor, group)
     elif action.startswith("groups:"):
         await show_groups(message, state, api, actor, int(action.split(":")[1]))
@@ -128,11 +142,17 @@ async def dispatch_action(
     elif action.startswith("members:"):
         _, gid_text, offset_text = action.split(":")
         page = await api.members(actor, int(gid_text), offset=int(offset_text))
-        text = "Участники:\n" + "\n".join(
-            f"#{m.user_id}" + (" — владелец" if m.is_owner else "") for m in page.items
+        names = await roster(api, actor, int(gid_text), first=page)
+        viewer = await api.profile(actor)
+        text = "Участники группы\n\n" + "\n".join(
+            person(names, m.user_id)
+            + (" · вы" if m.user_id == viewer.id else "")
+            + (" · владелец" if m.is_owner else "")
+            for m in page.items
         )
         if not page.items:
-            text += "На этой странице участников нет."
+            text += "Здесь пока никого нет."
+        text += "\n\nПри одинаковых именах сверяйте буквенную метку. Каждый видит пометку «вы» у себя."
         await screen(
             message,
             state,
@@ -150,7 +170,7 @@ async def dispatch_action(
         await screen(
             message,
             state,
-            "Создать одноразовое приглашение? TTL 24 часа. Ссылку получите только один раз; перешлите её одному человеку.",
+            "Создать одноразовое приглашение? Действует сутки. Ссылку получите только один раз; перешлите её одному человеку.",
             [("Создать приглашение", "save_invite"), ("К группе", f"group:{gid}")],
         )
     elif action == "save_invite" and previous == GroupFlow.invite_confirm.state:
@@ -172,9 +192,10 @@ async def dispatch_action(
                 await message.answer(safe_error(error))
                 await show_invites(message, state, api, actor, gid)
         else:
+            await retire(message, state)
             if invite.token is None:
                 await message.answer(
-                    "API вернул только metadata: секрет уже выдавался и не восстанавливается. Ссылка не показана. Отзовите потерянное приглашение, затем явно создайте новое."
+                    "Ссылка уже была выдана и не сохранилась. Отзовите приглашение, затем создайте новое."
                 )
             else:
                 raw = invite.token.get_secret_value()
@@ -185,15 +206,15 @@ async def dispatch_action(
                     or invite.expires_at <= datetime.now(UTC)
                 ):
                     await message.answer(
-                        "Ответ выдачи не позволяет показать ссылку. Проверьте metadata и отзовите потерянное приглашение."
+                        "Ссылка не сохранилась. Проверьте приглашения и отзовите потерянное."
                     )
                 else:
                     await message.answer(
-                        f"Приглашение #{invite.id} создано. Одно использование, срок проверяет API: до {invite.expires_at.isoformat()}.\nhttps://t.me/{me.username}?start=i_{raw}",
+                        f"Приглашение готово\nПерешлите ссылку одному другу. Она действует сутки и используется один раз.\n\nhttps://t.me/{me.username}?start=i_{raw}",
                         parse_mode=None,
                         link_preview_options=LinkPreviewOptions(is_disabled=True),
                     )
-            await state.clear()
+            await reset(state)
             await show_invites(message, state, api, actor, gid)
     elif action.startswith("recover:"):
         await recover_invite(message, state, api, actor, int(action.split(":")[1]))
@@ -204,7 +225,7 @@ async def dispatch_action(
         await screen(
             message,
             state,
-            f"Отозвать приглашение #{iid_text}? Вступить по нему больше не получится.",
+            "Отозвать ссылку?\nВступить по ней больше не получится.",
             [("Да, отозвать", "do_revoke"), ("Отмена", f"invites:{gid_text}:0")],
         )
     elif action == "do_revoke" and previous == GroupFlow.revoke_confirm.state:
@@ -226,19 +247,19 @@ async def dispatch_action(
                 await message.answer(safe_error(error))
                 await show_invites(message, state, api, actor, gid)
         else:
-            await message.answer(
-                "API подтвердил отзыв."
+            await state.update_data(
+                toast="Ссылка отозвана."
                 if result.revoked_at
                 else "Отзыв не подтверждён. Обновите список приглашений."
             )
-            await state.clear()
+            await reset(state)
             await show_invites(message, state, api, actor, gid)
     elif action == "join" and previous == GroupFlow.join_confirm.state:
         token = data.get("invite")
         if not isinstance(token, SecretStr):
             await message.answer(UNKNOWN)
             return
-        await state.clear()  # drop capability BEFORE send, no automatic join retry
+        await reset(state)  # drop capability BEFORE send, no automatic join retry
         await state.set_state(GroupFlow.busy)
         try:
             group = await api.join(actor, token)
@@ -262,7 +283,7 @@ async def dispatch_action(
                 await message.answer(safe_error(error))
                 await home(message, state)
         else:
-            await message.answer("API подтвердил: вы вступили в группу.")
+            await state.update_data(toast="Вы в группе!")
             await show_group(message, state, api, actor, group)
     else:
         await message.answer(UNKNOWN)

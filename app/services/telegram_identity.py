@@ -20,12 +20,14 @@ def lock_telegram_identity(session: Session, telegram_id: int) -> None:
     )
 
 
-def bootstrap_user(session: Session, telegram_id: int) -> User:
+def bootstrap_user(
+    session: Session, telegram_id: int, display_name: str | None = None
+) -> User:
     with write_transaction(session):
         lock_telegram_identity(session, telegram_id)
         user = session.scalar(select(User).where(User.telegram_id == telegram_id))
         if user is None:
-            user = User(telegram_id=telegram_id)
+            user = User(telegram_id=telegram_id, display_name=display_name)
             session.add(user)
             session.flush()
     return user

@@ -10,8 +10,9 @@ from app.api.groups import ERRORS, no_store
 from app.api.telegram_dependencies import get_bot_user, get_telegram_actor
 from app.db import get_session
 from app.models import User
-from app.schemas.auth import UserProfile
+from app.schemas.auth import BootstrapInput, ProfileUpdate, UserProfile
 from app.schemas.groups import EmptyInput, LinkInput, LinkIssued
+from app.services.profiles import update_profile
 from app.services.telegram_identity import (
     bootstrap_user,
     issue_link_code,
@@ -33,12 +34,14 @@ def me(user: Annotated[User, Depends(get_bot_user)]) -> UserProfile:
 
 @router.post("/internal/users/bootstrap", response_model=UserProfile)
 def bootstrap(
-    payload: EmptyInput,
+    payload: BootstrapInput,
     telegram_id: Annotated[int, Depends(get_telegram_actor)],
     session: Annotated[Session, Depends(get_session)],
 ) -> UserProfile:
     """Call only after explicit Create consent; repeats return the same profile."""
-    return UserProfile.model_validate(bootstrap_user(session, telegram_id))
+    return UserProfile.model_validate(
+        bootstrap_user(session, telegram_id, payload.display_name)
+    )
 
 
 @router.post("/users/me/telegram-link-code", status_code=201, response_model=LinkIssued)
@@ -61,4 +64,15 @@ def link(
     """Single use, 10 minutes, no merge. After timeout read internal/users/me first."""
     return UserProfile.model_validate(
         link_telegram(session, telegram_id, payload.code.get_secret_value())
+    )
+
+
+@router.patch("/internal/users/me", response_model=UserProfile)
+def rename_me(
+    payload: ProfileUpdate,
+    user: Annotated[User, Depends(get_bot_user)],
+    session: Annotated[Session, Depends(get_session)],
+) -> UserProfile:
+    return UserProfile.model_validate(
+        update_profile(session, user, payload.display_name)
     )

@@ -12,6 +12,7 @@ class BotSettings(BaseSettings):
         env_file=".env", extra="ignore", hide_input_in_errors=True
     )
 
+    expected_bot_username: str | None = Field(default=None, repr=False)
     telegram_bot_token: SecretStr = Field(repr=False)
     bot_service_token: SecretStr = Field(repr=False)
     api_base_url: AnyHttpUrl = Field(

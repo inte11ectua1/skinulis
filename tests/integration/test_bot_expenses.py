@@ -8,36 +8,18 @@ from uuid import uuid4
 
 import httpx
 import pytest
-from aiogram.types import InlineKeyboardMarkup
 
 from app.config import Settings
 from bot.api_client import ApiClient, ApiError
 from bot.dto import GroupDraft
 from bot.expense_dto import DRAFT, ReceiptExpense
 from bot.main import create_dispatcher
+from tests.integration.test_bot_identity_groups import choose as choose
 from tests.integration.test_bot_identity_groups import local_api as local_api
 from tests.integration.test_bot_identity_groups import telegram
 from tests.unit.test_bot_handlers import Harness
 
 pytestmark = [pytest.mark.integration, pytest.mark.anyio]
-
-
-async def choose(ui: Harness, label: str) -> str:
-    for sent in reversed(ui.sent):
-        markup = sent.reply_markup
-        if not isinstance(markup, InlineKeyboardMarkup):
-            continue
-        values = [
-            b.callback_data
-            for row in markup.inline_keyboard
-            for b in row
-            if b.text == label
-        ]
-        if values:
-            assert len(values) == 1 and values[0] is not None
-            await ui.click(values[0])
-            return values[0]
-    raise AssertionError((label, ui.sent[-1].text))
 
 
 @pytest.fixture
@@ -101,14 +83,14 @@ async def finance_ui(
 async def open_wizard(ui: Harness, gid: int, mode: str) -> None:
     await ui.send("/start")
     await ui.click("menu:groups")
-    await choose(ui, f"Ресторанная группа · #{gid}")
-    await choose(ui, "Добавить расход")
+    await choose(ui, f"@group:{gid}")
+    await choose(ui, "＋ Добавить расход")
     await choose(
         ui,
         {
-            "equal": "Поровну — equal",
-            "custom": "Точные суммы — custom",
-            "by_items": "По позициям — by_items",
+            "equal": "Поровну",
+            "custom": "Указать суммы",
+            "by_items": "По позициям",
         }[mode],
     )
 
@@ -136,7 +118,7 @@ async def fill(ui: Harness, mode: str, ids: list[int]) -> None:
         await ui.send(title)
         await ui.send(amount)
         for uid in consumers:
-            await choose(ui, f"Участник #{uid}")
+            await choose(ui, f"@ex:toggle:{uid}")
         await choose(ui, "Готово")
 
 
@@ -149,7 +131,7 @@ async def test_real_server_preview_create_author_access_edit_soft_delete(
     await open_wizard(ui, gid, mode)
     await fill(ui, mode, ids)
     assert not (await ui.api.expenses(123, gid)).items
-    await choose(ui, "Серверный предпросмотр")
+    await choose(ui, "Проверить доли")
     assert not (await ui.api.expenses(123, gid)).items  # Preview makes no DB record.
     confirm = await choose(ui, "Подтвердить расход")
     await ui.click(confirm)
@@ -195,14 +177,14 @@ async def test_real_server_preview_create_author_access_edit_soft_delete(
     assert "обратного долга" in ui.sent[-1].text
     await choose(ui, "Продолжить редактирование")
     await choose(ui, "Сменить режим")
-    await choose(ui, "Точные суммы — custom")
+    await choose(ui, "Указать суммы")
     await choose(ui, "Изменить сумму")
     await ui.send("0.01")
     await choose(ui, "Выбрать всех")
     await choose(ui, "Готово")
     for amount in ["0.01", "0.00", "0.00"]:
         await ui.send(amount)
-    await choose(ui, "Серверный предпросмотр")
+    await choose(ui, "Проверить доли")
     await choose(ui, "Сохранить изменения")
     current = await ui.api.expense(123, value.id)
     assert current.split_mode == "custom" and current.version == 2
@@ -224,7 +206,7 @@ async def test_lost_real_response_recovers_without_duplicate_or_stale_retry(
     ui, transport, ids, gid = finance_ui
     await open_wizard(ui, gid, "by_items")
     await fill(ui, "by_items", ids)
-    await choose(ui, "Серверный предпросмотр")
+    await choose(ui, "Проверить доли")
     if mutation == "POST":
         transport.lose = "POST"
     await choose(ui, "Подтвердить расход")
@@ -240,7 +222,7 @@ async def test_lost_real_response_recovers_without_duplicate_or_stale_retry(
         await choose(ui, "Продолжить редактирование")
         await choose(ui, "Изменить название")
         await ui.send("Новая версия")
-        await choose(ui, "Серверный предпросмотр")
+        await choose(ui, "Проверить доли")
         transport.lose = "PUT"
         await choose(ui, "Сохранить изменения")
         current = await ui.api.expense(123, eid)

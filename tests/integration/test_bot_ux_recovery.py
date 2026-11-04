@@ -12,6 +12,7 @@ from pydantic import SecretStr
 
 from app.config import Settings
 from bot.api_client import ApiError
+from bot.button_theme import plain_label
 from bot.expense_dto import DRAFT, draft_from_profile
 from bot.expense_wizard import load
 from bot.main import create_dispatcher
@@ -69,7 +70,7 @@ async def test_committed_expense_replay_reads_edited_or_deleted_current_state(
     monkeypatch.setattr(transport, "handle_async_request", damage)
     await open_wizard(ui, gid, mode)
     await fill(ui, mode, ids)
-    await choose(ui, "Серверный предпросмотр")
+    await choose(ui, "Проверить доли")
     await choose(ui, "Подтвердить расход")
     assert await ui.state.get_state() == ExpenseFlow.post_uncertain.state
     frozen = await load(ui.state)
@@ -94,7 +95,7 @@ async def test_committed_expense_replay_reads_edited_or_deleted_current_state(
         b.callback_data
         for row in markup.inline_keyboard
         for b in row
-        if b.text == "Повторить исходный запрос"
+        if plain_label(b.text) == "Повторить исходный запрос"
     )
     assert button is not None
     await ui.send("/help")
@@ -102,6 +103,18 @@ async def test_committed_expense_replay_reads_edited_or_deleted_current_state(
     assert (await load(ui.state)).sent_body == frozen.sent_body
     start = len(ui.sent)
     await ui.click(button)
+    assert (
+        len(
+            [
+                w
+                for w in transport.writes
+                if w[0] == "POST" and w[1].endswith("/expenses")
+            ]
+        )
+        == 1
+    )
+    await choose(ui, "Продолжить ввод")
+    button = await choose(ui, "Повторить исходный запрос")
     await ui.click(button)
     writes = [
         w for w in transport.writes if w[0] == "POST" and w[1].endswith("/expenses")
@@ -112,7 +125,9 @@ async def test_committed_expense_replay_reads_edited_or_deleted_current_state(
         assert "недоступна" in text and "Сохранённый расход" not in text
         assert not (await ui.api.expenses(123, gid)).items
     else:
-        assert "Актуальная версия" in text and "версия 2" in text
+        assert "Актуальная версия" in text
+        current = (await ui.api.expenses(123, gid)).items
+        assert current[0].version == 2
         assert len((await ui.api.expenses(123, gid)).items) == 1
     # Changed intent with the original UUID must remain a conflict, never a duplicate.
     changed = business.model_copy(update={"title": "Другое намерение"})
@@ -132,13 +147,13 @@ async def test_real_401_keeps_draft_then_same_intent_succeeds_once(
     await open_wizard(ui, gid, "custom")
     await fill(ui, "custom", ids)
     original = (await load(ui.state)).business()
-    await choose(ui, "Серверный предпросмотр")
+    await choose(ui, "Проверить доли")
     with monkeypatch.context() as invalid:
         invalid.setattr(ui.api, "_service_token", SecretStr(secrets.token_urlsafe(48)))
         await choose(ui, "Подтвердить расход")
     assert (await load(ui.state)).business() == original
     assert not (await ui.api.expenses(123, gid)).items
-    await choose(ui, "Серверный предпросмотр")
+    await choose(ui, "Проверить доли")
     await choose(ui, "Подтвердить расход")
     writes = [
         w for w in transport.writes if w[0] == "POST" and w[1].endswith("/expenses")
@@ -153,7 +168,7 @@ async def test_cancel_and_restart_after_actual_commit_do_not_undo_or_repost(
     ui, transport, ids, gid = finance_ui
     await open_wizard(ui, gid, "equal")
     await fill(ui, "equal", ids)
-    await choose(ui, "Серверный предпросмотр")
+    await choose(ui, "Проверить доли")
     transport.lose = "POST"
     await choose(ui, "Подтвердить расход")
     screen = (await ui.state.get_data())["screen"]
@@ -165,7 +180,8 @@ async def test_cancel_and_restart_after_actual_commit_do_not_undo_or_repost(
     try:
         await ui.send("/start")
         await ui.click(f"l3:{screen}:0")
-        assert "черновик потерян" in ui.sent[-1].text
+        assert ui.alerts[-1].show_alert
+        assert "Используйте последние кнопки" in str(ui.alerts[-1].text)
         assert len((await ui.api.expenses(123, gid)).items) == 1
         assert (
             len(

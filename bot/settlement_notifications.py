@@ -9,11 +9,7 @@ from bot.api_client import ApiError, BotApi
 from skinulis_logging import Event, emit
 
 DELIVERY_TIMEOUT = 5
-NOTICE = (
-    "Для вас могла появиться заявка на подтверждение перевода. "
-    "Откройте /start → Ожидают подтверждения и проверьте актуальный статус. "
-    "Подтверждайте только реально полученные деньги. Бот не переводит деньги."
-)
+NOTICE = "Новый перевод\nПроверьте «Ожидают подтверждения» — для вас могла появиться запись.\n\nПодтверждайте только действительно полученные деньги. Бот не переводит деньги."
 
 
 async def notify_receiver(
@@ -34,7 +30,9 @@ async def notify_receiver(
     try:
         async with asyncio.timeout(DELIVERY_TIMEOUT):
             await bot.send_message(
-                chat_id=claim.recipient_telegram_id, text=NOTICE, parse_mode=None
+                chat_id=claim.recipient_telegram_id,
+                text=NOTICE,
+                parse_mode=None,
             )
     except (TelegramAPIError, TimeoutError, OSError):
         # Never log the Telegram exception: it can contain identity or credentials.

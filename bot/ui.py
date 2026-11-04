@@ -2,36 +2,20 @@
 
 from uuid import uuid4
 
+from aiogram.exceptions import TelegramBadRequest, TelegramNetworkError
 from aiogram.fsm.context import FSMContext
 from aiogram.types import LinkPreviewOptions, Message
 from pydantic import SecretStr
 
 from bot.api_client import ApiError, ApiFailure, BotApi
-from bot.keyboards import action_keyboard, main_menu
+from bot.button_theme import LABELS
+from bot.keyboards import action_keyboard
+from bot.presentation import html_card
+from bot.screen_lifecycle import retire
 from bot.states import GroupFlow, Navigation, Onboarding
 
-WELCOME = (
-    "Привет! Я «Скинулись» — помогу учитывать общие расходы. "
-    "Банковские переводы вы делаете сами.\n"
-    "Создать Telegram-only профиль или привязать существующий API-аккаунт? "
-    "Email и пароль для Telegram-only профиля не нужны. "
-    "Пароль, JWT и доступ к email сюда не отправляйте. Объединять два профиля нельзя."
-)
-
-
-HELP = (
-    "/start — проверить профиль и открыть меню\n/help — справка\n"
-    "/cancel — очистить незавершённый ввод. Сохранённые записи не отменяются.\n"
-    "Создайте профиль или привяжите API-аккаунт, затем откройте или создайте группу. "
-    "Вступить можно добровольно по одноразовой ссылке владельца. "
-    "В карточке группы доступны расходы: equal/custom/by_items, серверный предпросмотр, "
-    "редактирование и удаление своего расхода; балансы, план и ручные переводы. "
-    "«Я перевёл деньги» создаёт pending без изменения баланса. Получатель подтверждает только реально полученные деньги. "
-    "Бот не переводит деньги.\n"
-    "После перезапуска черновик и UUID теряются. Сначала проверьте профиль/свои группы/расходы; "
-    "не создавайте запись заново, если результат прежнего запроса неизвестен. "
-    "Приглашение откройте повторно по исходной ссылке."
-)
+WELCOME = "Скинулись\nОбщие расходы — без путаницы.\n\nСоздайте профиль, чтобы вести расходы с друзьями. Уже пользовались сервисом? Привяжите прежний аккаунт.\nБанковские переводы вы делаете сами."
+HELP = "Как пользоваться\n\n1. Создайте группу и пригласите друзей.\n2. Запишите расход и выберите, кто участвовал.\n3. Посмотрите долги и план переводов.\n4. После оплаты получатель подтверждает получение.\n\nБот учитывает расходы, но не переводит деньги.\n/start — главное меню\n/groups — мои группы\n/profile — профиль\n/cancel — отменить несохранённый ввод\n\nЕсли ответ на сохранение потерялся, сначала проверьте историю."
 
 
 UNAVAILABLE = "Выберите доступное действие в меню."
@@ -64,10 +48,10 @@ UNCERTAIN_KINDS = {
 
 
 CODE_MESSAGES = {
-    "link_code_invalid": "Код недействителен, истёк, отозван или уже использован. Получите новый код в API-аккаунте.",
+    "link_code_invalid": "Код недействителен, истёк, отозван или уже использован. Получите новый код в аккаунте по почте.",
     "telegram_identity_conflict": "Объединение двух существующих профилей не поддерживается.",
-    "telegram_already_linked": "API-аккаунт уже связан с Telegram. Объединение профилей не поддерживается.",
-    "email_profile_required": "Код должен быть получен в вашем существующем email-аккаунте через API.",
+    "telegram_already_linked": "аккаунт по почте уже связан с Telegram. Объединение профилей не поддерживается.",
+    "email_profile_required": "Код должен быть получен в вашем существующем email-аккаунте по инструкции подключения.",
     "invite_invalid": "Приглашение недействительно, истекло, использовано или отозвано. Попросите владельца прислать новую ссылку.",
     "already_member": "Вы уже участник этой группы. Откройте «Мои группы».",
     "group_full": "В группе уже 30 участников. Вступить сейчас нельзя.",
@@ -81,24 +65,141 @@ def safe_error(error: ApiError) -> str:
     return CODE_MESSAGES.get(error.error_code or "", str(error))
 
 
+async def reset(state: FSMContext) -> None:
+    data = await state.get_data()
+    panel = {k: data[k] for k in ("panel_id", "telegram_name", "toast") if k in data}
+    await state.clear()
+    await state.update_data(**panel)
+
+
+def pages(text: str, limit: int = 2800) -> list[str]:
+    """Bound parsed Telegram text; keep all rows reachable, never truncate amounts."""
+    result: list[str] = []
+    current = ""
+    for row in text.splitlines(keepends=True):
+        while len(row) > limit:
+            if current:
+                result.append(current)
+                current = ""
+            result.append(row[:limit])
+            row = row[limit:]
+        if len(current) + len(row) > limit:
+            result.append(current)
+            current = ""
+        current += row
+    if current or not result:
+        result.append(current)
+    return result
+
+
 async def screen(
-    message: Message, state: FSMContext, text: str, actions: list[tuple[str, str]]
+    message: Message,
+    state: FSMContext,
+    text: str,
+    actions: list[tuple[str, str]],
+    *,
+    page: int = 0,
 ) -> None:
-    """Only the current opaque screen can select its server-sourced action."""
-    nonce = uuid4().hex[:12]
-    await state.update_data(screen=nonce, actions=[value for _, value in actions])
-    await message.answer(
-        text,
-        reply_markup=action_keyboard(nonce, [label for label, _ in actions]),
-        parse_mode=None,
-        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    data = await state.get_data()
+    base_text = text
+    if data.get("toast"):
+        heading, _, body = text.partition("\n")
+        text = heading + "\n" + str(data["toast"]) + "\n\n" + body
+        await state.update_data(toast=None)
+    chunks = pages(text)
+    page = max(0, min(page, len(chunks) - 1))
+    shown = chunks[page]
+    visible = (
+        actions
+        if page == len(chunks) - 1
+        else [a for a in actions if a[1] in {"home", "ex:cancel"}]
     )
+    visible = list(visible)
+    if len(chunks) > 1:
+        shown += f"\n\nСтраница {page + 1} из {len(chunks)}"
+        if page:
+            visible.append(("← Назад по тексту", f"ui:page:{page - 1}"))
+        if page + 1 < len(chunks):
+            visible.append(("Продолжить →", f"ui:page:{page + 1}"))
+    nonce = uuid4().hex[:12]
+    data = await state.get_data()
+    await state.update_data(
+        screen=nonce,
+        actions=[value for _, value in visible],
+        view_page=page,
+        view_text=base_text,
+        view_actions=actions,
+    )
+    rendered = html_card(shown)
+    markup = action_keyboard(nonce, visible)
+    options = LinkPreviewOptions(is_disabled=True)
+    panel = data.get("panel_id")
+    bot = message.bot
+    if isinstance(panel, int) and bot is not None:
+        try:
+            await bot.edit_message_text(
+                rendered,
+                chat_id=message.chat.id,
+                message_id=panel,
+                reply_markup=markup,
+                parse_mode="HTML",
+                link_preview_options=options,
+            )
+            return
+        except TelegramBadRequest as error:
+            if "message is not modified" in error.message.lower():
+                return
+            if not any(
+                v in error.message.lower()
+                for v in (
+                    "message to edit not found",
+                    "message can't be edited",
+                    "message_id_invalid",
+                )
+            ):
+                raise
+            await retire(message, state)
+        except TelegramNetworkError:
+            # Only replace the panel after its previous keyboard was retired.
+            await retire(message, state)
+    # retire invalidated the new nonce too; restore only this rendered view.
+    await state.update_data(screen=nonce, actions=[value for _, value in visible])
+    sent = await message.answer(
+        rendered, reply_markup=markup, parse_mode="HTML", link_preview_options=options
+    )
+    await state.update_data(panel_id=sent.message_id)
+
+
+async def hint(message: Message, state: FSMContext, text: str) -> None:
+    data = await state.get_data()
+    if data.get("view_text") and data.get("view_actions"):
+        await state.update_data(toast=text)
+        await screen(
+            message,
+            state,
+            data["view_text"],
+            data["view_actions"],
+            page=data.get("view_page", 0),
+        )
+    else:
+        await message.answer(text)
 
 
 async def home(message: Message, state: FSMContext) -> None:
-    await state.clear()
+    await reset(state)
     await state.set_state(Navigation.menu)
-    await message.answer("Что хотите сделать?", reply_markup=main_menu())
+    await screen(
+        message,
+        state,
+        "Скинулись\nСоберите общие расходы в одном месте.\n\nВыберите группу или начните новую.",
+        [
+            (LABELS["groups"], "groups:0"),
+            (LABELS["create"], "create"),
+            (LABELS["pending"], "st:groups:0"),
+            (LABELS["profile"], "profile"),
+            (LABELS["help"], "help"),
+        ],
+    )
 
 
 async def offer_onboarding(message: Message, state: FSMContext) -> None:
@@ -117,7 +218,7 @@ async def offer_onboarding(message: Message, state: FSMContext) -> None:
 
 async def ready(message: Message, state: FSMContext) -> None:
     invite = (await state.get_data()).get("invite")
-    await state.clear()
+    await reset(state)
     if isinstance(invite, SecretStr):
         await state.update_data(invite=invite)
         await state.set_state(GroupFlow.join_confirm)
@@ -167,6 +268,6 @@ async def recover_identity(
         )
     else:
         await message.answer(
-            "Профиль сейчас существует. Это не доказывает результат предыдущей операции. Откройте «Профиль» и проверьте аккаунт; для привязки также проверьте /users/me в своём API-аккаунте."
+            "Профиль сейчас существует. Это не доказывает результат предыдущей операции. Откройте «Профиль» и проверьте аккаунт; для привязки также проверьте свой прежний аккаунт по инструкции."
         )
         await ready(message, state)

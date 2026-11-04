@@ -24,6 +24,7 @@ from app.config import Settings
 from app.core.migrate import main as migrate
 from app.main import create_app
 from bot.api_client import ApiClient, ApiError
+from bot.button_theme import plain_label
 from bot.main import create_dispatcher
 from tests.unit.test_bot_handlers import Harness
 
@@ -64,6 +65,35 @@ async def local_api(database_url: URL) -> AsyncIterator[tuple[str, Settings]]:
 
 
 async def choose(ui: Harness, label: str) -> str:
+    await ui.sync_screen()
+    if label.startswith("@"):
+        value = label[1:]
+        if value.startswith("record:"):
+            sid = value.split(":")[1]
+            value = next(
+                a
+                for a in ui.last_actions
+                if a.startswith("st:detail:") and a.endswith(":" + sid)
+            )
+        key = ui.action(value)
+        await ui.click(key)
+        return key
+    if label == "Я перевёл деньги" and not any(
+        a.startswith("st:new:") for a in ui.last_actions
+    ):
+        key = next(
+            a
+            for a in ui.last_actions
+            if a.startswith("st:list:") and a.endswith(":all:all:0")
+        )
+        await ui.click(ui.action(key))
+    if label in ("Статус: confirmed", "Направление: исходящие"):
+        key = next(a for a in ui.last_actions if a.startswith("st:filters:"))
+        await ui.click(ui.action(key))
+        label = {
+            "Статус: confirmed": "Подтверждено",
+            "Направление: исходящие": "От меня",
+        }[label]
     # Help/stale-button notices need not have a keyboard. Telegram keeps earlier
     # messages visible; select ONLY the currently valid screen's button.
     nonce = (await ui.state.get_data()).get("screen")
@@ -76,7 +106,7 @@ async def choose(ui: Harness, label: str) -> str:
                 b.callback_data
                 for row in markup.inline_keyboard
                 for b in row
-                if b.text == label
+                if plain_label(b.text) == plain_label(label)
                 and b.callback_data is not None
                 and b.callback_data.startswith(prefix)
             ]
@@ -135,9 +165,9 @@ async def test_profile_group_owner_invite_voluntary_join_real_http(
                 await owner.click("menu:create")
                 await owner.send("  Реальная группа  ")
                 await choose(owner, "Создать")
-                assert "Группа: Реальная группа" in owner.sent[-1].text
+                assert "<b>Реальная группа</b>" in owner.sent[-1].text
                 group = (await api.groups(123)).items[0]
-                await choose(owner, "Приглашения")
+                await choose(owner, "Пригласить друзей")
                 await choose(owner, "Создать приглашение")
                 await choose(owner, "Создать приглашение")
                 link_text = next(
@@ -205,9 +235,7 @@ async def test_public_code_to_telegram_link_real_http(
                     assert profile.id == registered.json()["id"]
                     me = await public.get("/users/me", headers=headers)
                     assert me.json()["telegram_id"] == 123
-                    assert "API подтвердил привязку" in " ".join(
-                        m.text for m in ui.sent
-                    )
+                    assert "Аккаунт привязан" in " ".join(m.text for m in ui.sent)
                     assert code not in caplog.text + repr(await ui.state.get_data())
                     assert password not in caplog.text and jwt not in caplog.text
             finally:

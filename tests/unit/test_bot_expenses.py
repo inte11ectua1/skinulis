@@ -19,11 +19,13 @@ from aiogram.types import InlineKeyboardMarkup, Update
 from pydantic import SecretStr, ValidationError
 
 from bot.api_client import ApiClient
+from bot.button_theme import plain_label
 from bot.expense_dto import DRAFT, EXPENSE, PREVIEW, ExpenseMutation
 from bot.expense_wizard import keep, load
 from bot.main import create_dispatcher
+from bot.presentation import money
 from bot.states import ExpenseFlow
-from tests.unit.test_bot_handlers import Harness
+from tests.unit.test_bot_handlers import Harness, business_state
 from tests.unit.test_bot_onboarding_groups import ContractFixture, error
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -153,6 +155,8 @@ class ExpenseJourney:
     server: ExpenseServer
 
     def button(self, label: str) -> str:
+        if label.startswith("@"):
+            return self.ui.action(label[1:])
         for sent in reversed(self.ui.sent):
             markup = sent.reply_markup
             if not isinstance(markup, InlineKeyboardMarkup):
@@ -161,7 +165,9 @@ class ExpenseJourney:
                 b.callback_data
                 for row in markup.inline_keyboard
                 for b in row
-                if b.text == label
+                if plain_label(b.text) == plain_label(label)
+                and b.callback_data is not None
+                and b.callback_data.startswith(f"l3:{self.ui.last_nonce}:")
             ]
             if values:
                 assert len(values) == 1 and values[0] is not None
@@ -169,6 +175,24 @@ class ExpenseJourney:
         raise AssertionError((label, self.ui.sent[-1].text))
 
     async def choose(self, label: str) -> str:
+        await self.ui.sync_screen()
+        for _ in range(60):
+            try:
+                self.button(label)
+                break
+            except (AssertionError, ValueError):
+                forward = next(
+                    (
+                        a
+                        for a in self.ui.last_actions
+                        if a.startswith("ui:page:")
+                        and int(a.rsplit(":", 1)[1]) > self.ui.last_page
+                    ),
+                    None,
+                )
+                if forward is None:
+                    raise
+                await self.ui.click(self.ui.action(forward))
         value = self.button(label)
         await self.ui.click(value)
         return value
@@ -187,13 +211,13 @@ class ExpenseJourney:
         self.server.groups = [self.server.group(100)]
         await self.ui.send("/start")
         await self.ui.click("menu:groups")
-        await self.choose("Группа 100 · #100")
-        await self.choose("Добавить расход")
+        await self.choose("Группа 100")
+        await self.choose("＋ Добавить расход")
         await self.choose(
             {
-                "equal": "Поровну — equal",
-                "custom": "Точные суммы — custom",
-                "by_items": "По позициям — by_items",
+                "equal": "Поровну",
+                "custom": "Указать суммы",
+                "by_items": "По позициям",
             }[mode]
         )
 
@@ -206,7 +230,7 @@ class ExpenseJourney:
             await self.ui.send(item["title"])
             await self.ui.send(item["amount"])
             for uid in item["participants"]:
-                await self.choose(f"Участник #{uid}")
+                await self.choose(f"@ex:toggle:{uid}")
             await self.choose("Готово")
 
     async def simple(self, mode: str = "equal", amount: str = "100.00") -> None:
@@ -267,9 +291,9 @@ async def test_create_modes_only_after_server_preview(
     j = expense_journey
     await (j.receipt() if mode == "by_items" else j.simple(mode))
     assert not j.server.saved
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     assert not j.server.saved
-    assert "Серверный предпросмотр — ещё не сохранено" in j.text
+    assert "ещё не сохранено" in j.text
     confirm = await j.choose("Подтвердить расход")
     await j.ui.click(confirm)
     writes = j.calls("POST", "/internal/groups/100/expenses")
@@ -278,10 +302,10 @@ async def test_create_modes_only_after_server_preview(
     if mode == "by_items":
         assert "amount" not in body and body["items"] == O05["preview_request"]["items"]
         for value in ["3200.00", "1000.00", "1400.00", "800.00"]:
-            assert value in j.text
+            assert money(value) in j.text
     elif mode == "custom":
         assert body["shares"][0] == {"user_id": 10, "amount": "0.00"}
-    assert "Сохранённый расход #7" in j.text
+    assert "Расход сохранён" in j.text
 
 
 @pytest.mark.anyio
@@ -290,7 +314,7 @@ async def test_post_timeout_replays_exact_intent_then_gets_current(
 ) -> None:
     j = expense_journey
     await j.receipt()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     j.server.fail_after = "POST"
     await j.choose("Подтвердить расход")
     assert await j.ui.state.get_state() == ExpenseFlow.post_uncertain.state
@@ -311,7 +335,7 @@ async def test_preview_edit_invalidation_and_new_intent_uuid(
 ) -> None:
     j = expense_journey
     await j.simple()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     stale = j.button("Подтвердить расход")
     await j.choose("Исправить черновик")
     await j.choose("Изменить название")
@@ -320,17 +344,17 @@ async def test_preview_edit_invalidation_and_new_intent_uuid(
     assert not j.server.saved
     assert (await load(j.ui.state)).preview_body is None
     j.server.preview_data["title"] = "Другой обед"
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     await j.choose("Подтвердить расход")
     first_key = j.server.saved[7]["client_request_id"]
     await j.choose("К расходам")
-    await j.choose("Добавить расход")
-    await j.choose("Поровну — equal")
+    await j.choose("＋ Добавить расход")
+    await j.choose("Поровну")
     await j.ui.send("Ещё")
     await j.ui.send("100.00")
     await j.choose("Выбрать всех")
     await j.choose("Готово")
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     await j.choose("Подтвердить расход")
     assert j.server.saved[7]["client_request_id"] != first_key
 
@@ -344,11 +368,11 @@ async def test_custom_server_validation_preserves_zero_and_all_fields(
     j.server.overrides["POST", "/internal/groups/100/expenses/preview"] = [
         error(400, "validation_error")
     ]
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     draft = await load(j.ui.state)
     assert draft.shares == {"10": "0.00", "20": "40.00", "30": "60.00"}
     assert draft.preview_body is None and not j.server.saved
-    assert "точное совпадение custom-долей" in j.text
+    assert "вместе они должны составлять сумму расхода" in j.text
 
 
 @pytest.mark.anyio
@@ -357,11 +381,11 @@ async def test_custom_server_validation_preserves_zero_and_all_fields(
     [
         "0.00",
         "-1.00",
-        "1,00",
+        "1,0,0",
         "1.001",
         "1e2",
         "01.00",
-        " 1.00",
+        "1 000",
         "١.٠٠",
         "NaN",
         "10000000.00",
@@ -385,25 +409,25 @@ async def test_empty_selection_toggle_and_mode_switch(
     j = expense_journey
     await j.simple("custom")
     await j.choose("Выбрать участников")
-    await j.choose("✓ Участник #10")
-    await j.choose("✓ Участник #20")
-    await j.choose("✓ Участник #30")
+    await j.choose("@ex:toggle:10")
+    await j.choose("@ex:toggle:20")
+    await j.choose("@ex:toggle:30")
     await j.choose("Готово")
-    assert "Выберите хотя бы одного" in j.text
-    await j.choose("Участник #20")
-    await j.choose("✓ Участник #20")
-    await j.choose("Участник #20")
+    assert "Выбрано: 0 из 3" in j.text
+    await j.choose("@ex:toggle:20")
+    await j.choose("@ex:toggle:20")
+    await j.choose("@ex:toggle:20")
     await j.choose("Готово")
     await j.ui.send("100.00")
     draft = await load(j.ui.state)
     assert draft.selected == [20] and draft.shares == {"20": "100.00"}
     await j.choose("Сменить режим")
-    await j.choose("По позициям — by_items")
+    await j.choose("По позициям")
     draft = await load(j.ui.state)
     assert not draft.amount and not draft.selected and not draft.shares
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     assert not j.calls("POST", "/internal/groups/100/expenses/preview")
-    assert "1–50" in j.text
+    assert "хотя бы одну позицию" in j.text
 
 
 @pytest.mark.anyio
@@ -434,7 +458,7 @@ async def test_long_receipt_edit_drop_and_50_limit(
     await j.choose("Добавить позицию")
     await j.ui.send("Новая")
     await j.ui.send("1.00")
-    await j.choose("Участник #10")
+    await j.choose("@ex:toggle:10")
     await j.choose("Готово")
     draft = await load(j.ui.state)
     assert len(draft.items) == 50 and draft.items[-1].title == "Новая"
@@ -446,7 +470,7 @@ async def test_list_pagination_detail_owner_is_not_author(
 ) -> None:
     j = expense_journey
     await j.receipt()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     await j.choose("Подтвердить расход")
     original = j.server.saved[7]
     j.server.saved = {
@@ -458,14 +482,14 @@ async def test_list_pagination_detail_owner_is_not_author(
         "limit": "20",
         "offset": "20",
     }
-    await j.choose("Открыть #21 · Ресторан")
+    await j.choose("@ex:detail:21")
     assert "Редактировать" not in str(j.ui.sent[-1].reply_markup)
     assert "Удалить" not in str(j.ui.sent[-1].reply_markup)
-    assert "Плательщик: участник #20" in j.text
+    assert "Оплатил: Без имени · Б" in j.text
     await j.choose("К расходам")
     j.server.saved.clear()
     await j.choose("Обновить")
-    assert "расходов нет" in j.ui.sent[-1].text
+    assert "нет расходов" in j.ui.sent[-1].text
 
 
 @pytest.mark.anyio
@@ -476,17 +500,17 @@ async def test_edit_delete_versions_and_recovery(
 ) -> None:
     j = expense_journey
     await j.receipt()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     await j.choose("Подтвердить расход")
     await j.choose("Редактировать" if mutation == "PUT" else "Удалить")
     assert "обратного долга" in j.ui.sent[-1].text
     if mutation == "PUT":
         await j.choose("Продолжить редактирование")
         await j.choose("Сменить режим")
-        await j.choose("Точные суммы — custom")
+        await j.choose("Указать суммы")
         await j.choose("Изменить сумму")
         await j.ui.send("1.00")
-        await j.choose("Участник #20")
+        await j.choose("@ex:toggle:20")
         await j.choose("Готово")
         await j.ui.send("1.00")
         j.server.preview_data = {
@@ -497,7 +521,7 @@ async def test_edit_delete_versions_and_recovery(
             "amount": "1.00",
             "shares": [{"user_id": 20, "amount": "1.00"}],
         }
-        await j.choose("Серверный предпросмотр")
+        await j.choose("Проверить доли")
     if outcome == "timeout":
         j.server.fail_after = mutation
     if outcome == "stale":
@@ -544,19 +568,19 @@ async def test_cancel_start_restart_no_financial_write(
     j = expense_journey
     await j.simple()
     if step == "preview":
-        await j.choose("Серверный предпросмотр")
+        await j.choose("Проверить доли")
     await j.ui.state.set_state(getattr(ExpenseFlow, step))
     old = j.ui.sent[-1].reply_markup
     before = await j.ui.state.get_data()
     await j.ui.send("/start")
-    assert before == await j.ui.state.get_data()
+    assert business_state(before) == business_state(await j.ui.state.get_data())
     await j.ui.send("/help")
     await j.ui.send("/cancel")
     assert "expense_session" not in await j.ui.state.get_data()
     assert not j.server.saved
     assert old is not None
     await j.ui.click("l3:missing:0")
-    assert "черновик потерян" in j.ui.sent[-1].text
+    assert j.ui.alerts[-1].show_alert
 
 
 @pytest.mark.anyio
@@ -566,7 +590,7 @@ async def test_safe_errors_no_false_success_or_secret_leak(
 ) -> None:
     j = expense_journey
     await j.simple()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     secret = secrets.token_urlsafe(48)
     j.server.overrides["POST", "/internal/groups/100/expenses"] = [
         httpx.Response(
@@ -591,7 +615,7 @@ async def test_exact_duplicate_telegram_update_and_foreign_callback(
 ) -> None:
     j = expense_journey
     await j.simple()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     button = j.button("Подтвердить расход")
     await j.ui.click(button, user_id=456)
     assert not j.server.saved
@@ -666,7 +690,7 @@ async def test_reading_list_does_not_lose_unknown_write_intent(
 ) -> None:
     j = expense_journey
     await j.simple()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     if mutation == "POST":
         j.server.fail_after = "POST"
         await j.choose("Подтвердить расход")
@@ -681,7 +705,7 @@ async def test_reading_list_does_not_lose_unknown_write_intent(
     assert "Добавить расход" not in str(j.ui.sent[-1].reply_markup)
     if mutation == "POST":
         assert (await load(j.ui.state)).sent_body == frozen
-        await j.choose("Открыть #7 · Обед")
+        await j.choose("@ex:detail:7")
         assert "Редактировать" not in str(j.ui.sent[-1].reply_markup)
     await j.choose("К восстановлению запроса")
     await j.choose(
@@ -696,11 +720,11 @@ async def test_put_timeout_failed_read_rechecks_without_second_put(
 ) -> None:
     j = expense_journey
     await j.simple()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     await j.choose("Подтвердить расход")
     await j.choose("Редактировать")
     await j.choose("Продолжить редактирование")
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     j.server.fail_after = "PUT"
     j.server.overrides["GET", "/internal/expenses/7"] = [
         httpx.ConnectError("private read diagnostic")
@@ -710,7 +734,7 @@ async def test_put_timeout_failed_read_rechecks_without_second_put(
     assert "API подтвердил сохранение изменений" not in j.text
     await j.choose("Перечитать актуальную версию")
     assert len(j.calls("PUT", "/internal/expenses/7")) == 1
-    assert "версия 2" in j.text
+    assert "Карточка могла измениться" in j.text
 
 
 @pytest.mark.anyio
@@ -735,11 +759,11 @@ async def test_penny_three_consumers_preserves_explicit_zero_rows(
             {"user_id": 30, "amount": "0.00"},
         ],
     }
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     await j.choose("Подтвердить расход")
     value = j.server.saved[7]
     assert [s["amount"] for s in value["shares"]] == ["0.01", "0.00", "0.00"]
-    assert "#20: 0.00 ₽" in j.text and "#30: 0.00 ₽" in j.text
+    assert "Без имени · Б · 0 ₽" in j.text and "Без имени · В · 0 ₽" in j.text
 
 
 @pytest.mark.anyio
@@ -765,7 +789,7 @@ async def test_stale_preview_body_is_refused_even_with_current_button(
 ) -> None:
     j = expense_journey
     await j.simple()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     draft = await load(j.ui.state)
     draft.title = "Изменённый ввод"
     # Simulate a changed draft behind an old preview without relying on nonce alone.
@@ -789,7 +813,7 @@ async def test_expense_error_codes_do_not_invent_details(
 ) -> None:
     j = expense_journey
     await j.simple()
-    await j.choose("Серверный предпросмотр")
+    await j.choose("Проверить доли")
     j.server.overrides["POST", "/internal/groups/100/expenses"] = [
         error(
             400

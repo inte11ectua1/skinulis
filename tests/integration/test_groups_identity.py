@@ -117,7 +117,7 @@ def test_t05_upgrade_preserves_users_and_one_head(database_url: URL) -> None:
         command.upgrade(config, "head")
         command.upgrade(config, "head")
         assert ScriptDirectory.from_config(config).get_heads() == [
-            "0006_settlement_notification_claim"
+            "0007_user_display_name"
         ]
         command.check(config)
         with Session(engine) as session:
@@ -162,7 +162,12 @@ def test_group_creation_replay_access_pagination(h: Harness) -> None:
     assert set(members) == {"items", "limit", "offset"}
     assert members["limit"] == 20 and members["offset"] == 0
     assert members["items"][0]["user_id"] == uid and members["items"][0]["is_owner"]
-    assert set(members["items"][0]) == {"user_id", "joined_at", "is_owner"}
+    assert set(members["items"][0]) == {
+        "user_id",
+        "joined_at",
+        "is_owner",
+        "display_name",
+    }
     second = h.group(owner, "Another")
     page = h.client.get("/groups?limit=1&offset=1", headers=owner).json()
     assert [g["id"] for g in page["items"]] == [second]

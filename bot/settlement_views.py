@@ -1,11 +1,11 @@
-"""Read-only M4 screens. Exact server strings/order, no financial arithmetic."""
+"""One editable screen per financial view; amounts/order remain server-owned."""
 
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from bot.api_client import ApiError, ApiFailure, BotApi
-from bot.expense_views import lines
 from bot.group_views import paging
+from bot.presentation import STATUSES, money, person, roster
 from bot.settlement_dto import (
     Balances,
     Direction,
@@ -16,14 +16,16 @@ from bot.settlement_dto import (
 )
 from bot.settlement_state import SettlementSession, keep, load
 from bot.states import Navigation, SettlementFlow
-from bot.ui import safe_error, screen
+from bot.ui import reset, safe_error, screen
 
-REAL_MONEY = "Бот не переводит деньги и не проверяет банк. Подтверждайте только реально полученные деньги."
+REAL_MONEY = (
+    "Бот не переводит деньги. Подтверждайте только то, что действительно получили."
+)
 STATUS_TEXT = {
-    "pending": "ожидает получателя; баланс не меняется",
-    "confirmed": "получатель подтвердил; учтено в балансе",
-    "rejected": "получатель отклонил; не влияет на баланс",
-    "cancelled": "отправитель отменил заявку; не влияет на баланс",
+    "pending": "Баланс изменится после подтверждения получателем.",
+    "confirmed": "Получатель подтвердил получение — перевод учтён в балансе.",
+    "rejected": "Получатель отклонил запись. Баланс не изменился.",
+    "cancelled": "Отправитель отменил запись. Баланс не изменился.",
 }
 ACTION_TEXT = {
     "confirm": "Подтвердить получение",
@@ -34,33 +36,28 @@ TARGET_STATUS = {"confirm": "confirmed", "reject": "rejected", "cancel": "cancel
 
 
 def settlement_error(error: ApiError) -> str:
-    messages = {
-        "settlement_balance_conflict": "Долг или доступный кредит изменился. Прежнюю сумму сейчас принять нельзя. При отказе confirm запись остаётся pending: получатель может отклонить, отправитель — отменить заявку. Сумму автоматически не исправляем.",
-        "settlement_state_conflict": "Запись уже перешла в конечный статус. Перечитайте актуальное состояние; изменить terminal-статус нельзя.",
-        "settlement_receiver_required": "Подтвердить или отклонить может только получатель. Владелец группы не получает дополнительных прав.",
-        "settlement_sender_required": "Отменить заявку может только её отправитель.",
-        "request_conflict": "UUID относится к другому намерению. Проверьте историю переводов; новый ключ автоматически не создаётся.",
-        "invalid_participants": "Получатель должен быть другим участником этой группы. Обновите состав и проверьте выбор.",
-        "validation_error": "API не принял данные. Нужна положительная сумма вида 500.00 и другой участник группы. Диапазон BIGINT и текущие долги проверяет API; лимит расхода здесь не применяется.",
-    }
-    return messages.get(error.error_code or "", safe_error(error))
+    return {
+        "settlement_balance_conflict": "Долг изменился. Эту сумму сейчас подтвердить нельзя. Запись по-прежнему ожидает: её можно отклонить или отменить.",
+        "settlement_state_conflict": "Эта запись уже завершена. Обновите её состояние.",
+        "settlement_receiver_required": "Подтвердить или отклонить может только получатель.",
+        "settlement_sender_required": "Отменить запись может только её отправитель.",
+        "request_conflict": "Этот запрос уже связан с другой записью. Проверьте историю перед новым действием.",
+        "invalid_participants": "Выберите другого участника этой группы.",
+        "validation_error": "Проверьте сумму и получателя. Например, 100 или 100,50; сумма должна быть положительной.",
+    }.get(error.error_code or "", safe_error(error))
 
 
 def menu(gid: int, *, recovering: bool = False) -> list[tuple[str, str]]:
     actions = [
-        ("Балансы", f"st:balances:{gid}"),
+        ("Кто кому должен", f"st:balances:{gid}"),
         ("План переводов", f"st:plan:{gid}"),
         ("Ожидают подтверждения", f"st:list:{gid}:pending:incoming:0"),
-        ("Исходящие переводы", f"st:list:{gid}:all:outgoing:0"),
         ("История переводов", f"st:list:{gid}:all:all:0"),
     ]
     return actions + (
-        [("К восстановлению заявки", "st:recover")]
+        [("К восстановлению", "st:recover")]
         if recovering
-        else [
-            ("Я перевёл деньги", f"st:new:{gid}"),
-            ("К группе", f"group:{gid}"),
-        ]
+        else [("Я перевёл деньги", f"st:new:{gid}"), ("← В группу", f"group:{gid}")]
     )
 
 
@@ -75,37 +72,45 @@ async def viewing(state: FSMContext, gid: int) -> bool:
                 else SettlementFlow.transition_unknown
             )
             return True
-    await state.clear()
+    await reset(state)
     await state.set_state(Navigation.menu)
     return False
 
 
-def balance_rows(result: Balances, gid: int) -> list[str]:
+def balance_rows(
+    result: Balances, gid: int, names: dict[int, str] | None = None
+) -> list[str]:
     if result.group_id != gid:
         raise ApiError(ApiFailure.UNEXPECTED)
-    return [f"Балансы группы #{gid} (API):"] + [
-        f"Участник #{b.user_id}: {b.balance} ₽ — "
+    names = names or {}
+    return ["Кто кому должен", ""] + [
+        f"{person(names, b.user_id)} · "
         + (
-            "долгов нет"
+            "Долгов нет"
             if b.balance == "0.00"
-            else "участник должен"
+            else "Нужно вернуть " + money(b.balance.removeprefix("-"))
             if b.balance.startswith("-")
-            else "участнику должны"
+            else "Должны вернуть " + money(b.balance)
         )
         for b in result.balances
     ]
 
 
-def plan_rows(result: Plan, gid: int) -> list[str]:
+def plan_rows(result: Plan, gid: int, names: dict[int, str] | None = None) -> list[str]:
     if result.group_id != gid:
         raise ApiError(ApiFailure.UNEXPECTED)
+    names = names or {}
     return (
-        [f"План переводов группы #{gid} (API):"]
+        ["План переводов", ""]
         + [
-            f"Участник #{t.sender_id} → Участник #{t.receiver_id}: {t.amount} ₽"
+            f"{person(names, t.sender_id)} → {person(names, t.receiver_id)}\n{money(t.amount)}"
             for t in result.transfers
         ]
-        + (["По текущему плану переводов нет."] if not result.transfers else [])
+        + (
+            ["Все рассчитались. Переводов не требуется."]
+            if not result.transfers
+            else []
+        )
     )
 
 
@@ -114,16 +119,22 @@ async def show_balances(
 ) -> None:
     recovering = await viewing(state, gid)
     try:
-        await lines(message, balance_rows(await api.balances(actor, gid), gid))
+        text = (
+            "\n".join(
+                balance_rows(
+                    await api.balances(actor, gid), gid, await roster(api, actor, gid)
+                )
+            )
+            + "\n\nОжидающие, отклонённые и отменённые записи не меняют долг."
+        )
     except ApiError as error:
         text = settlement_error(error)
-    else:
-        text = "pending/rejected/cancelled не меняют баланс. Значения получены от API."
     await screen(
         message,
         state,
         text,
-        [("Обновить балансы", f"st:balances:{gid}")] + menu(gid, recovering=recovering),
+        [("Обновить", f"st:balances:{gid}")]
+        + [a for a in menu(gid, recovering=recovering) if a[1] != f"st:balances:{gid}"],
     )
 
 
@@ -132,46 +143,31 @@ async def show_plan(
 ) -> None:
     recovering = await viewing(state, gid)
     try:
-        await lines(message, plan_rows(await api.settlement_plan(actor, gid), gid))
+        text = (
+            "\n".join(
+                plan_rows(
+                    await api.settlement_plan(actor, gid),
+                    gid,
+                    await roster(api, actor, gid),
+                )
+            )
+            + "\n\nЭто рекомендации. Переведите деньги самостоятельно, затем отметьте оплату."
+        )
     except ApiError as error:
         text = settlement_error(error)
-    else:
-        text = (
-            "Это рекомендации, не факт оплаты и не обязательство. Минимальное число переводов не обещается. Просмотр ничего не создаёт. "
-            + REAL_MONEY
-        )
     await screen(
         message,
         state,
         text,
-        [("Обновить план", f"st:plan:{gid}")] + menu(gid, recovering=recovering),
+        [("Обновить", f"st:plan:{gid}")]
+        + [a for a in menu(gid, recovering=recovering) if a[1] != f"st:plan:{gid}"],
     )
-
-
-async def refresh_financials(
-    message: Message, api: BotApi, actor: int, gid: int
-) -> None:
-    # Separate API snapshots; do not derive one endpoint's result from the other.
-    for kind in ("balances", "plan"):
-        try:
-            rows = (
-                balance_rows(await api.balances(actor, gid), gid)
-                if kind == "balances"
-                else plan_rows(await api.settlement_plan(actor, gid), gid)
-            )
-            await lines(message, rows)
-        except ApiError as error:
-            await message.answer(
-                "Не удалось обновить "
-                + ("балансы: " if kind == "balances" else "план: ")
-                + settlement_error(error)
-            )
 
 
 async def pending_groups(
     message: Message, state: FSMContext, api: BotApi, actor: int, offset: int = 0
 ) -> None:
-    await state.clear()
+    await reset(state)
     await state.set_state(Navigation.menu)
     try:
         page = await api.groups(actor, offset=offset)
@@ -180,21 +176,41 @@ async def pending_groups(
             message,
             state,
             settlement_error(error),
-            [("Повторить загрузку", f"st:groups:{offset}"), ("Главное меню", "home")],
+            [("Повторить", f"st:groups:{offset}"), ("← Главное меню", "home")],
         )
         return
     await screen(
         message,
         state,
-        "Выберите группу для входящих pending."
+        "Ожидают подтверждения\nВыберите группу."
         if page.items
-        else "На этой странице групп нет.",
-        [
-            (f"{g.name[:50]} · #{g.id}", f"st:list:{g.id}:pending:incoming:0")
-            for g in page.items
-        ]
+        else "Ожидают подтверждения\nГрупп пока нет — создайте свою или примите приглашение.",
+        [(g.name[:60], f"st:list:{g.id}:pending:incoming:0") for g in page.items]
         + paging(page, "st:groups")
-        + [("Главное меню", "home")],
+        + [("← Главное меню", "home")],
+    )
+
+
+async def filters(
+    message: Message, state: FSMContext, gid: int, status: str, direction: str
+) -> None:
+    actions = [("Все состояния", f"st:list:{gid}:all:{direction}:0")] + [
+        (label, f"st:list:{gid}:{value}:{direction}:0")
+        for value, label in STATUSES.items()
+    ]
+    actions += [
+        (label, f"st:list:{gid}:{status}:{value}:0")
+        for value, label in [
+            ("incoming", "Мне"),
+            ("outgoing", "От меня"),
+            ("all", "Все направления"),
+        ]
+    ]
+    await screen(
+        message,
+        state,
+        "Какие переводы показать?\nВыберите состояние или направление.",
+        actions + [("← Назад", f"st:list:{gid}:{status}:{direction}:0")],
     )
 
 
@@ -214,62 +230,52 @@ async def show_list(
         page = await api.settlements(
             actor, gid, status=status, direction=direction, offset=offset
         )
-        if any(item.group_id != gid for item in page.items):
+        if any(s.group_id != gid for s in page.items):
             raise ApiError(ApiFailure.UNEXPECTED)
+        names = await roster(api, actor, gid)
     except ApiError as error:
         await screen(
             message,
             state,
             settlement_error(error),
-            [("Повторить загрузку", f"{prefix}:{offset}")]
-            + menu(gid, recovering=recovering),
+            [("Повторить", f"{prefix}:{offset}")] + menu(gid, recovering=recovering),
         )
         return
-    await lines(
-        message,
-        [
-            f"Переводы группы #{gid} · статус: {status or 'все'} · направление: {direction}"
-        ]
-        + [
-            f"#{s.id}: #{s.sender_id} → #{s.receiver_id}, {s.amount} ₽ · {s.status} — {STATUS_TEXT[s.status]}"
-            for s in page.items
-        ],
-    )
-    context = await load(state) if recovering else None
+    session = await load(state) if recovering else None
     actions = [
-        (f"Открыть перевод #{s.id}", f"st:detail:{gid}:{s.id}")
+        (
+            f"{STATUSES[s.status]} · {person(names, s.sender_id)} → {person(names, s.receiver_id)} · {money(s.amount)}",
+            f"st:detail:{gid}:{s.id}",
+        )
         for s in page.items
-        if context is None
-        or s.id == context.target_id
-        or s.client_request_id == context.target_key
+        if session is None
+        or s.id == session.target_id
+        or s.client_request_id == session.target_key
     ]
     actions += paging(page, prefix)
-    actions += [
-        (f"Статус: {label}", f"st:list:{gid}:{value}:{direction}:0")
-        for label, value in [
-            ("все", "all"),
-            ("pending", "pending"),
-            ("confirmed", "confirmed"),
-            ("rejected", "rejected"),
-            ("cancelled", "cancelled"),
+    if not recovering:
+        actions += [
+            ("Фильтры", f"st:filters:{gid}:{status or 'all'}:{direction}"),
+            ("Я перевёл деньги", f"st:new:{gid}"),
+            ("← В группу", f"group:{gid}"),
         ]
-    ]
-    actions += [
-        (f"Направление: {label}", f"st:list:{gid}:{status or 'all'}:{value}:0")
-        for label, value in [
-            ("входящие", "incoming"),
-            ("исходящие", "outgoing"),
-            ("все", "all"),
+    else:
+        actions += [("К восстановлению", "st:recover")]
+    text = (
+        "Переводы\n"
+        + (STATUSES[status] if status else "Все состояния")
+        + " · "
+        + {"all": "Все направления", "incoming": "Мне", "outgoing": "От меня"}[
+            direction
         ]
-    ]
-    await screen(
-        message,
-        state,
-        "Выберите запись. Актуальный статус читается через список API."
-        if page.items
-        else "На этой странице переводов нет.",
-        actions + menu(gid, recovering=recovering),
+        + "\n\n"
+        + (
+            "Откройте запись, чтобы посмотреть детали."
+            if page.items
+            else "Здесь пока нет переводов. Отметьте оплату только после передачи денег."
+        )
     )
+    await screen(message, state, text, actions)
 
 
 def allowed(value: SettlementProfile, user_id: int, action: Transition) -> bool:
@@ -291,33 +297,24 @@ async def show_record(
     if value.group_id != session.group_id:
         raise ApiError(ApiFailure.UNEXPECTED)
     profile = await api.profile(actor) if value.status == "pending" else None
-    uncertain_pending = session.uncertain == "transition" and value.status == "pending"
-    if uncertain_pending:
+    uncertain = session.uncertain == "transition" and value.status == "pending"
+    if uncertain:
         await keep(state, session)
         await state.set_state(SettlementFlow.transition_unknown)
     else:
-        await state.clear()
+        await reset(state)
         await state.set_state(Navigation.menu)
-    await lines(
-        message,
-        [
-            f"Перевод #{value.id} · группа #{value.group_id}",
-            f"Участник #{value.sender_id} → Участник #{value.receiver_id}: {value.amount} ₽",
-            f"Актуальный статус API: {value.status} — {STATUS_TEXT[value.status]}",
-            f"Создан: {value.created_at.isoformat()}",
-            f"Завершён: {value.resolved_at.isoformat() if value.resolved_at else 'ещё нет'}",
-        ],
-    )
-    if value.status == "confirmed":
-        await refresh_financials(message, api, actor, value.group_id)
-    actions: list[tuple[str, str]] = []
+    names = await roster(api, actor, value.group_id)
+    text = f"{STATUSES[value.status]}\n{money(value.amount)}\n\n{person(names, value.sender_id)} → {person(names, value.receiver_id)}\n{STATUS_TEXT[value.status]}"
+    if uncertain:
+        text += "\n\nОтвет на прежнее действие неизвестен. Допустим только повтор того же действия."
+    actions = []
     if profile is not None:
-        if uncertain_pending:
+        if uncertain:
             if session.operation and allowed(value, profile.id, session.operation):
                 actions.append(("Повторить то же действие", "st:resolve"))
         else:
-            transitions: tuple[Transition, ...] = ("confirm", "reject", "cancel")
-            for action in transitions:
+            for action in ("confirm", "reject", "cancel"):
                 if allowed(value, profile.id, action):
                     actions.append(
                         (
@@ -325,15 +322,10 @@ async def show_record(
                             f"st:ask:{value.group_id}:{value.id}:{action}",
                         )
                     )
-    actions += [("Обновить статус", f"st:detail:{value.group_id}:{value.id}")]
+    actions += [("Обновить", f"st:detail:{value.group_id}:{value.id}")]
     await screen(
         message,
         state,
-        (
-            "Результат прежнего запроса неизвестен; pending — текущий снимок, запрос ещё мог выполняться. Допустим только явный повтор того же перехода. "
-            if uncertain_pending
-            else ""
-        )
-        + REAL_MONEY,
-        actions + menu(value.group_id, recovering=uncertain_pending),
+        text + "\n\n" + REAL_MONEY,
+        actions + menu(value.group_id, recovering=uncertain),
     )

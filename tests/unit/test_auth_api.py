@@ -79,7 +79,13 @@ def test_registration_hashes_password_and_exposes_only_profile(
         "/auth/register", json={"email": "ALICE@example.com", "password": password}
     )
     assert response.status_code == 201
-    assert set(response.json()) == {"id", "email", "telegram_id", "created_at"}
+    assert set(response.json()) == {
+        "id",
+        "email",
+        "telegram_id",
+        "created_at",
+        "display_name",
+    }
     assert response.json()["email"] == "alice@example.com"
     stored = session.add.call_args.args[0]
     assert stored.password_hash.startswith("$argon2id$")

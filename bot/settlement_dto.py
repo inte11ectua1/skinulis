@@ -14,6 +14,7 @@ from pydantic import (
 
 from bot.dto import EntityId, WireModel
 from bot.expense_dto import Balance
+from bot.money_input import parse_money
 
 type SettlementStatus = Literal["pending", "confirmed", "rejected", "cancelled"]
 type Direction = Literal["incoming", "outgoing", "all"]
@@ -48,11 +49,7 @@ class Plan(SettlementWire):
 
 
 def amount_input(value: str) -> str:
-    value = TypeAdapter(SettlementAmount).validate_python(value)
-    if value == "0.00":
-        raise ValueError("Enter a positive canonical RUB string")
-    # No expense cap, maximum/debt/min computation or rounding. API validates BIGINT.
-    return value
+    return TypeAdapter(SettlementAmount).validate_python(parse_money(value))
 
 
 class SettlementCreate(SettlementWire):
@@ -60,7 +57,12 @@ class SettlementCreate(SettlementWire):
     amount: SettlementAmount
     client_request_id: UUID
 
-    _positive = field_validator("amount")(amount_input)
+    @field_validator("amount")
+    @classmethod
+    def positive(cls, value: str) -> str:
+        if value == "0.00":
+            raise ValueError("Use a positive amount")
+        return value
 
 
 class SettlementProfile(SettlementWire):

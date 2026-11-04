@@ -3,6 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Response
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
@@ -90,14 +91,23 @@ def build_router(*, internal: bool = False) -> APIRouter:
         offset: Annotated[int, Query(ge=0)] = 0,
     ) -> Page[MemberProfile]:
         group = groups.require_member(session, group_id, user.id)
+        entries = groups.list_members(session, group_id, limit, offset)
+        names = dict(
+            session.execute(
+                select(User.id, User.display_name).where(
+                    User.id.in_([m.user_id for m in entries])
+                )
+            ).all()
+        )
         return Page(
             items=[
                 MemberProfile(
                     user_id=member.user_id,
+                    display_name=names.get(member.user_id),
                     joined_at=member.joined_at,
                     is_owner=member.user_id == group.owner_id,
                 )
-                for member in groups.list_members(session, group_id, limit, offset)
+                for member in entries
             ],
             limit=limit,
             offset=offset,

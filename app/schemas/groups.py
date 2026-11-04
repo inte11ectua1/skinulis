@@ -103,11 +103,17 @@ class MemberProfile(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [
-                {"user_id": 1, "joined_at": "2026-11-03T00:00:00Z", "is_owner": True}
+                {
+                    "user_id": 1,
+                    "display_name": "Алиса",
+                    "joined_at": "2026-11-03T00:00:00Z",
+                    "is_owner": True,
+                }
             ]
         }
     )
     user_id: UserId
+    display_name: str | None = None
     joined_at: UTCDateTime
     is_owner: bool
 

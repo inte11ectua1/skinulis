@@ -185,3 +185,23 @@ API/bot не печатают Settings, exception text, request bodies/headers �
 Production Docker json-file rotation: max-size=5m, max-file=3, compress=true у
 api/bot/migrate/db/caddy; применяется при разрешённом создании новых контейнеров.
 Ни secrets на EC2, ни GitHub Environment policies T-10 не изменяет.
+
+
+## Локальный UX #84
+
+Генерируемый `~/.config/skinulis/ux84.env` (0600, вне Git) содержит отдельные
+POSTGRES_*, JWT_SECRET_KEY, BOT_SERVICE_TOKEN, пустой TELEGRAM_BOT_TOKEN,
+APP_ENV=test, уникальные COMPOSE_PROJECT_NAME/LOCAL_UX_IMAGE и loopback API_PORT.
+Значения не копируются из production. См. [локальный runbook](operations/LOCAL_TELEGRAM_UX.md).
+
+`EXPECTED_BOT_USERNAME` — optional BotSettings, default null, только runtime.
+Локальный overlay фиксирует `skinulis_testing_bot`: при разрешённом запуске `getMe`
+проверяет username до polling. В production значение не менялось; дополнительный
+запрос при null не выполняется. Эта проверка не заменяет разрешение владельца и
+не определяет, есть ли polling того же токена на другом хосте.
+
+
+В доработке после live-feedback тот же EXPECTED_BOT_USERNAME также ограничивает
+регистрацию тестового командного меню: SetMyCommands/SetChatMenuButton вызываются
+только при совпавшем `getMe.username == skinulis_testing_bot`. Для production с null
+настройка меню не выполняется. Дополнительных секретов/переменных не вводится.

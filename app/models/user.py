@@ -23,6 +23,11 @@ class User(Base):
         PrimaryKeyConstraint(name="pk_users"),
         UniqueConstraint("email", name="uq_users_email"),
         UniqueConstraint("telegram_id", name="uq_users_telegram_id"),
+        CheckConstraint(
+            "display_name IS NULL OR (length(display_name) BETWEEN 1 AND 64 "
+            "AND display_name = btrim(display_name) AND display_name !~ '[[:cntrl:]]')",
+            name="ck_users_display_name",
+        ),
         CheckConstraint("id > 0", name="ck_users_id_positive"),
         CheckConstraint("telegram_id > 0", name="ck_users_telegram_id_positive"),
         CheckConstraint(
@@ -46,6 +51,7 @@ class User(Base):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    display_name: Mapped[str | None] = mapped_column(String(64))
     email: Mapped[str | None] = mapped_column(String(254))
     password_hash: Mapped[str | None] = mapped_column(String(255))
     telegram_id: Mapped[int | None] = mapped_column(BigInteger)

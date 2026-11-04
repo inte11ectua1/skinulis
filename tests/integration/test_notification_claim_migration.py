@@ -16,7 +16,7 @@ from app.core.security import create_access_token
 from app.main import create_app
 
 pytestmark = pytest.mark.integration
-HEAD = "0006_settlement_notification_claim"
+HEAD = "0007_user_display_name"
 PREVIOUS = "0005_expense_replay_version"
 
 

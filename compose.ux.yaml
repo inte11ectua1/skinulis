@@ -1,0 +1,38 @@
+# Local-only overlay: docker compose -f compose.yaml -f compose.ux.yaml.
+# scripts/local_ux.py enforces a separate project/env/image and loopback API.
+x-ux-image: &ux-image
+  image: ${LOCAL_UX_IMAGE:?Use scripts/local_ux.py init}
+
+services:
+  db:
+    networks: [database]
+  migrate:
+    <<: *ux-image
+    networks: [database]
+  api:
+    <<: *ux-image
+    networks: [application, database, local_edge]
+  bot:
+    <<: *ux-image
+    profiles: [polling]
+    container_name: ${COMPOSE_PROJECT_NAME:?Use a separate local project}-bot
+    command: [python, -m, bot.main]
+    environment:
+      API_BASE_URL: http://api:8000
+      BOT_SERVICE_TOKEN: ${BOT_SERVICE_TOKEN:?Set local BOT_SERVICE_TOKEN}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      EXPECTED_BOT_USERNAME: skinulis_testing_bot
+    networks: [application, telegram]
+    restart: "no"
+    deploy: {replicas: 1}
+    depends_on:
+      api: {condition: service_healthy}
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: "3"}
+
+networks:
+  application: {internal: true}
+  database: {internal: true}
+  local_edge: {}
+  telegram: {}

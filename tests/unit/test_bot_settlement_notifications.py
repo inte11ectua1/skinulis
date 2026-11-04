@@ -15,6 +15,7 @@ from pydantic import SecretStr, ValidationError
 from app.schemas.settlements import NotificationClaim as BackendClaim
 from bot.api_client import ApiClient, ApiError
 from bot.main import create_dispatcher
+from bot.presentation import STATUSES
 from bot.settlement_dto import NotificationClaim
 from bot.settlement_notifications import NOTICE
 from tests.unit.test_bot_settlements import ROOT, SettlementJourney
@@ -54,10 +55,10 @@ async def test_verified_recipient_and_no_claim_on_reads_or_duplicate_update(
     assert not request.content and request.headers["X-Telegram-ID"] == "123"
     ordered = [r.url.path for r in j.server.requests]
     assert ordered.index(CREATE) < ordered.index(CLAIM) < len(ordered) - 1
-    assert ordered[-1] == "/internal/users/me"
+    assert "/internal/users/me" in ordered and ordered[-1].endswith("/members")
     await j.ui.click(old)
     await j.choose("История переводов")
-    await j.choose("Открыть перевод #123")
+    await j.choose("@st:detail:10:123")
     # Reuse an already processed update_id, then simulate MemoryStorage loss.
     update = j.ui.update_id
     j.ui.update_id -= 1
@@ -105,7 +106,7 @@ async def test_delivery_failure_keeps_pending_and_never_reposts_or_leaks(
     assert len(j.calls("POST", CREATE)) == len(j.calls("POST", CLAIM)) == 1
     assert len(notices(j)) == 1
     assert "settlement_session" not in await j.ui.state.get_data()
-    assert "Актуальный статус API: pending" in j.text
+    assert "Баланс изменится после подтверждения" in j.text
     for private in [secret, "987654321"]:
         assert private not in caplog.text + j.text
     assert "notification_delivery_failed" in caplog.text
@@ -122,9 +123,9 @@ async def test_no_binding_consumes_claim_but_incoming_menu_still_works(
     assert not notices(j) and j.server.claimed == {123}
     assert len(j.calls("POST", CREATE)) == 1
     j.server.owner = 10
-    await j.group()
-    await j.choose("Ожидают подтверждения")
-    assert "Открыть перевод #123" in str(j.ui.sent[-1].reply_markup)
+    await j.ui.click("menu:pending")
+    await j.choose("@st:list:10:pending:incoming:0")
+    assert "st:detail:10:123" in j.ui.last_actions
     assert len(j.calls("POST", CLAIM)) == 1
 
 
@@ -145,7 +146,7 @@ async def test_lost_create_recovery_claims_once_and_terminal_replay_never_sends(
     assert len(posts) == 2 and posts[0].content == posts[1].content
     assert len(j.calls("POST", CLAIM)) == 1
     assert len(notices(j)) == (0 if terminal else 1)
-    assert f"Актуальный статус API: {terminal or 'pending'}" in j.text
+    assert STATUSES[terminal or "pending"] in j.text
 
 
 @pytest.mark.parametrize("kind", ["server", "timeout", "network", "malformed"])
@@ -165,7 +166,7 @@ async def test_claim_error_has_no_send_or_financial_retry(
     assert not notices(j)
     assert len(j.calls("POST", CREATE)) == len(j.calls("POST", CLAIM)) == 1
     assert j.server.saved[123]["status"] == "pending"
-    assert "Актуальный статус API: pending" in j.text
+    assert "Баланс изменится после подтверждения" in j.text
 
 
 @pytest.mark.parametrize("status", [200, 204])

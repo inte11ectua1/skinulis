@@ -14,6 +14,7 @@ class SettlementSession(BaseModel):
     receiver_id: int | None = None
     amount: str = ""
     members: list[int] = Field(default_factory=list)
+    names: dict[int, str] = Field(default_factory=dict)
     frozen: str | None = None
     target_id: int | None = None
     target_key: UUID | None = None
