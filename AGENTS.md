@@ -47,8 +47,9 @@ PR #85 merged; main/release `c9ec9ce`, main CI5/5, protected deploy success с
 polling=true. Владелец подтвердил production UI и меню BotFather. Не считать старые
 POLLING OFF/current SHA в исторических отчётах текущим состоянием.
 [Актуальный аудит](docs/reviews/POST_RELEASE_AUDIT_2026-11-04.md),
-[STATUS](docs/STATUS.md) и GitHub Issues — рабочие точки. #84/#79/#80 открыты;
-новых дублирующих M6 Issues не создавать. G6/официальный DoD не закрыты:
+[STATUS](docs/STATUS.md) и GitHub Issues — рабочие точки. #84 закрыта по решению владельца с раскрытием незавершённых независимых проверок;
+#80 закрыта как `not_planned`, отдельный M7 исключён из roadmap.
+Открыта только единая #79 (M6); новых дублирующих M6 Issues не создавать. G6/официальный DoD не закрыты:
 routing FAIL, p95, исторические approvals/admin bypass и оставшаяся приёмка раскрыты.
 Read-only AWS runtime04.11 после browser login VERIFIED: healthy services, один polling, actual0007 и прежний volume. Production read-only аудит не
 разрешает deploy/restart/миграции/запуск или остановку polling/изменение данных.

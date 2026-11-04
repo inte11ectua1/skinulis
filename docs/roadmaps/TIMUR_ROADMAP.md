@@ -1,4 +1,4 @@
-> **Актуализация 04.11.2026.** Текущий порядок: #84 (UX merged/released; owner acceptance и formal review gaps), #79 (единый M6 у Тимура, open/PARTIALLY), #80 (M7 open; подготовка, не завершённая защита). M5 closed; новый release `c9ec9ce` уже deployed с polling=true. Старые секции ниже — этапные срезы; не создавать отдельные L-07/O-09/M6 задачи и не утверждать G6 PASS.
+> **Решение владельца 04.11.2026.** UX Issue #84 закрыта как completed (с раскрытыми исключениями); #80 закрыта как not_planned. Отдельный этап M7 исключён из текущего плана. Действующая незавершённая фаза — M6 #79 у Тимура, G6 остаётся PARTIALLY. M5 closed, production `c9ec9ce` с polling=true. Ниже сохранены выполненные задачи и их доказательства; не создавать отдельные M6 Issues.
 > [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
 
 # Тимур — личный roadmap
@@ -18,7 +18,6 @@
 | T-09 | M5 | GHCR publish and VPS Docker Compose SSH CD, Caddy HTTPS, deploy job | T-04 | after merge SHA-tag image and /version matching |
 | T-10 | M5 | JSON logs, request_id, rotation, health, rollback runbook | T-09 | failure visible, logs no secrets |
 | T-11 | M6 | DoD audit, cold-start other machine, release smoke, evidence | all owners | evidence linked in STATUS |
-| T-12 | M7 | PR->CI->approval->merge->CD demonstration | T-09/11 | live rehearsed and backup successful run linked |
 
 ## Завершённая фаза M1 (27.10.2026)
 

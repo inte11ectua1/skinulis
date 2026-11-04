@@ -4,7 +4,9 @@
 
 **Актуальный handoff 04.11.2026:** PR85 merged, main/release `c9ec9ce`;
 protected deploy41836839608 с polling=true успешен. Владелец подтвердил UI и меню
-production через BotFather. #84/#79/#80 open; M6 не принят полностью, M7 не пройден.
+production через BotFather. #84 закрыта completed по решению владельца с явными
+UX-приёмочными исключениями; #80 закрыта not_planned и M7 отменён.
+Единственная открытая задача этапного плана — M6 #79; полный DoD не принят.
 [Свежий аудит](../reviews/POST_RELEASE_AUDIT_2026-11-04.md) / [STATUS](../STATUS.md)
 заменяют старые текущие срезы. Общие M6 задачи у Тимура, не создавать новые L-07/O-09.
 Есть routing FAIL (пустой200 foreign-authority без доказанной утечки), p95>500ms,

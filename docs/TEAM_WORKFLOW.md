@@ -11,9 +11,11 @@
 
 ## Текущая очередь (04.11.2026)
 
-M5 closed; #84 UX merged PR85 и production release `c9ec9ce`. M6 остаётся единой
-[#79](https://github.com/inte11ectua1/skinulis/issues/79), ответственный Тимур,
-консультации/review Олега и Леры без дублирующих задач. M7 — #80, open.
+M5 closed; #84 UX merged PR85, deployed и **closed/completed по решению владельца**
+с раскрытыми исключениями. M6 остаётся единой [#79](https://github.com/inte11ectua1/skinulis/issues/79),
+ответственный Тимур; консультации/review Олега и Леры без дублирующих задач.
+Отдельный M7 отменён: #80 **closed/not_planned**; соответствующие T-12/O-10/L-08
+исключены из актуальных roadmaps.
 [Аудит](reviews/POST_RELEASE_AUDIT_2026-11-04.md) отделяет owner live-подтверждение
 от полной независимой учебной приёмки. 41/52 merged PR без APPROVED, включая #85;
 Environment approval deploy не является code review. Main enforce_admins=false;
