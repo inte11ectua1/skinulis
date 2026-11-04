@@ -2,22 +2,27 @@
 
 **Актуализация: 04.11.2026.** M1–M5 приняты владельцем по объёму реализации;
 UX #84 реализован и объединён [PR #85](https://github.com/inte11ectua1/skinulis/pull/85).
-Main/release `c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c`; [main CI](https://github.com/inte11ectua1/skinulis/actions/runs/41824303985)
+Последний подтверждённый production release `c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c`; [его main CI](https://github.com/inte11ectua1/skinulis/actions/runs/41824303985)
 5/5, 1382 unit +458 PostgreSQL, branch coverage94,10%.
 [Protected deploy](https://github.com/inte11ectua1/skinulis/actions/runs/41836839608)
 success с независимым Environment approval Леры и enable_polling=true.
 Публичный /version совпал; health/database/HTTPS работают. Владелец подтвердил новый
 UI @skinulis_expenses_bot и ручное меню BotFather. Read-only runtime follow-up04.11 — VERIFIED (healthy, один polling,0007, прежний volume).
 
-**Текущие Issues:** #84 open (оценка финальной UX-приёмки), #79 open (M6 Acceptance,
-ответственный Тимур), #80 open (M7 — подготовка защиты, не пройдена).
+**Текущие Issues:** #84 **closed/completed** (UX принят владельцем с документированными исключениями),
+#79 **open** (M6 Acceptance, ответственный Тимур). #80 **closed/not_planned**:
+отдельный M7 отменён по решению владельца 04.11.2026; его задачи не планируются.
+После PR #86 текущий `main` — `1d668e59cb994de45dc1e9c853a61eb6579d4628`;
+[CI](https://github.com/inte11ectua1/skinulis/actions/runs/41862624252) 5/5.
+[Автоматический Release](https://github.com/inte11ectua1/skinulis/actions/runs/41866257675)
+остановился на guard, publish/deploy не запускались; production остаётся на предыдущем подтверждённом релизе.
 [Актуальный аудит](docs/reviews/POST_RELEASE_AUDIT_2026-11-04.md) ·
 [USER_GUIDE](docs/USER_GUIDE.md) · [3-user сценарий](docs/reviews/M6_THREE_USER_DEMO.md) ·
 [STATUS](docs/STATUS.md). Исторические отчёты не доказывают новый runtime.
 
 **G6 не закрыт:** routing FAIL absolute-form/foreign authority (пустой200, без доказанной
 утечки), p95>500ms, 41/52 merged PR без независимого APPROVED, admin bypass и формальные
-logging/live-E2E/defense gaps. Environment approval не заменяет PR review;
+logging/live-E2E/учебные приёмочные пробелы. Environment approval не заменяет PR review;
 согласие владельца не является исключением преподавателя.
 Новые deploy/restart/migrations/polling/config/данные production или AWS changes —
 только по отдельному разрешению. Этот документационный аудит ничего из этого не выполняет.
