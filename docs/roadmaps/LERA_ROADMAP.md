@@ -1,4 +1,4 @@
-> **Актуализация 04.11.2026.** Текущий порядок: #84 (UX merged/released; owner acceptance и formal review gaps), #79 (единый M6 у Тимура, open/PARTIALLY), #80 (M7 open; подготовка, не завершённая защита). M5 closed; новый release `c9ec9ce` уже deployed с polling=true. Старые секции ниже — этапные срезы; не создавать отдельные L-07/O-09/M6 задачи и не утверждать G6 PASS.
+> **Решение владельца 04.11.2026.** UX Issue #84 закрыта как completed (с раскрытыми исключениями); #80 закрыта как not_planned. Отдельный этап M7 исключён из текущего плана. Действующая незавершённая фаза — M6 #79 у Тимура, G6 остаётся PARTIALLY. M5 closed, production `c9ec9ce` с polling=true. Ниже сохранены выполненные задачи и их доказательства; не создавать отдельные M6 Issues.
 > [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
 
 # Лера — личный roadmap
@@ -14,7 +14,6 @@
 | L-05 | M4 | balances, plan, mark partial, incoming pending, confirm/reject/cancel | O-06/07 contract | до confirm балансы прежние, после обновились |
 | L-06 | M5 | Retry UUID, timeout, errors/UX regression, UI screenshots | L-03/04/05 | 409/5xx понятны, timeout не удваивает запрос |
 | L-07 | M6 | User guide, E2E smoke, сценарий live demo | all API integrated | инструкция от /start до confirm для 3 users |
-| L-08 | M7 | Репетиция бот-демо, участие в вопросах | L-07 | 5-минутный live demo репетирован |
 
 ## Завершённая фаза M1 (27.10.2026)
 
