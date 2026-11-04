@@ -1,9 +1,9 @@
-> **Актуализация 04.11.2026.** Текущий порядок: #84 (UX merged/released; owner acceptance и formal review gaps), #79 (единый M6 у Тимура, open/PARTIALLY), #80 (M7 open; подготовка, не завершённая защита). M5 closed; новый release `c9ec9ce` уже deployed с polling=true. Старые секции ниже — этапные срезы; не создавать отдельные L-07/O-09/M6 задачи и не утверждать G6 PASS.
+> **Актуализация 04.11.2026.** Текущий порядок: #84 закрыта владельцем (UX merged/released, исключения задокументированы); #79 — единый M6 у Тимура, open/PARTIALLY. #80 закрыта как not_planned, отдельный этап M7 отменён и удалён из действующего roadmap. M5 closed; новый release `c9ec9ce` уже deployed с polling=true. Старые секции ниже — этапные срезы; не создавать отдельные L-07/O-09/M6 задачи и не утверждать G6 PASS.
 > [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
 
 # Общий roadmap (зависимости, интеграция, gate)
 
-**Актуальный статус 03.11.2026:** M1–M5 **завершены по принятому объёму реализации и первичному rollout**, включая T-09 #59, T-10 #60, O-08 #61, L-06 #62 и O-09 #76, все closed. [M5 closeout и handoff M6](../operations/M5_CLOSEOUT_M6_HANDOFF.md), [STATUS](../STATUS.md). G5 технически подтверждён первым public rollout (SHA `f7020cd`); baseline M6 `main` `638a976` ещё не был развёрнут. G1 (закрытая `not_planned` T-01 #2), G2/G3/G4 live Telegram и независимые GitHub review — отдельные **незакрытые вопросы приемки курса**. M6 выполняется Тимуром в единой [#79](https://github.com/inte11ectua1/skinulis/issues/79): DoD, финансы, offline Telegram, guide/demo. [Отчёт приёмки](../reviews/M6_ACCEPTANCE_REPORT.md); G6 PARTIALLY, не закрыт. M7 — [#80](https://github.com/inte11ectua1/skinulis/issues/80). M0–M7 — фазы, не календарные недели. Исторические вехи ниже не переписываются задним числом.
+**Актуальный статус 03.11.2026:** M1–M5 **завершены по принятому объёму реализации и первичному rollout**, включая T-09 #59, T-10 #60, O-08 #61, L-06 #62 и O-09 #76, все closed. [M5 closeout и handoff M6](../operations/M5_CLOSEOUT_M6_HANDOFF.md), [STATUS](../STATUS.md). G5 технически подтверждён первым public rollout (SHA `f7020cd`); baseline M6 `main` `638a976` ещё не был развёрнут. G1 (закрытая `not_planned` T-01 #2), G2/G3/G4 live Telegram и независимые GitHub review — отдельные **незакрытые вопросы приемки курса**. M6 выполняется Тимуром в единой [#79](https://github.com/inte11ectua1/skinulis/issues/79): DoD, финансы, offline Telegram, guide/demo. [Отчёт приёмки](../reviews/M6_ACCEPTANCE_REPORT.md); G6 PARTIALLY, не закрыт. В первоначальном плане M7 относился к #80; 04.11 владелец отменил эту фазу (#80 closed/not_planned). Действующие фазы M0–M6, не календарные недели. Исторические вехи ниже не переписываются задним числом.
 
 | Фаза | Тимур (T) | Олег (O) | Лера (L) | Общий gate |
 |---|---|---|---|---|
@@ -14,7 +14,6 @@
 | M4 Balances | T-08 audit locking/idempotency | O-06 балансы и settlement plan; O-07 компенсации | L-05 баланс, переводы, подтверждения | Частичный перевод обновляет баланс только после confirm |
 | M5 Delivery (закрыт) | T-09 #59 GHCR/CD/VPS/Caddy, T-10 #60 логи; O-09 #76 pool fix | O-08 #61 PG/finance/load | L-06 #62 offline E2E/UX | Первичный GHCR/HTTPS G5 evidence; O-09 p95 waiver |
 | M6 Acceptance (#79, выполняется) | Тимур: единый DoD audit, clean start, finance QA, offline Telegram, guide/demo | Консультация/review, отдельная Issue не нужна | Консультация/review, отдельная Issue не нужна | G6 PARTIALLY: технический QA есть, human/process/live/formal gaps раскрыты |
-| M7 Defense | T-12 rehearsal PR to deploy | O-10 defense calculations/Q&A | L-08 Telegram live demonstration | 7m presentation, 5m live-demo, 8m Q&A |
 
 ## Итог M1 — принято в main (27.10.2026)
 
