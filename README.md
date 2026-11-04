@@ -8,7 +8,7 @@ production https://3-25-53-31.sslip.io работает на `c9ec9ce`.
 success с polling=true и Environment approval Леры. Владелец подтвердил новый
 @skinulis_expenses_bot и меню BotFather. Rollout flag=false.
 [Текущий аудит/ограничения](docs/reviews/POST_RELEASE_AUDIT_2026-11-04.md):
-M6 не закрыт, routing absolute-form FAIL; свежий runtime AWS NOT VERIFIED.
+M6 не закрыт, routing absolute-form FAIL; read-only runtime follow-up04.11 VERIFIED.
 Датированные M1–M5 срезы ниже — история, не текущая версия/статус polling.
 
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.

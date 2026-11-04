@@ -1,6 +1,6 @@
 {
   "audit_date": "2026-11-04",
-  "scope": "read-only external production/GitHub/GHCR, code/doc audit; no runtime mutations or Telegram API calls",
+  "scope": "read-only external/GitHub/GHCR + pinned SSH-over-SSM runtime follow-up after owner-authorized AWS browser login; no runtime mutations or Telegram API calls",
   "repository_main": "git:c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c",
   "github": {
     "pr85_merged": true,
@@ -602,15 +602,317 @@
     "conclusion": "FAIL expected400/404, no internal data observed"
   },
   "runtime": {
-    "aws_login": "expired; GetCallerIdentity failed without returning account",
-    "account_instance_region_check": "NOT VERIFIED",
-    "containers": "NOT VERIFIED",
-    "polling_process_count": "NOT VERIFIED",
-    "alembic_actual": "NOT VERIFIED",
-    "expected_code_head": "0007_user_display_name",
-    "postgresql_volume_retained": "NOT VERIFIED",
-    "restarts_oom_logs": "NOT VERIFIED",
-    "actual_running_digest": "NOT VERIFIED"
+    "initial_attempt": "AWS CLI session expired; later resolved by owner-authorized standard browser login",
+    "followup": "VERIFIED current read-only snapshot",
+    "aws": {
+      "account": "621150878773",
+      "instance_id": "i-0c920378dd242af2b",
+      "region": "ap-southeast-2",
+      "state": "running",
+      "public_ip": "3.25.53.31",
+      "architecture": "x86_64",
+      "inbound_rules": [
+        {
+          "protocol": "tcp",
+          "from": 80,
+          "to": 80,
+          "public_ipv4": true,
+          "public_ipv6": false
+        },
+        {
+          "protocol": "tcp",
+          "from": 443,
+          "to": 443,
+          "public_ipv4": true,
+          "public_ipv6": false
+        }
+      ]
+    },
+    "server": {
+      "checked_at": "2026-11-04T14:37:44.018947+00:00",
+      "scope": "read-only metadata; no env/secrets/user records; no lifecycle or database writes",
+      "current_release": {
+        "sha": "git:c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c",
+        "image": "ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+        "polling": true,
+        "expected_sha_matches": true
+      },
+      "containers": [
+        {
+          "service": "bot",
+          "status": "running",
+          "running": true,
+          "health": "healthy",
+          "exit_code": 0,
+          "oom_killed": false,
+          "restart_count": 0,
+          "started_at": "2026-11-04T13:30:31.810641349Z",
+          "configured_image": "ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "image_id": "sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "logging": {
+            "Config": {
+              "compress": "true",
+              "max-file": "3",
+              "max-size": "5m"
+            },
+            "Type": "json-file"
+          },
+          "port_bindings": {},
+          "networks": [
+            "skinulis-production_application",
+            "skinulis-production_telegram"
+          ],
+          "volumes": []
+        },
+        {
+          "service": "caddy",
+          "status": "running",
+          "running": true,
+          "health": "healthy",
+          "exit_code": 0,
+          "oom_killed": false,
+          "restart_count": 0,
+          "started_at": "2026-11-04T13:30:30.424651666Z",
+          "configured_image": "caddy:2.11.7-alpine@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5",
+          "image_id": "sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5",
+          "logging": {
+            "Config": {
+              "compress": "true",
+              "max-file": "3",
+              "max-size": "5m"
+            },
+            "Type": "json-file"
+          },
+          "port_bindings": {
+            "443/tcp": [
+              {
+                "HostIp": "",
+                "HostPort": "443"
+              }
+            ],
+            "80/tcp": [
+              {
+                "HostIp": "",
+                "HostPort": "80"
+              }
+            ]
+          },
+          "networks": [
+            "skinulis-production_application",
+            "skinulis-production_edge"
+          ],
+          "volumes": [
+            {
+              "name": "skinulis-production-caddy-config",
+              "destination": "/config"
+            },
+            {
+              "name": "skinulis-production-caddy-data",
+              "destination": "/data"
+            }
+          ]
+        },
+        {
+          "service": "api",
+          "status": "running",
+          "running": true,
+          "health": "healthy",
+          "exit_code": 0,
+          "oom_killed": false,
+          "restart_count": 0,
+          "started_at": "2026-11-04T13:30:24.013623277Z",
+          "configured_image": "ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "image_id": "sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "logging": {
+            "Config": {
+              "compress": "true",
+              "max-file": "3",
+              "max-size": "5m"
+            },
+            "Type": "json-file"
+          },
+          "port_bindings": {},
+          "networks": [
+            "skinulis-production_application",
+            "skinulis-production_database"
+          ],
+          "volumes": []
+        },
+        {
+          "service": "migrate",
+          "status": "exited",
+          "running": false,
+          "health": "not configured",
+          "exit_code": 0,
+          "oom_killed": false,
+          "restart_count": 0,
+          "started_at": "2026-11-04T13:30:19.914074931Z",
+          "configured_image": "ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "image_id": "sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+          "logging": {
+            "Config": {
+              "compress": "true",
+              "max-file": "3",
+              "max-size": "5m"
+            },
+            "Type": "json-file"
+          },
+          "port_bindings": {},
+          "networks": [
+            "skinulis-production_database"
+          ],
+          "volumes": []
+        },
+        {
+          "service": "db",
+          "status": "running",
+          "running": true,
+          "health": "healthy",
+          "exit_code": 0,
+          "oom_killed": false,
+          "restart_count": 0,
+          "started_at": "2026-11-02T09:08:04.281442266Z",
+          "configured_image": "postgres:17.11-bookworm@sha256:858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27",
+          "image_id": "sha256:858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27",
+          "logging": {
+            "Config": {
+              "compress": "true",
+              "max-file": "3",
+              "max-size": "5m"
+            },
+            "Type": "json-file"
+          },
+          "port_bindings": {},
+          "networks": [
+            "skinulis-production_database"
+          ],
+          "volumes": [
+            {
+              "name": "skinulis-production-postgres",
+              "destination": "/var/lib/postgresql/data"
+            }
+          ]
+        }
+      ],
+      "running_image": {
+        "id": "sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf",
+        "repo_digests": [
+          "ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809e13a1c30c5f4251e97cbf"
+        ],
+        "revision": "git:c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c",
+        "source": "https://github.com/inte11ectua1/skinulis",
+        "expected_revision_matches": true,
+        "release_digest_matches": true,
+        "api_bot_same_image": true
+      },
+      "postgresql_volumes": [
+        {
+          "name": "skinulis-production-postgres",
+          "created_at": "2026-11-01T20:22:25Z",
+          "driver": "local",
+          "matches_historical_identity": true
+        }
+      ],
+      "alembic_revision": [
+        "0007_user_display_name"
+      ],
+      "runtime_role": {
+        "login": true,
+        "superuser": false,
+        "createdb": false,
+        "createrole": false,
+        "replication": false,
+        "bypassrls": false
+      },
+      "sql_session_readonly": true,
+      "polling": {
+        "host_bot_main_count": 1,
+        "init_forwarder_count_excluded": 1,
+        "unreadable_proc_cmdlines": 0,
+        "containers_with_bot_main": [
+          {
+            "service": "bot",
+            "expected_project": true,
+            "bot_main_count": 1
+          }
+        ],
+        "running_bot_service_containers": 1,
+        "other_running_containers": 0
+      },
+      "logs": [
+        {
+          "service": "bot",
+          "scope": "last200 including startup",
+          "lines": 25,
+          "json_objects": 25,
+          "read_ok": true,
+          "error_critical_count": 0,
+          "obvious_sensitive_fields": false,
+          "token_shape_match_count": 0,
+          "required_fields_present": true,
+          "unexpected_field_count": 0,
+          "non_null_request_ids": 24
+        },
+        {
+          "service": "caddy",
+          "scope": "last200 including startup",
+          "lines": 19,
+          "json_objects": 19,
+          "read_ok": true,
+          "error_critical_count": 0,
+          "obvious_sensitive_fields": false,
+          "token_shape_match_count": 0
+        },
+        {
+          "service": "api",
+          "scope": "last30m capped200 lines",
+          "lines": 200,
+          "json_objects": 200,
+          "read_ok": true,
+          "error_critical_count": 0,
+          "obvious_sensitive_fields": false,
+          "token_shape_match_count": 0,
+          "required_fields_present": true,
+          "unexpected_field_count": 0,
+          "non_null_request_ids": 100
+        },
+        {
+          "service": "migrate",
+          "scope": "last200 including startup",
+          "lines": 5,
+          "json_objects": 5,
+          "read_ok": true,
+          "error_critical_count": 0,
+          "obvious_sensitive_fields": false,
+          "token_shape_match_count": 0,
+          "required_fields_present": true,
+          "unexpected_field_count": 0,
+          "non_null_request_ids": 0,
+          "migration_started_count": 1,
+          "migration_completed_count": 1
+        }
+      ],
+      "resources": {
+        "memory": {
+          "MemTotal_kib": 1951736,
+          "MemAvailable_kib": 1010696,
+          "SwapTotal_kib": 2097148,
+          "SwapFree_kib": 2096880
+        },
+        "disk_total_bytes": 19682557952,
+        "disk_free_bytes": 13210943488,
+        "load_average": [
+          0.32666015625,
+          0.2001953125,
+          0.12353515625
+        ],
+        "docker_version": "29.9.2"
+      },
+      "last30m_events": {}
+    },
+    "ssm_status": "Online",
+    "ssh_host_key_policy": "StrictHostKeyChecking=yes; existing pinned dedicated known_hosts; no fallback",
+    "backup_restore": "NOT VERIFIED in this follow-up; not executed"
   },
   "owner_reported": {
     "source": "explicit owner task04.11.2026; not independently replayed",

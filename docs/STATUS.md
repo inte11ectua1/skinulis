@@ -9,8 +9,9 @@ branch **94,10%**. Release41836839608 guard/publish/deploy success,
 Environment approval **Valeria18-new**, input polling=true, rollout flag прочитан **false**.
 Свежие HTTPS/health(database=ok)/version/docs/OpenAPI PASS; exact SHA совпал.
 **Routing FAIL сохраняется:** foreign-authority absolute-form → пустой200,
-утечка/обход аутентификации не доказаны. Runtime containers/one polling/0007/volume/logs
-сейчас **NOT VERIFIED**: AWS сессия истекла; прежний runtime срез не переносится вперёд.
+утечка/обход аутентификации не доказаны. Read-only runtime follow-up14:37UTC после browser login **VERIFIED**: API/db/Caddy/bot healthy,
+один Python polling, actual0007, тот же volume/digest, restart0/OOM=false, bounded safe JSON logs.
+Первоначальный пробел expired session закрыт новой проверкой, а не переносом старого evidence.
 
 Владелец подтвердил живой @skinulis_expenses_bot с новым UI; команды production
 настроены им через BotFather. Это owner-reported evidence, не независимый полный

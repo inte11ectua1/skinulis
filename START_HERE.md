@@ -7,7 +7,7 @@ Main/release `c9ec9cea388fd9282fadc437ff2ce1c7390d4a0c`; [main CI](https://githu
 [Protected deploy](https://github.com/inte11ectua1/skinulis/actions/runs/41836839608)
 success с независимым Environment approval Леры и enable_polling=true.
 Публичный /version совпал; health/database/HTTPS работают. Владелец подтвердил новый
-UI @skinulis_expenses_bot и ручное меню BotFather. Свежий runtime audit AWS — NOT VERIFIED.
+UI @skinulis_expenses_bot и ручное меню BotFather. Read-only runtime follow-up04.11 — VERIFIED (healthy, один polling,0007, прежний volume).
 
 **Текущие Issues:** #84 open (оценка финальной UX-приёмки), #79 open (M6 Acceptance,
 ответственный Тимур), #80 open (M7 — подготовка защиты, не пройдена).

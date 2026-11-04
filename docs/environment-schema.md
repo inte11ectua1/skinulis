@@ -12,8 +12,8 @@
 **M5 / T-09 (31.10.2026):** подготовлены отдельный production Compose, Caddy policy,
 trusted-main release workflow и контроллер deploy/rollback; [runbook](operations/DEPLOYMENT.md).
 На срезе T-09 последней была `0006_settlement_notification_claim`; текущий кодовый
-head после PR85 — `0007_user_display_name`. Фактическая production revision требует
-нового read-only SQL после восстановления AWS login.
+head после PR85 — `0007_user_display_name`. Фактическая production revision `0007_user_display_name` подтверждена read-only SQL
+04.11 после штатного browser login; миграции при аудите не запускались.
 Ниже local/test environment сохранён, а production-схема добавлена отдельно в конце.
 02.11.2026 approved production rollout выполнен; trusted HTTPS, exact version SHA,
 private boundary и backup/restore подтверждены. [Current evidence](operations/T-09_FIRST_PRODUCTION_ROLLOUT.md).

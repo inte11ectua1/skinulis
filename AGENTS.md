@@ -50,7 +50,7 @@ POLLING OFF/current SHA в исторических отчётах текущи�
 [STATUS](docs/STATUS.md) и GitHub Issues — рабочие точки. #84/#79/#80 открыты;
 новых дублирующих M6 Issues не создавать. G6/официальный DoD не закрыты:
 routing FAIL, p95, исторические approvals/admin bypass и оставшаяся приёмка раскрыты.
-Runtime AWS без действующего login NOT VERIFIED. Production read-only аудит не
+Read-only AWS runtime04.11 после browser login VERIFIED: healthy services, один polling, actual0007 и прежний volume. Production read-only аудит не
 разрешает deploy/restart/миграции/запуск или остановку polling/изменение данных.
 Меню production задано владельцем через BotFather; автоматический setup в коде —
 только для проверенного test bot. Удаление групп/участников с историей и Mini App

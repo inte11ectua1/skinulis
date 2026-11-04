@@ -8,7 +8,7 @@ production через BotFather. #84/#79/#80 open; M6 не принят полн
 [Свежий аудит](../reviews/POST_RELEASE_AUDIT_2026-11-04.md) / [STATUS](../STATUS.md)
 заменяют старые текущие срезы. Общие M6 задачи у Тимура, не создавать новые L-07/O-09.
 Есть routing FAIL (пустой200 foreign-authority без доказанной утечки), p95>500ms,
-исторические missing approvals/admin bypass; runtime AWS login expired, NOT VERIFIED.
+исторические missing approvals/admin bypass; runtime follow-up04.11 VERIFIED после browser login (без изменений production).
 Owner acceptance и зелёный CI не заменяют исключение преподавателя или независимое review.
 Любые новые production/AWS/polling изменения требуют отдельного разрешения.
 

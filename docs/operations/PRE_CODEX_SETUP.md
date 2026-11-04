@@ -1,4 +1,4 @@
-> **Актуализация 04.11.2026.** PR #85 merged; main/release `c9ec9ce`, protected Release41836839608 success с polling input=true. Владелец подтвердил ответы production-бота и новый UI; меню настроено через BotFather. Свежий подсчёт процессов/контейнеров и revision БД NOT VERIFIED: AWS login истёк. Это не прежний POLLING OFF и не полная учебная приёмка. Ниже сохранён датированный исходный срез/общий runbook; его прежние статусы не переносятся на04.11.
+> **Актуализация 04.11.2026.** PR #85 merged; main/release `c9ec9ce`, protected Release41836839608 success с polling input=true. Владелец подтвердил ответы production-бота и новый UI; меню настроено через BotFather. Read-only follow-up04.11 после штатного browser login подтвердил healthy API/db/Caddy/bot, ровно один Python polling на EC2, SQL revision0007 и прежний volume; рестарты/изменения не выполнялись. Это не прежний POLLING OFF и не полная учебная приёмка. Ниже сохранён датированный исходный срез/общий runbook; его прежние статусы не переносятся на04.11.
 > [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
 
 # Подготовка к Codex

@@ -2,7 +2,7 @@
 
 **Итог: production API RELEASE VERIFIED; M6/G6 PARTIALLY / NOT READY для полного
 официального закрытия.** Новый интерфейс и команды подтверждены владельцем;
-свежая внутренняя диагностика AWS **NOT VERIFIED**. M7 можно готовить с раскрытыми
+read-only runtime follow-up04.11 после browser login **VERIFIED**. M7 можно готовить с раскрытыми
 ограничениями, утверждать завершение защиты нельзя.
 
 [Машинное evidence](POST_RELEASE_EVIDENCE_2026-11-04.json) ·
@@ -12,6 +12,8 @@
 Проверки выполнены с Mac. GET/read-only GitHub/GHCR и безопасные raw HTTP-пробы;
 без Telegram API, финансовых POST/PUT/DELETE, нагрузки, SSH-обхода, deployment,
 миграций, остановки polling или изменения AWS/Environment/данных.
+Дополнительное разрешение владельца на browser login позволило закрыть
+первоначальный runtime gap в14:37UTC (17:37МСК) через pinned SSH-over-SSM.
 Дата —04.11.2026; внешние пробы начаты **13:55:25 UTC** (16:55МСК).
 
 ## 1. Main, CI, образ и protected release
@@ -38,9 +40,9 @@ ghcr.io/inte11ectua1/skinulis@sha256:9deb582d78653dffac806d1c3304d51e419c0d79809
 ```
 
 GHCR digest совпал с APP_IMAGE deployment job. Публичный /version совпал с release.
-**Actual running Docker image ID/RepoDigests пока NOT VERIFIED** — нельзя подменять
-его workflow input или HTTP-ответом. Deployment job success не доказывает нынешнюю
-долговременную устойчивость контейнеров.
+**Actual running Docker image ID/RepoDigests/OCI revision VERIFIED** свежим inspect
+через pinned SSH-over-SSM после browser login: API и bot используют тот же immutable
+digest. Само по себе workflow input/HTTP-ответ или deploy success не заменяет эту проверку.
 
 ## 2. Свежий внешний production smoke
 
@@ -71,28 +73,42 @@ Foreign-authority повторён curl --request-target с обычным TLS:2
 Исправление Caddy/request-target поведения — отдельный кодовый Issue/PR после
 разрешения владельца, с regression и защищённым rollout; здесь код не менялся.
 
-## 3. Внутренний runtime: границы доступа
+## 3. Внутренний runtime: read-only follow-up после browser login
 
-`aws sts get-caller-identity --profile skinulis-new-admin --region ap-southeast-2`
-вернул session expired. Обхода через иной account/direct public SSH не делалось.
+Первоначальная попытка STS вернула session expired. После отдельной команды
+владельца выполнен штатный `aws login --profile skinulis-new-admin --region ap-southeast-2`
+через браузер; постоянные access keys не создавались. STS подтвердил account621150878773.
+Использовано существующее pinned SSH-over-SSM: StrictHostKeyChecking=yes,
+отдельный deployment key/known_hosts; без direct fallback/изменения host key.
+В14:37UTC выполнен новый metadata/SQL/log audit, **не повторный deploy**.
 
-| Пункт | Что есть | Свежая проверка |
+| Пункт | Фактический результат | Статус |
 |---|---|---|
-| AWS account/instance/SSM | Ожидаемые621150878773 / i-0c920378dd242af2b / Sydney | NOT VERIFIED |
-| API/db/Caddy healthy, restart/OOM | Старый runtime03.11 и успешный deployment job04.11 | NOT VERIFIED сейчас |
-| Ровно один polling process | Release input=true; fixed Compose name/replicas1; владелец видит ответы | **NOT VERIFIED count**, нельзя утверждать OFF |
-| Миграция | В коде единственный ожидаемый head0007_user_display_name; migrator штатного deploy прошёл | SQL actual revision NOT VERIFIED |
-| PostgreSQL volume | Compose external existing volume, reset/down-v не выполнялись этим аудитом | Mount/identity/данные NOT VERIFIED сейчас |
-| Приватные порты и сети | В принятом Compose только Caddy80/443, bot без DB/ports | AWS SG/actual bindings NOT VERIFIED сейчас |
-| JSON logs/privacy/rotation | Код/Compose5m×3 и CI; историческое runtime evidence | Свежие логи/rotation NOT VERIFIED |
-| Backup/restore | Исторический M5 backup evidence сохранён | Новый backup/restore не выполнялся и не подтверждён |
+| AWS/EC2/SSM | Account621150878773, Sydney, i-0c920378dd242af2b Running/SSM Online, IPv43.25.53.31, AMD64 | VERIFIED |
+| API/db/Caddy/bot | Все running/healthy; restart_count0/OOM=false | VERIFIED на момент проверки |
+| Polling | Один Python -m bot.main на host и внутри одного bot container; иных running containers0 | VERIFIED на этой EC2 |
+| Docker init | Отдельный docker-init только передаёт команду дочернему Python; исключён из count | Не второй polling |
+| Миграция | SQL SELECT alembic_version →0007_user_display_name; migrate exited0, в bounded startup logs started1/completed1 | VERIFIED, миграции аудит не запускал |
+| PostgreSQL volume | skinulis-production-postgres, CreatedAt2026-11-01T20:22:25Z, подключён к /var/lib/postgresql/data | Имя/дата/mount совпали с прежним evidence; пользовательские записи не читались |
+| Runtime роль | LOGIN=true; SUPERUSER/CREATEDB/CREATEROLE/REPLICATION/BYPASSRLS=false | VERIFIED через pg_roles |
+| Read-only SQL | default_transaction_read_only=on, statement_timeout5s, только schema/role metadata | VERIFIED; без DDL/пользовательских SELECT |
+| Сеть/порты | SG inbound только TCP80/443; только Caddy имеет bindings80/443; API/db/bot без ports, bot без DB network | VERIFIED, правил не меняли |
+| Логи/rotation | json-file5m×3/compress=true на всех5 services; API200/200, bot25/25, migrate5/5, Caddy19/19 JSON | VERIFIED в ограниченной выборке |
+| Privacy/errors | obvious sensitive fields/token shapes0, API/bot/migrate unexpected fields0, error/critical0; restart/oom/die events за30min0 | Не полный forensic-аудит всех логов |
+| Ресурсы | RAM available≈1,00GiB, swap2GiB почти свободен; root disk free≈12,30GiB из18,33GiB; низкий load | Запаса достаточно для текущего scope, не нагрузочная гарантия |
+| Backup/restore | Старые M5 evidence сохранены | Свежий backup/restore не выполнялся/не проверен |
 
-Для снятия пробела нужен штатный интерактивный вход владельца:
-`aws login --profile skinulis-new-admin --region ap-southeast-2`, затем только
-документированный pinned SSH-over-SSM read-only audit. Пароли/MFA/токены в чат не
-присылать. Эта команда — следующий безопасный шаг, она здесь не запускалась.
+Не выводились env, credentials, сырые command lines/logs или пользовательские данные.
+Секреты приложения не читались; логи анализировались только в памяти, сохранены
+агрегаты. Нулевые флаги privacy не доказывают отсутствия всех возможных утечек во
+всей истории. Process-count относится к этой EC2, не всем возможным внешним хостам.
+Два первоначальных отказа операторского скрипта были ошибками формата docker inspect/top;
+после исправления read-only скрипта проверка завершилась. Это не ошибки production.
+
 Исторические [POST_DEPLOY_REPORT](POST_DEPLOY_REPORT.md) и
-[runtime evidence03.11](POST_DEPLOY_RUNTIME_EVIDENCE.json) не переносятся на новый SHA.
+[runtime evidence03.11](POST_DEPLOY_RUNTIME_EVIDENCE.json) сохранены; свежий результат
+в текущем JSON evidence. Нового Telegram API getMe/getUpdates/тестовых сообщений,
+контейнерных lifecycle-команд, миграций, rollback или DB writes не выполнялось.
 
 ## 4. Функционал по коду и текущему CI
 
@@ -163,8 +179,8 @@ production load. Literal logging backend/user-context и red-check UI proof ос
 
 ## 7. Что осталось и готовность к защите
 
-1. Восстановить AWS login и повторить свежую read-only runtime проверку: digest,
-   один bot process, health/restarts/OOM, actual0007, старый volume, bounded safe logs.
+1. Runtime gap закрыт: browser login и свежие read-only проверки выполнены.
+   Перед следующим релизом/защитой повторять диагностику по необходимости без lifecycle changes.
 2. Отдельно согласовать кодовый fix routing FAIL с regression, review и rollout;
    не исправлять Caddy в docs PR и не называть200 доказанной утечкой.
 3. Оформить полный3-user/new-user E2E checklist с фактическими результатами/датой
