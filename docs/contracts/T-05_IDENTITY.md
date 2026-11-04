@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** Базовые identity/actor/UTC контракты действуют. PR85 добавил nullable display_name в profile/member DTO, PATCH /users/me и /internal/users/me, optional имя bootstrap без перезаписи; точное расширение — [84_DISPLAY_NAMES](84_DISPLAY_NAMES.md). Endpoint удаления групп/участников и Mini App не добавлялись.
+> [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # T-05 — users и публичная аутентификация
 
 **Статус: предложено для независимого review, не принятый заранее контракт.**

@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** Текущий порядок: #84 (UX merged/released; owner acceptance и formal review gaps), #79 (единый M6 у Тимура, open/PARTIALLY), #80 (M7 open; подготовка, не завершённая защита). M5 closed; новый release `c9ec9ce` уже deployed с polling=true. Старые секции ниже — этапные срезы; не создавать отдельные L-07/O-09/M6 задачи и не утверждать G6 PASS.
+> [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # Тимур — личный roadmap
 
 **Приоритет:** сначала Git/CI и воспроизводимый запуск, затем auth/groups и CD. Завершение любого шага = PR + тесты + review + запись статуса.

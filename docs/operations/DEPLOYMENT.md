@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** PR #85 merged; main/release `c9ec9ce`, protected Release41836839608 success с polling input=true. Владелец подтвердил ответы production-бота и новый UI; меню настроено через BotFather. Свежий подсчёт процессов/контейнеров и revision БД NOT VERIFIED: AWS login истёк. Это не прежний POLLING OFF и не полная учебная приёмка. Ниже сохранён датированный исходный срез/общий runbook; его прежние статусы не переносятся на04.11.
+> [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 > **Свежий read-only post-deploy срез 03.11.2026:** production SHA `7aa7c14`,
 > approved Release41591582318 success, flag=false. [Отчёт](../reviews/POST_DEPLOY_REPORT.md)
 > фиксирует routing FAIL; read-only runtime follow-up подтвердил container/image/DB/

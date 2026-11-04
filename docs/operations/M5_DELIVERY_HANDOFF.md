@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** PR #85 merged; main/release `c9ec9ce`, protected Release41836839608 success с polling input=true. Владелец подтвердил ответы production-бота и новый UI; меню настроено через BotFather. Свежий подсчёт процессов/контейнеров и revision БД NOT VERIFIED: AWS login истёк. Это не прежний POLLING OFF и не полная учебная приёмка. Ниже сохранён датированный исходный срез/общий runbook; его прежние статусы не переносятся на04.11.
+> [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # Handoff M4 → M5 Delivery (31.10.2026)
 
 > **Исторический срез задач на 31.10.2026, НЕ текущая очередь задач.** По состоянию на 03.11.2026 M5 закрыт, T-09 #59/T-10 #60/O-08 #61/L-06 #62/O-09 #76 merged/accepted; T-01 #2 закрыта `not_planned`; подтвержден первичный G5 rollout, но live Telegram gates не проверены. Новый статус и [M5→M6 handoff](M5_CLOSEOUT_M6_HANDOFF.md). Все фразы ниже «issue open», «G5 не проверен» отражают исключительно дату первоначального handoff.

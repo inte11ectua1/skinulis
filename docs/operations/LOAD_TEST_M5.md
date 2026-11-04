@@ -1,3 +1,8 @@
+> **Актуализация 04.11.2026.** O-09 fix merged PR77 и входит в release `c9ec9ce`.
+> Ниже исторические замеры/этапные выводы: p95≈956/1098ms остаётся FAIL относительно500ms;
+> новый production load не проводился. Фразы «fix ещё не merged/deployed» относятся к дате замера.
+> [Текущий аудит](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # O-08 — финансовая безопасность и нагрузка M5
 
 **Итоговая приёмка O-09 #76 (03.11.2026):** [PR #77](https://github.com/inte11ectua1/skinulis/pull/77) merged, задача закрыта владельцем. Минимальный auth-lifecycle fix устранил pool starvation (100-client HTTP500/pool timeouts=0), но **p95≤500ms остаётся FAIL** (mixed 956ms, contention 1098ms). Тимур явно принял эти остаточные задержки как допустимые для учебного проекта; это не performance PASS, не AWS benchmark и не изменение официального DoD. [Отдельный раздел O-09 ниже](#o-09-76--исправление-lifecycle-и-beforeafter-03112026),

@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** PR #85 merged; main/release `c9ec9ce`, protected Release41836839608 success с polling input=true. Владелец подтвердил ответы production-бота и новый UI; меню настроено через BotFather. Свежий подсчёт процессов/контейнеров и revision БД NOT VERIFIED: AWS login истёк. Это не прежний POLLING OFF и не полная учебная приёмка. Ниже сохранён датированный исходный срез/общий runbook; его прежние статусы не переносятся на04.11.
+> [Текущий аудит и границы доказательств](POST_RELEASE_AUDIT_2026-11-04.md).
+
 # M6 — POST-DEPLOY проверка
 
 **Внешний smoke: 03.11.2026, 07:17–07:26 UTC. Внутренняя read-only проверка: 07:59–08:02 UTC (10:59–11:02 Europe/Moscow). Итог: NOT READY; внутреннее состояние VERIFIED.**

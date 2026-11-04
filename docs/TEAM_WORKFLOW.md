@@ -9,13 +9,19 @@
 
 Согласовывать общий API до реализации, не изменять чужие модели без ревью. Ревью по кругу: Тимур → Олег → Лера → Тимур. Изменения финансов дополнительно проверяет Тимур, безопасности — Олег.
 
-## M5 Delivery — принят (03.11.2026) / M6 Acceptance — план
+## Текущая очередь (04.11.2026)
 
-- M5 T-09 #59, T-10 #60, O-08 #61, L-06 #62 и O-09 #76 **закрыты**; PR #74/#75/#77 merged, первый API HTTPS/CD G5 evidence есть. [Closeout](operations/M5_CLOSEOUT_M6_HANDOFF.md). O-09 100-client pool500 устранены, p95 956/1098ms — внутренний FAIL, явно принят Тимуром.
-- **Следующий M6:** T-11 DoD audit/cold start у Тимура, финальный financial QA у Олега (O-09 ID уже использован), L-07 user guide/demo у Леры. Новые Issues ещё не созданы.
-- По-прежнему обязательно независимое человеческое GitHub APPROVED до merge; исторические PR без APPROVED не выдавать за reviewed. T-01 #2 закрыта `not_planned`, но исходные branch-protection evidence не закрыты по DoD.
-- `pull_request` не получает prod secrets; после merge trusted main может публиковать образ, **но автоматически не деплоит в AWS**: защищённый Environment approval и разрешённый rollout flag. Production SSH/AWS/DB/Telegram polling/live/production stress — только с новой явной командой Тимура.
-- G2/G3/G4 live Telegram не проверены; G5 evidence относится к первому API rollout, а не актуальному `main`. `Closes #N` только после полного acceptance; при согласованной уступке фиксировать точное FAIL, как в O-09.
+M5 closed; #84 UX merged PR85 и production release `c9ec9ce`. M6 остаётся единой
+[#79](https://github.com/inte11ectua1/skinulis/issues/79), ответственный Тимур,
+консультации/review Олега и Леры без дублирующих задач. M7 — #80, open.
+[Аудит](reviews/POST_RELEASE_AUDIT_2026-11-04.md) отделяет owner live-подтверждение
+от полной независимой учебной приёмки. 41/52 merged PR без APPROVED, включая #85;
+Environment approval deploy не является code review. Main enforce_admins=false;
+Environment can_admins_bypass=false. Правила не ослаблялись.
+Trusted CI/publish не означают deploy: новый rollout требует разрешения владельца,
+production Environment approval и rollout flag. Выполненный Release41836839608
+имел polling=true; flag снова false. Не запускать второй бот/новый deploy/DB writes
+ради документационной проверки. Удаление групп и Mini App вне MVP.
 
 ## Перед каждым PR
 Прочитать AGENTS.md, docs/PRODUCT_RULES.md, свой SPEC и ROADMAP, выполнить одну issue, добавить тесты, указать проверки, риски, ссылку на issue. После merge обновить docs/STATUS.md.

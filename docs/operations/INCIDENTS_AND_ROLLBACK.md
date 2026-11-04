@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** Опорный текущий release `c9ec9ce` с polling input=true; владелец подтвердил живого production-бота. Не останавливать/не запускать его ради аудита. Наблюдение health200 не подтверждает отсутствие restart loops, свежие логи, backup или revision: AWS runtime сейчас NOT VERIFIED. Следующие команды — runbook по отдельному разрешению, не инструкция выполнять rollback в этой задаче.
+> [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # T-10 — инциденты, логи и безопасный откат
 
 [Issue #60](https://github.com/inte11ectua1/skinulis/issues/60) · код принят в main

@@ -4,7 +4,7 @@
 
 **Авторизация — Тимур.** Публичные API JWT, внутренние bot-service запросы с проверенным служебным токеном. Actor из аутентификации, не из произвольного JSON. Проверка прав и членства на API.
 
-**Telegram — Лера.** aiogram handlers, FSM и httpx-клиент по согласованным OpenAPI-схемам. Использовать mock fixtures, пока API не готов.
+**Telegram — Лера.** aiogram handlers, FSM и httpx-клиент по согласованным OpenAPI-схемам. API уже реализован; тесты используют mock Telegram и настоящие HTTP/PostgreSQL. Mock не является live E2E.
 
 **Общий формат ошибок:** error.code, error.message, error.request_id. HTTP 400/401/403/404/409/500. Списки limit 20 по умолчанию; предварительный выбор limit+offset и стабильная сортировка по created_at и id.
 
@@ -13,3 +13,7 @@
 **Модели:** Тимур users/groups/members/invites/link codes; Олег expenses/items/shares/settlements. Новые миграции согласовывать, не оставлять несколько Alembic heads.
 
 Контракт меняется только через issue, PR и ревью владельцев.
+
+Человеческий ввод сумм с точкой/запятой/целой частью нормализуется ботом до строгой
+API-строки; это не расчёт долей/балансов. Расширение display_name —
+[контракт #84](84_DISPLAY_NAMES.md), не новый credential и не замена ID.

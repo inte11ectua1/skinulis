@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** O-02 merged PR16/17; последующие O-03–O-07 API/ORM/balances/settlements тоже merged. Ниже исторический pure-functions checkpoint, не ограничение нынешнего API.
+> [Post-release аудит](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # O-02 — реализация чистой денежной арифметики
 
 Основание: [Issue #11](https://github.com/inte11ectua1/skinulis/issues/11), [PRODUCT_RULES](../PRODUCT_RULES.md), [матрица O-01](O-01_TEST_MATRIX.md). База — main после человеческого merge [PR #15](https://github.com/inte11ectua1/skinulis/pull/15), `06bf28bb4404cfba02328a5315e3519fdfcadf5f`.

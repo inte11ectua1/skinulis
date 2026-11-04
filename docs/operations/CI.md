@@ -1,3 +1,6 @@
+> **Актуализация 04.11.2026.** Main CI41824303985 на `c9ec9ce`: 5/5, 1382 unit +458 PostgreSQL, branch94,10%; fresh main protection strict/5 required checks, enforce_admins=false. Environment can_admins_bypass=false и approval deploy — отдельная защита, не PR APPROVED. Ничего в CI/protection этим docs PR не меняется.
+> [Текущий аудит и границы доказательств](../reviews/POST_RELEASE_AUDIT_2026-11-04.md).
+
 # T-04 — CI и защита main
 
 ## Актуальный M5 closeout / CI срез (03.11.2026)

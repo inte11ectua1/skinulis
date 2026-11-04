@@ -1,5 +1,16 @@
 # Скинулись
 
+**Актуально 04.11.2026:** [PR #85](https://github.com/inte11ectua1/skinulis/pull/85) merged;
+production https://3-25-53-31.sslip.io работает на `c9ec9ce`.
+[Main CI](https://github.com/inte11ectua1/skinulis/actions/runs/41824303985)5/5,
+1382 unit +458 PostgreSQL, branch coverage94,10%;
+[protected deploy](https://github.com/inte11ectua1/skinulis/actions/runs/41836839608)
+success с polling=true и Environment approval Леры. Владелец подтвердил новый
+@skinulis_expenses_bot и меню BotFather. Rollout flag=false.
+[Текущий аудит/ограничения](docs/reviews/POST_RELEASE_AUDIT_2026-11-04.md):
+M6 не закрыт, routing absolute-form FAIL; свежий runtime AWS NOT VERIFIED.
+Датированные M1–M5 срезы ниже — история, не текущая версия/статус polling.
+
 Учебный сервис совместных расходов с Telegram-ботом, FastAPI и PostgreSQL.
 
 **O-07 merged (PR #53, проверено 31.10.2026):** ручные компенсации: POST/GET `/groups/{group_id}/settlements`,
@@ -180,7 +191,7 @@ docker compose up --build
 `expense_shares`, `expense_item_shares`, `settlements`**.
 Расходные endpoints добавлены O-04/O-05, следующая миграция —
 `0005_expense_replay_version`, затем одноразовая нотификация
-`0006_settlement_notification_claim` (**актуальный единственный Alembic head**). Балансы O-06 и settlement transitions O-07 merged, без новой миграции M4.
+`0006_settlement_notification_claim` (исторический head M4; текущий head — `0007_user_display_name`). Балансы O-06 и settlement transitions O-07 merged, без новой миграции M4.
 
 ```sh
 docker compose ps -a
@@ -670,7 +681,7 @@ strict mypy --platform linux и integration-каталог через отдел
 это не заменяет обязательный полный Linux CI. Подробности — в матрице L-06.
 
 
-### Редизайн Telegram #84 (на ревью)
+### Редизайн Telegram #84 (merged и production release 04.11.2026)
 
 Имена вместо технических ID, русские карточки, одна актуальная клавиатура,
 выбор нескольких участников без новых сообщений. [Галерея и приёмка](docs/ux/84_TELEGRAM_REDESIGN.md),
@@ -681,11 +692,11 @@ strict mypy --platform linux и integration-каталог через отдел
 изолированные PostgreSQL/API. Токен заполняет владелец в частном 0600-файле вне Git.
 `start-bot --allow-test-polling` выполняется только после отдельного разрешения;
 `stop-bot` останавливает локальный polling, `stop` — локальный стек без удаления volumes.
-AWS/production не используются. Live и визуальная приёмка пока не подтверждены.
+Этот локальный runner не использует AWS/production. Владелец отдельно подтвердил новый production UI; полный независимый 3-user/new-user E2E ещё не подтверждён.
 
 
 После первого live-теста владельца PR #85 дополнен общей картой иконок, стандартными
 цветами кнопок и командным меню тестового бота. Callback редактирует карточку;
 после нового текста прежняя клавиатура снимается, новая карточка появляется внизу.
 [Повторный тест и безопасная пересборка без удаления данных](docs/operations/LOCAL_TELEGRAM_UX.md#обновление-после-live-обратной-связи--без-потери-данных).
-Применение нового меню и перезапуск polling ещё требуют отдельного разрешения.
+Production-команды `/start`, `/groups`, `/profile`, `/help`, `/cancel` уже настроены владельцем через BotFather и сохраняются на стороне Telegram при обычном рестарте. Код автоматически настраивает только test bot. Новое управление polling требует отдельного разрешения.
